@@ -1,0 +1,809 @@
+1Iterative Constructs
+Mechanisms for deciding under what 
+conditions an action should be repeated
+JPC and JWD © 2002 McGraw-Hill, Inc.
+Averaging
+
+--- Page Break ---
+
+2
+Determining Average Magnitude
+Suppose we want to calculate the average apparent brightness 
+of a list of five star magnitude values
+Can we do it?
+Yes, it would be easy
+Suppose we want to calculate the average apparent brightness of a list of five star magnitude values
+Can we do it
+Yes, it would be easy
+Suppose we want to calculate the average apparent brightness of a list of 8,479 stars visible from earth
+Can we do it
+Yes, but it would be gruesome without the use of iteration
+C++ Iterative Constructs
+Three constructs
+while statement
+for statement
+do-while statement
+
+--- Page Break ---
+
+3
+While Syntax
+Logical expression that determines
+whether the action is to be executed
+while ( Expression ) ActionAction to be iteratively
+performed until logical
+expression is false
+While Semantics
+Expression
+Action/G57/G55/G58/G48 /G49/G44/G4f/G56/G48Expression is
+evaluated at the
+start of each
+iteration of the
+loop
+If Expression is
+true, Action is
+executedIf Expression is
+false, program
+execution
+continues with
+next statement
+
+--- Page Break ---
+
+4
+Computing an Average
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;
+Execution Trace
+int listSize = 4 ;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;Suppose input contains: 1 5 3 1 6
+listSize 4
+
+--- Page Break ---
+
+5
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+Suppose input contains: 1 5 3 1 6
+4 listSize
+0
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum Suppose input contains: 1 5 3 1 6
+4 listSize
+0
+0
+
+--- Page Break ---
+
+6
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum Suppose input contains: 1 5 3 1 6
+4 listSize
+0
+0
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueSuppose input contains: 1 5 3 1 6
+4 listSize
+0
+0
+--
+
+--- Page Break ---
+
+7
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueSuppose input contains: 1 5 3 1 6
+4 listSize
+0
+0
+1
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueSuppose input contains: 1 5 3 1 6
+4 listSize
+0
+0
+11
+
+--- Page Break ---
+
+8
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueSuppose input contains: 1 5 3 1 6
+4 listSize
+0
+1
+11
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueSuppose input contains: 1 5 3 1 6
+4 listSize
+1
+1
+1
+
+--- Page Break ---
+
+9
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueSuppose input contains: 1 5 3 1 6
+4 listSize
+1
+1
+--
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueSuppose input contains: 1 5 3 1 6
+4 listSize
+1
+1
+5
+
+--- Page Break ---
+
+10
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueSuppose input contains: 1 5 3 1 6
+4 listSize
+1
+1
+56
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueSuppose input contains: 1 5 3 1 6
+4 listSize
+1
+6
+52
+
+--- Page Break ---
+
+11
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueSuppose input contains: 1 5 3 1 6
+4 listSize
+2
+6
+56
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueSuppose input contains: 1 5 3 1 6
+4 listSize
+2
+6
+--2
+
+--- Page Break ---
+
+12
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueS u p p o s e  i n p u t  c o n t a i n s :  1531  6
+4 listSize
+2
+6
+32
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueS u p p o s e  i n p u t  c o n t a i n s :  1531  6
+4 listSize
+2
+6
+39
+
+--- Page Break ---
+
+13
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueS u p p o s e  i n p u t  c o n t a i n s :  1531  6
+4 listSize
+2
+9
+33
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueS u p p o s e  i n p u t  c o n t a i n s :  1531  6
+4 listSize
+3
+9
+33
+
+--- Page Break ---
+
+14
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueS u p p o s e  i n p u t  c o n t a i n s :  1531  6
+4 listSize
+3
+9
+--3
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueS u p p o s e  i n p u t  c o n t a i n s :  15316
+4 listSize
+3
+9
+13
+
+--- Page Break ---
+
+15
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueS u p p o s e  i n p u t  c o n t a i n s :  15316
+4 listSize
+3
+9
+110
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueS u p p o s e  i n p u t  c o n t a i n s :  15316
+4 listSize
+3
+10
+14
+
+--- Page Break ---
+
+16
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+valueS u p p o s e  i n p u t  c o n t a i n s :  15316
+4 listSize
+3
+10
+14
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum S u p p o s e  i n p u t  c o n t a i n s :  15316
+4 listSize
+3
+10
+average 2.54
+
+--- Page Break ---
+
+17
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;numberProcessed
+sum
+averageS u p p o s e  i n p u t  c o n t a i n s :  15316
+4 listSize
+3
+10
+2.54
+Execution Trace
+int listSize = 4;
+int numberProcessed = 0;double sum = 0;
+while (numberProcessed < listSize) {
+double value;cin >> value;sum += value;++numberProcessed; 
+}
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;S u p p o s e  i n p u t  c o n t a i n s :  15316
+Stays in stream until 
+extracted
+
+--- Page Break ---
+
+18
+Power of Two Table
+const int TableSize = 20;
+int i = 0;
+long Entry = 1;
+cout << "i" << "\t\t" << "2 ** i" << endl;
+while (i < TableSize) {
+cout << i << "\t\t" << Entry << endl;
+Entry = 2 * Entry;++i;
+}
+Better Way of Averaging
+int numberProcessed = 0;
+double sum = 0;double value;
+while (  cin >> value  ) {
+sum += value;++numberProcessed; 
+}double average = sum / numberProcessed ;
+cout  << "Average: " << average << endl;What if list is 
+empty?The value of the input 
+operation corresponds to 
+true only if a successful 
+extraction was made
+
+--- Page Break ---
+
+19
+Even Better Way of Averaging
+int numberProcessed = 0;
+double sum = 0;double value;while (  cin >> value  ) {
+sum += value;++numberProcessed; 
+}
+if ( numberProcessed > 0 ) {
+double average = sum / numberProcessed ;cout  << "Average: " << average << endl;
+}else {
+cout << "No list to average" << endl;
+}
+The For Statement
+Syntax
+for (ForInit ; ForExpression ; PostExpression )
+Action
+Example
+for (int i = 0; i < 3; ++i) {
+cout << "i is " << i << endl;
+}
+
+--- Page Break ---
+
+20
+ForExpr
+Action/G57/G55/G58/G48 /G49/G44/G4f/G56/G48ForInit
+PostExprEvaluated once
+at the beginning
+of the for
+statements's
+executionThe ForExpr is
+evaluated at the
+start of each
+iteration of the
+loop
+If ForExpr is
+true, Action is
+executed
+After the Action
+has completed,
+the
+PostExpression
+is evaluatedIf ForExpr is
+false, program
+execution
+continues with
+next statement
+After evaluating the
+PostExpression, the next
+iteration of the loop starts
+Execution Trace
+for (int i = 0 ; i < 3; ++i) {
+cout << "i is " << i << endl;
+}cout << "all done" << endl;i
+0
+
+--- Page Break ---
+
+21
+Execution Trace
+for (int i = 0; i < 3; ++i) {
+cout << "i is " << i << endl;
+}cout << "all done" << endl;i
+0
+Execution Trace
+for (int i = 0; i < 3; ++i) {
+cout << "i is " << i << endl;
+}cout << "all done" << endl;
+i is 0i
+0
+
+--- Page Break ---
+
+22
+Execution Trace
+for (int i = 0; i < 3; ++i) {
+cout << "i is " << i << endl;
+}cout << "all done" << endl;
+i is 0i
+0
+Execution Trace
+for (int i = 0; i < 3; ++i) {
+cout << "i is " << i << endl;
+}cout << "all done" << endl;
+i is 0i
+1
+
+--- Page Break ---
+
+23
+Execution Trace
+for (int i = 0; i < 3; ++i) {
+cout << "i is " << i << endl;
+}cout << "all done" << endl;i
+1
+Execution Trace
+for (int i = 0; i < 3; ++i) {
+cout << "i is " << i << endl;
+}cout << "all done" << endl;
+i is 0
+i is 1i
+1
+
+--- Page Break ---
+
+24
+Execution Trace
+for (int i = 0; i < 3; ++i) {
+cout << "i is " << i << endl;
+}cout << "all done" << endl;
+i is 0
+i is 1i
+1
+Execution Trace
+for (int i = 0; i < 3; ++i) {
+cout << "i is " << i << endl;
+}cout << "all done" << endl;
+i is 0
+i is 1i
+2
+
+--- Page Break ---
+
+25
+Execution Trace
+for (int i = 0; i < 3; ++i) {
+cout << "i is " << i << endl;
+}cout << "all done" << endl;
+i is 0
+i is 1i
+2
+Execution Trace
+for (int i = 0; i < 3; ++i) {
+cout << "i is " << i << endl;
+}cout << "all done" << endl;
+i is 0
+i is 1i is 2i
+2
+
+--- Page Break ---
+
+26
+Execution Trace
+for (int i = 0; i < 3; ++i) {
+cout << "i is " << i << endl;
+}cout << "all done" << endl;
+i is 0
+i is 1i is 2i
+2
+Execution Trace
+for (int i = 0; i < 3; ++i) {
+cout << "i is " << i << endl;
+}cout << "all done" << endl;
+i is 0
+i is 1i is 2i
+3
+
+--- Page Break ---
+
+27
+Execution Trace
+for (int i = 0; i < 3; ++i) {
+cout << "i is " << i << endl;
+}cout << "all done" << endl;
+i is 0
+i is 1i is 2i
+3
+Execution Trace
+for (int i = 0; i < 3; ++i) {
+cout << "i is " << i << endl;
+}cout << "all done" << endl;
+i is 0
+i is 1i is 2
+all donei
+3
+
+--- Page Break ---
+
+28
+Table Revisiting
+const int TableSize = 20;
+long Entry = 1;
+cout << "i" << "\t\t" << "2**i" << endl;
+for (int i = 0; i <= TableSize; ++i) {
+cout << i << "\t\t" << Entry << endl;Entry *= 2;
+}
+Table Revisiting
+const int TableSize = 20;
+long Entry = 1;
+cout << "i" << "\t\t" << "2**i" << endl;
+for (int i = 0; i < TableSize; ++i) {
+cout << i << "\t\t" << Entry << endl;Entry = 2 * Entry;
+}
+cout << "i is" << i << endl; // illegal
+The scope of  i is limited 
+to the loop!
+
+--- Page Break ---
+
+29
+Displaying a Diagonal
+SimpleWindow W("One diagonal", 5.5, 2.25);
+W.Open();for (int j = 1;  j <= 3; ++j) {
+float x = j * 0.75 + 0.25;
+float y = j * 0.75 - 0.25;float Side = 0.4;RectangleShape S(W, x, y, Blue, Side, Side);S.Draw();
+}
+Sample Display
+
+
+--- Page Break ---
+
+30
+Displaying Three Diagonals
+SimpleWindow W("Three diagonals", 6.5, 2.25);
+W.Open();for (int i = 1; i <= 3; ++i) {
+for (int j = 1;  j <= 3; ++j) {
+float x = i - 1 + j * 0.75 + 0.25;float y = j * 0.75 - 0.25;float Side = 0.4;RectangleShape S(W, x, y, Blue, Side, Side);
+S.Draw();
+}
+} The scope of i includes the inner loop. 
+The scope of  j is just the inner loop.
+Sample Display
+
+
+--- Page Break ---
+
+31
+int Counter1 = 0;
+int Counter2 = 0;
+int Counter3 = 0;int Counter4 = 0;int Counter5 = 0;
+++Counter1;
+for (int i = 1; i <= 10; ++i) {
+++Counter2;
+for (int j = 1; j <= 20; ++j) {
+++Counter3; 
+}
+++Counter4;
+}
+++Counter5;
+cout << Counter1 << " " << Counter2 << " "
+<< Counter3 << " " << Counter4 << " " 
+<< Counter5 << endl;
+For Into While
+Observation
+The for statement is equivalent to
+{
+ForInit;
+while (ForExpression) {
+Action;PostExpression;
+}
+}
+
+--- Page Break ---
+
+32
+Counting Characters
+int NumberOfNonBlanks = 0;
+int NumberOfUpperCase = 0;char c;while (cin >> c) {
+++NumberOfNonBlanks;if ((c >= 'A') && (c <= 'Z')) {
+++NumberOfUpperCase;
+}
+}
+cout << "Nonblank characters: " << NumberOfNonBlanks
+<< endl << "Uppercase characters: "<< NumberOfUpperCase << endl;Only extracts 
+nonblank characters
+Counting All Characters
+char c;
+int NumberOfCharacters = 0;int NumberOfLines = 0;
+while ( cin.get(c) ) {
+++NumberOfCharacters;if (c == '\n') {
+++NumberOfLines
+}
+}cout << "Characters: " << NumberOfCharacters
+<< endl << "Lines: " << NumberOfLines<< endl;Extracts all 
+characters
+
+--- Page Break ---
+
+33
+#include <iostream>
+#include <fstream>
+using namespace std;
+int main() {
+ifstream fin("mydata.txt");int ValuesProcessed = 0;
+float ValueSum = 0;
+float Value;while ( fin >> Value ) {
+ValueSum += Value;
+++ValuesProcessed;
+}if (ValuesProcessed > 0) {
+ofstream fout("average.txt");
+float Average = ValueSum / ValuesProcessed;
+fout << "Average: " << Average << endl;return 0;
+}
+else {
+cerr << "No list to average" << endl;return 1;
+}
+}File Processing
+Iteration Do’s
+Key Points
+Make sure there is a statement that will eventually terminate 
+the iteration criterion
+The loop must stop!
+Make sure that initialization of loop counters or iterators is properly performed
+Have a clear purpose for the loop
+Document the purpose of the loop
+Document how the body of the loop advances the purpose of the loop
+
+--- Page Break ---
+
+34
+The Do-While Statement
+Syntax
+doAction
+while (Expression )
+Semantics
+Execute Action
+If Expression is true then 
+execute Action again
+Repeat this process until 
+Expression evaluates to 
+false
+Action is either a single 
+statement or a group of statements within bracesAction
+true
+falseExpression
+Waiting for a Proper Reply
+char Reply;
+do {
+cout << "Decision (y, n): ";
+if (cin >> Reply)
+Reply = tolower(Reply);
+else
+Reply = 'n';
+} while ((Reply != 'y') && (Reply != 'n'));
+
+--- Page Break ---
+

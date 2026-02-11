@@ -1,0 +1,468 @@
+1Abstract Data Types
+Development and Implementation
+JPC and JWD © 2002 McGraw-Hill, Inc.
+Our Goal
+Well-defined representations that allow objects to be created 
+and used in an intuitive manner
+User should not have to bother with unnecessary details
+Example
+programming a microwave to make popcorn should not require a physics course
+
+--- Page Break ---
+
+2
+Golden Rule
+Use information hiding and encapsulation to support integrity of
+data
+Put implementation details in a separate module
+Implementation details complicate the class declarations
+Data members are private so that use of the interface is required
+Makes clients generally immune to implementation changes
+Another Golden Rule
+Keep it simple – class minimality rule
+Implement a behavior as a nonmember function when possible
+Only add a behavior if it is necessary
+
+--- Page Break ---
+
+3
+Abstract Data Type
+Well-defined and complete data abstraction using the 
+information-hiding principle
+Rational Number Review
+Rational number
+Ratio of two integers: a/b
+Numerator over the denominator
+Standard operations
+Addition Multiplication
+Subtraction Divisionbc+ad=c+aac=c*a
+a-c=ad - bc ad=c/a
+
+--- Page Break ---
+
+4
+Abstract Data Type
+Consider
+Rational a(1,2);    // a = 1/2
+Rational b(2,3);    // b = 2/3
+cout << a << " + " << b << " = " << a + b;Rational s;         // s = 0/1
+Rational t;         // t = 0/1
+cin >> s >> t;
+cout << s << " * " << t << " = " << s * t;
+Observation
+Natural look that is analogous to fundamental-type 
+arithmetic objects
+Rational Attributes
+A numerator and denominator
+Implies in part a class representation with two private  int
+data members
+NumeratorValue and DenominatorValue
+
+--- Page Break ---
+
+5
+Rational Public Behaviors
+Rational arithmetic
+Addition, subtraction, multiplication, and division
+Rational relational
+Equality and less than comparisons
+Practice rule of class minimality
+Rational Public Behaviors
+Construction
+Default construction
+Design decision 0/1
+Specific construction
+Allow client to specify numerator and denominator 
+Copy construction
+Provided automatically
+Assignment
+Provided automatically
+Insertion and extraction
+
+--- Page Break ---
+
+6
+Non-Public Behaviors
+Inspection and mutation of data members
+Clients deal with a Rational object!
+Auxiliary Behaviors
+Operations (necessarily public)
+Arithmetic, relational, insertion, and extraction operations
+Provides the natural form we expect
+Class definition provides a functional form that 
+auxiliary operators use
+Provides commutativity consistency
+For C++ reasons 1 + r and r + 1 would not be 
+treated the same if addition was a member operation
+
+--- Page Break ---
+
+7
+Object a
+Attributes:
+NumeratorValue(1)
+DenominatorValue(2)Object b
+Attributes:
+NumeratorValue(2)
+DenominatorValue(3)Class Rational
+Public interface: Add(), Subtract(),
+Multiply(),Divide(), Equal(),
+LessThan(), Insert(),Extract()
+Data members: NumeratorValue,
+DenominatorValue
+Other members: GetNumerator(), GetDenominator(),
+SetNumerator(), SetDenominator(),
+Instantiation
+Rational a(1,2);Instantiation
+Rational b(2,3);
+Library Components
+Rational.h
+Class definitions and library function prototypes
+Rational.cpp
+Implementation source code – member and auxiliary function definitions
+Auxiliary functions are assisting global functions that provide expected but non-member capabilities
+Rational.obj
+Translated version of Rational.cpp (linkable)
+Rational.lib
+Library version of Rational.obj that is more readily linkable
+
+--- Page Break ---
+
+8
+#include <iostream>
+using namespace std;#include "rational.h"
+int main() {
+Rational r;Rational s;cout << "Enter two rationals(a/b): ";cin >> r >> s;
+Rational Sum = r + s;
+cout << r << " + " << s << " = " << Sum;return 0;
+}MyProgram.cpp
+Making use of the Rational
+class. The header file providesaccess to the class definitionand to auxiliary functionprototypes. The header filedoes not provide member andauxiliary definitions
+Compiler translates the unit and produces MyProgram.obj
+Compiler recognizes that MyProgram.obj does not contain actual definitions of Rational constructor, +, >>, and <<
+Linker is used to combine definitions from the Rational library file with MyProgram.obj to produce MyProgram.exe
+Compiler must be told where to find the Rational library fileProducing MyProgram.exe
+Preprocessor combines the definitions and prototypes iniostream and rational headers along with MyProgram.cpp to produce a compilation unit
+Compiler must be told where to look for Rational.h
+
+--- Page Break ---
+
+9
+Producing MyProgram.exe
+Process
+preprocessor
+directives to
+produce a
+translation
+unit
+MyProgram.exeMyProgram.cpp
+Check
+translation unit
+for legal syntax
+and compile it
+into object file
+MyProgram.objLink object file
+with standard
+library files
+and rational
+library file to
+produce
+executable
+unit
+Rational Header File Overview
+File layout
+Class definition and library prototypes nested within 
+preprocessor statements
+Ensures one inclusion per translation unit
+Class definition precedes library prototypes
+#ifndef RATIONAL_H
+#define RATIONAL_H
+class Rational {
+// …
+} ;// library prototypes 
+…
+#endif
+
+--- Page Break ---
+
+10
+Class Rational Overview
+class Rational {      // from rational.h
+public:
+// for everybody including clients
+protected:
+// for Rational member functions and for// member functions from classes derived// from rational
+private:
+// for Rational member functions
+} ;
+Rational Public Section
+public:
+// default constructorRational();
+// specific constructor
+Rational(int numer, int denom = 1);// arithmetic facilitatorsRational Add(const Rational &r) const;Rational Multiply(const Rational &r) const;
+// stream facilitators
+void Insert(ostream &sout) const;void Extract(istream &sin);
+
+--- Page Break ---
+
+11
+Rational Protected Section
+protected:
+// inspectorsint GetNumerator() const;
+int GetDenominator() const;
+// mutatorsvoid SetNumerator(int numer);void SetDenominator(int denom);
+Rational Private Section
+private:
+// data membersint NumeratorValue;
+int DenominatorValue;
+
+--- Page Break ---
+
+12
+// after the class definition in rational.h
+Rational operator+(
+const Rational &r, const Rational &s);
+Rational operator*(
+const Rational &r, const Rational &s);
+ostream& operator<<(
+ostream &sout, const Rational &s);
+istream& operator>>(istream &sin, Rational &r);Auxiliary Operator Prototypes 
+Auxiliary Operator Importance
+Rational r;
+Rational s;r.Extract(cin);
+s.Extract(cin);
+Rational t = r.Add(s);t.Insert(cout);Rational r;
+Rational s;cin >> r;cin >> s;Rational t = r + s;cout << t;
+Natural look
+Should << be a member?
+Consider
+r << cout;
+
+--- Page Break ---
+
+13
+Const Power
+const Rational OneHalf(1,2);
+cout << OneHalf;              // legal
+cin >> OneHalf;               // illegal
+Rational Implementation
+#include <iostream>     // Start of rational.cpp
+#include <string>using namespace std;#include "rational.h"
+// default constructor
+Rational::Rational() {         
+SetNumerator(0);SetDenominator(1);
+}
+Example
+Rational r;       // r = 0/1Which objects are
+being referenced?Is this necessary?
+
+--- Page Break ---
+
+14
+Remember
+Every class object
+Has its own data members
+Has its own member functions
+When a member function accesses a data member
+By default the function accesses the data member of 
+the object to which it belongs!
+No special notation needed
+Remember
+Auxiliary functions
+Are not class members
+To access a public member of an object, an auxiliary function must use the dot operator on the desired object
+object.member
+
+--- Page Break ---
+
+15
+Specific Constructor
+// (numer, denom) constructor
+Rational::Rational(int numer, int denom) {
+SetNumerator(numer); 
+SetDenominator(denom);
+}
+Example
+Rational t(2,3);   // t = 2/3
+Rational u(2);     // u = 2/1 (why?)
+Inspectors
+int Rational::GetNumerator() const {
+return NumeratorValue;
+}
+int Rational::GetDenominator() const {
+return DenominatorValue;
+}
+Where are the following legal?
+int a = GetNumerator();
+int b = t.GetNumerator();Which object is
+being referenced?
+Why the const?
+
+--- Page Break ---
+
+16
+Numerator Mutator
+void Rational::SetNumerator(int numer) {
+NumeratorValue = numer;
+}
+Where are the following legal?
+SetNumerator(1);
+t.SetNumerator(2);Why no const?
+Denominator Mutator
+void Rational::SetDenominator(int denom) {
+if (denom != 0) {
+DenominatorValue = denom;
+}else {
+cerr << "Illegal denominator: " << denom
+<< "using 1" << endl;
+DenominatorValue = 1;
+}
+}
+Example
+SetDenominator(5);
+
+--- Page Break ---
+
+17
+Addition Facilitator
+Rational Rational::Add(const Rational &r) const {
+int a = GetNumerator();int b = GetDenominator();
+int c = r.GetNumerator();
+int d = r.GetDenominator();return Rational(a*d + b*c, b*d);
+}
+Example
+cout << t.Add(u);
+Multiplication Facilitator
+Rational Rational::Multiply(const Rational &r) 
+const {
+int a = GetNumerator();
+int b = GetDenominator();
+int c = r.GetNumerator();int d = r.GetDenominator();return Rational(a*c, b*d);
+}
+Example
+t.Multiply(u);
+
+--- Page Break ---
+
+18
+Insertion Facilitator
+void Rational::Insert(ostream &sout) const {
+sout << GetNumerator() << '/' << GetDenominator();return;
+}
+Example
+t.Insert(cout);
+Why is sout a reference parameter?
+Basic Extraction Facilitator
+void Rational::Extract(istream &sin) {
+int numer;int denom;
+char slash;
+sin >> numer >> slash >> denom;assert(slash == '/');SetNumerator(numer);SetDenominator(denom);
+return;
+}
+Example
+t.Extract(cin);
+
+--- Page Break ---
+
+19
+Auxiliary Arithmetic Operators
+Rational operator+(
+const Rational &r, const Rational &s) {
+return r.Add(s);
+}
+Rational operator*(
+const Rational &r, const Rational &s) {
+return r.Multiply(s);
+}
+Example
+cout << (t + t) * t;
+Auxiliary Insertion Operator
+ostream& operator<<(
+ostream &sout, const Rational &r) {
+r.Insert(sout);
+return sout;
+}
+Why a reference return? 
+Note we can do either
+t.Insert(cout); cout << endl; // unnatural
+cout << t << endl; // natural
+
+--- Page Break ---
+
+20
+Auxiliary Extraction Operator
+// extracting a Rational
+istream& operator>>(istream &sin, Rational &r) {
+r.Extract(sin);
+return sin;
+}
+Why a reference return? 
+We can do either
+t.Extract(cin);         // unnatural
+cin >> t; // natural
+What’s Happening Here?
+Suppose the following definitions are in effect
+Rational a(2,3);
+Rational b(3,4);
+Rational c(1,2);
+Why do the following statements work
+Rational s(a);
+Rational t = b;c = a
+C++ has automatically provided us a copy constructor and an 
+assignment operator
+
+--- Page Break ---
+
+21
+Copy Construction
+Default copy construction
+Copy of one object to another in a bit-wise manner
+The representation of the source is copied to the target 
+in a bit-by-bit manner
+This type of copy is called shallow copying
+Class developers are free to implement their own copy constructor
+Rational does need a special one, but we will define one for theexperience
+A Rational Copy Constructor
+Rational::Rational(const Rational &r) {
+int a = r.GetNumerator();int b = r.GetDenomiator();
+SetNumerator(a);
+SetDenominator(b);
+}
+Rational s(a);
+Rational t = b;
+
+--- Page Break ---
+
+22
+Gang Of Three
+If it is appropriate to define a copy constructor then
+Consider also defining
+Assignment operator
+Copy source to target and return target
+A = B = C
+Destructor
+Clean up the object when it goes out of scope
+We give the name Gang of three to the
+Copy constructor, assignment operator, and the destructor
+A Rational Assignment Operator
+Rational& Rational::operator =(const Rational &r) {
+int a = r.GetNumerator();int b = r.GetDenomiator();
+SetNumerator(a);
+SetDenominator(b);
+return *this; 
+}
+a = b;
+a = b = c;*this is C++ syntax for the 
+object whose member function was invoked
+
+--- Page Break ---
+
+23
+Rational Destructor
+Rational::~Rational() {
+// nothing to do
+}
+
+
+--- Page Break ---
+

@@ -1,0 +1,588 @@
+1Programmer-defined 
+Functions
+Development of simple functions 
+using value and reference parameters
+JPC and JWD © 2002 McGraw-Hill, Inc.
+Includes description of the interface and the function body
+/G84Interface
+/G8aSimilar to a function prototype, but parameters’ names 
+are required
+/G84Body
+/G8aStatement list with curly braces that comprises its actions
+/G8aReturn statement to indicate value of invocationFunction Definition
+
+--- Page Break ---
+
+2float CircleArea (float r) {
+const float Pi = 3.1415;
+return Pi*r*r ;
+}Function Definition
+FunctionbodyReturnstatementLocal
+objectdefinitionFormalparameterReturntypeFunctionname
+Function Invocation
+cout << CircleArea(MyRadius) << endl;
+Toprocess theinvocation, thefunctionthat contains the
+insertionstatement is suspendedand CircleArea() does its
+job. Theinsertionstatement is thencompleted usingthevalue
+suppliedbyCircleArea() .Actualparameter
+
+--- Page Break ---
+
+3Simple Programs
+Single file
+/G84Include statements
+/G84Using statements
+/G84Function prototypes
+/G84Function definitions
+Single file
+/G84Include statements
+/G84Using statements
+/G84Function prototypes
+/G84Function definitions
+Functions use value parameter passing
+/G84Also known as pass by value or call by value
+/G8aThe actual parameter is evaluated and a copy is given to 
+the invoked function
+#include <iostream>
+using namespace std;float CircleArea(float r);
+// main(): manage circle computation
+int main() {
+cout << "Enter radius: ";float MyRadius;
+cin >> MyRadius;
+float Area = CircleArea(MyRadius);cout << "Circle has area " << Area;return 0;
+}
+// CircleArea(): compute area of radius r circle
+float CircleArea(float r) {
+const float Pi = 3.1415;return Pi*r*r ;
+}
+
+--- Page Break ---
+
+4Value Parameter Rules
+Formal parameter is created on function invocation and it is 
+initialized with the value of the actual parameter
+Changes to formal parameter do not affect actual parameter
+Reference to a formal parameter pr oduces the value for it in the
+current activation record
+New activation record for every function invocation
+Formal parameter name is on ly known within its function
+Formal parameter ceases to exis t when the function completes
+Activation record memory is automatically released at function 
+completion
+Return
+valueFunctionInputstream
+dataOutputstream
+dataInformation to function
+can comefrom
+parametersoraninput
+stream
+Parameters
+Information from
+functioncancome
+throughareturn
+valueoranoutput
+stream
+
+--- Page Break ---
+
+5PromptAndRead()
+// PromptAndRead(): prompt and extract next
+// integer
+int PromptAndRead() {
+cout << "Enter number (integer): ";int Response;cin >> Response;
+return Response;
+}
+Sum()
+// Sum(): compute sum of integers in a ... b
+int Sum(int a, int b) {
+int Total = 0;
+f o r( i n ti=a ;i< =b ; ++i) {
+Total += i;
+}return Total;
+}
+
+--- Page Break ---
+
+6Problem
+Definition
+/G84Input two numbers that represent a range of integers and 
+display the sum of the intege rs that lie in that range
+Design
+/G84Prompt user and read the first number
+/G84Prompt user and read the second number
+/G84Calculate the sum of integers in  the range smaller...larger by 
+adding in turn each integer in that range
+/G84Display the sum
+Range.cpp
+#include <iostream>
+using namespace std;
+int PromptAndRead();
+int Sum(int a, int b);
+int main() {
+int FirstNumber = PromptAndRead();int SecondNumber = PromptAndRead();int RangeSum = Sum(FirstNumber , SecondNumber);cout << "The sum from " << FirstNumber
+<< " to " << SecondNumber<< " is " << RangeSum << endl;
+return 0;
+}
+
+--- Page Break ---
+
+7Range.cpp
+// PromptAndRead(): prompt &extract next integer
+int PromptAndRead() {
+cout <<"Enter number(integer): ";
+int Response;
+cin >>Response;
+returnResponse;
+}
+// Sum(): compute sumof integersin a...b
+int Sum(inta, int b){
+int Total =0;
+for (int i =a;i <=b; ++i){
+Total+= i;
+}
+returnTotal;
+}
+A block is a list of statements within curly braces
+Blocks can be put anywhere a statement can be put
+Blocks within blocks are nested blocks
+An object name is known only wi thin the block in which it is 
+defined and in nested blocks of that block
+A parameter can be considered to  be defined at the beginning 
+of the block corresponding to the function bodyBlocks and Local Scope
+A block is a list of statements within curly braces
+
+--- Page Break ---
+
+8Local Object Manipulation
+void f() {
+i n ti=1 ;cout << i << endl;
+// insert 1
+{
+int j = 10;cout << i << j << endl;
+// insert 1 10
+i=2 ;
+cout << i << j << endl // insert 2 10
+}
+cout << i << endl; // insert 2
+cout << j << endl; // illegal
+}
+Name Reuse
+If a nested block defines an ob ject with the same name as 
+enclosing block, the new definition is in effect in the nested block
+
+--- Page Break ---
+
+9However, Don’t Do This At Home
+void f() {
+{
+i n ti=1 ;cout << i << endl; // insert 1{
+cout << i << endl; // insert 1char i = 'a';
+cout << i << endl; // insert a
+}cout << i << endl; // insert 1
+}cout << i << endl; // illegal insert
+}
+Global Scope
+Objects  not defined within a block are global objects
+A global object can be used by an y function in the file that is 
+defined after the global object
+/G84It is best to avoid programmer-defined global objects
+/G8aExceptions tend to be important constants
+Global objects with appropriate declarations can even be used inother program files
+/G84cout , cin, and cerr are global objects that are defined in 
+by the iostream library
+Local objects can reuse a global object's name
+/G84Unary scope operator :: can pr ovide access to global object 
+even if name reuse has occurred
+
+--- Page Break ---
+
+10Don’t Do This At Home Either
+i n ti=1 ;
+int main() {
+cout << i << endl; // insert 1{
+char i = 'a';cout << i << endl; // insert a: : i=2 ;
+cout << i << endl; // insert a
+cout << ::i << endl; // insert 2
+}cout << i << endl;
+return 0;
+}
+Consider
+int main() {
+int Number1 = PromptAndRead();int Number2 = PromptAndRead();
+if (Number1 > Number2) {
+Swap(Number1, Number2);
+}cout << "The numbers in sorted order:"
+<< Number1 << ", " << Number2 << endl;
+return 0;
+}
+
+--- Page Break ---
+
+11Using
+void Swap(int a, int b) {
+int Temp = a;a=b ;
+b = Temp;
+return;
+}
+Doesn’t do what we want!
+
+--- Page Break ---
+
+12Consider
+A parameter passing style where
+/G84Changes to the formal parameter change the actual 
+parameter
+That would work!
+
+--- Page Break ---
+
+13Reference Parameters
+If the formal argument declaration is a reference parameter 
+then
+/G84Formal parameter becomes an aliasfor the actual parameter
+/G8aChanges to the formal parameter change the actual 
+parameter
+Function definition determines whether a parameter’s passing style is by value or by reference
+/G8aReference parameter form
+ptypei&pnamei
+void Swap(int &a, int &b)
+Reconsider
+int main() {
+int Number1 = PromptAndRead();int Number2 = PromptAndRead();
+if (Number1 > Number2) {
+Swap(Number1, Number2);
+}cout << "The numbers in sorted order: "
+<< Number1 << ", " << Number2 << endl;
+return 0;
+}
+
+--- Page Break ---
+
+14Using
+void Swap(int &a, int &b) {
+int Temp = a;a=b ;
+b = Temp;
+return;
+}
+Returnstatementnot
+necessaryfor voidfunctionsPassedbyreference-- inan
+invocationtheactual
+parameter is givenrather
+thanacopy
+Consider
+i n ti=5 ;
+i n tj=6 ;Swap(i, j);
+i n ta=7 ;
+i n tb=8 ;Swap(b, a);void Swap(int &a, int &b) {
+int Temp = a;a=b ;
+b = Temp;
+return;
+}
+
+--- Page Break ---
+
+15Extraction
+Function to extract a value from a given stream
+void GetNumber(int &MyNumber, istream &sin) {
+sin >> MyNumber;
+return;
+}
+Whyis thestream a
+referenceparameter?Whyis MyNumber areferenceparameter?
+Getnum.cpp
+int main() {
+ifstream fin("mydata.txt");
+int Number1;
+int Number2;
+cout <<"Enter number:";
+GetNumber(Number1, cin);
+// notneeded: cout <<"Enternumber:";
+GetNumber(Number2, fin);
+if (Number1> Number2){
+Swap(Number1, Number2);
+}
+cout <<"Thenumbersin sorted order:"
+<< Number1<< ", " <<Number2 <<endl;
+return0;
+}
+
+--- Page Break ---
+
+16Constant Parameters
+The const modifier can be applied to formal parameter declarations
+/G84const indicates that the function may not modify the parameter
+void PromptAndGet(int &n, const string &s) {
+cout << s ;
+cin >> n ;// s = "Got it";
+// illegal assignment
+} // caught by compiler
+/G84Sample invocation
+int x;
+PromptAndGet(x, "Enter number (n): ");
+Constant Parameters
+Usefulness
+/G84When we want to pass an obje ct by reference, but we do 
+not want to let the called function modify the object
+Usefulness
+/G84When we want to pass an obje ct by reference, but we do 
+not want to let the called function modify the object
+Question
+/G84Why not just pass the object by value?
+Answer
+/G84?
+Usefulness
+/G84When we want to pass an obje ct by reference, but we do 
+not want to let the called function modify the object
+Question
+/G84Why not just pass the object by value?
+Answer
+/G84For large objects, making a copy of the object can be very inefficient
+
+--- Page Break ---
+
+17Passing Constant Rectangles
+void DrawBoxes(constRectangleShape &R1,
+constRectangleShape&R2) {
+R1.Draw();R2.Draw();
+}
+int ApiMain() {
+SimpleWindowDemo("Demo Program");Demo.Open();RectangleShape Rect1(Demo, 3,2, Blue);RectangleShape Rect2(Demo, 6,5, Yellow);DrawBoxes(Rect1,Rect2);return0;
+}
+Default Parameters
+Observations
+/G84Our functions up to this point required that we explicitly 
+pass a value for each of the function parameters
+Observations
+/G84Our functions up to this point required that we explicitly pass a value for each of the function parameters
+/G84It would be convenient to define functions that accept a varying number of parameters
+Observations
+/G84Our functions up to this point required that we explicitly pass a value for each of the function parameters
+/G84It would be convenient to define functions that accept a varying number of parameters
+Default parameters
+/G84Allows programmer to define a default behavior
+/G8aA value for a parameter ca n be implicitly passed
+/G8aReduces need for similar functi ons that differ only in the 
+number of parame ters accepted
+
+--- Page Break ---
+
+18Default Parameters
+If the formal argument declaration is of the form
+ptypeipnamei=dvaluei
+then
+/G84If there is no ithargument in the function invocation, 
+pnameiis initialized to dvaluei
+/G84The parameter pnameiis an optional value parameter
+/G8aOptional reference parame ters are also permitted
+Consider
+void PrintChar(cha r c = '=', intn=8 0 ){
+f o r( i n ti=0 ;i<n ; ++i)
+cout << c;
+}
+What happens in the following invocations?
+PrintChar('*', 20);
+PrintChar('-');
+PrintChar();
+
+--- Page Break ---
+
+19Default Parameters
+Default parameters must appear after any mandatory 
+parameters
+Bad example
+void Trouble(in tx=5 ,double z, double y) {
+...
+}
+Cannotcomebefore
+mandatoryparameters
+Default Parameters
+Consider
+bool GetNumber(int &n, istream &sin = cin) {
+return sin >> n ;
+}
+Some possible invocations
+int x, y, z;
+ifstream fin("Data.txt");
+GetNumber(x, cin);
+GetNumber(y);GetNumber(z, fin);
+Design your functions for ease and reuse!
+
+--- Page Break ---
+
+20Function Overloading
+A function name can be overloaded
+/G84Two functions with the same name but with different 
+interfaces
+/G8aTypically this means differe nt formal parameter lists
+/G84Difference in number of parameters
+Min(a, b, c)
+Min(a, b)
+/G84Difference in types of parameters
+Min(10, 20)
+Min(4.4, 9.2)
+Function Overloading
+int Min(inta, int b){
+cout <<"Using int min()" <<endl;if (a >b)
+returnb;
+else
+returna;
+}doubleMin(double a,double b) {
+cout <<"Using doublemin()"<< endl;
+if (a >b)
+returnb;
+else
+returna;
+}
+
+--- Page Break ---
+
+21Function Overloading
+int main() {
+int a = 10;int b = 20;
+double x = 4.4;
+double y = 9.2;
+int c = Min(a, b);cout << "c is " << c << endl;int z = Min(x, y);
+cout << "z is " << z << endl;
+return 0;
+}
+Function Overloading
+Compiler uses function overload resolution to call the most 
+appropriate function
+/G84First looks for a function definition where the formal and actual parameters exactly match
+/G84If there is no exact match, th e compiler will attempt to cast 
+the actual parameters to ones used by an appropriate function
+The rules for function defini tion overloading are very 
+complicated
+/G84Advice
+/G8aBe very careful when  using this feature
+
+--- Page Break ---
+
+22Random Numbers
+Generating a sequence of random numbers is often useful 
+/G84In a game, it ensures that a player does not see
+the same behavior each time
+/G84In a simulation of  a complex system,
+random numbers can be used tohelp generate random events
+/G8aCar crash in a simulationof a highway system
+/G8aLikelihood of a gene in cell mutation
+/G8aWeather simulation
+Uniform Random Numbers
+Uniform random number sequence
+/G84A sequence of random numbers where
+/G8aEach value in the sequence is drawn from the same range of numbers
+/G8aIn each position of the sequence, any value in the number range is equally likely to occur
+
+--- Page Break ---
+
+23Random Numbers
+Examples
+/G84Generate a uniform random
+number sequence in the range1 to 6
+/G8aUse a fair six-sided die
+/G8aEach roll represents a new random number
+/G84Generate a uniform random numbersequence in the range 1 to 2
+/G8aUse a fair coin
+/G84Heads: 1, Tails: 2
+Random Numbers
+We can write an algorithmfor generating what lookslike random numbers
+Because it’s an algorithm,we know the rules for generating the next number
+/G84The generated numbers are not really random
+/G8aThey are properly called pseudorandom numbers30 21 9 28 29...
+
+--- Page Break ---
+
+24Stdlib Library
+Provides in part functions for generating pseudorandom 
+numbers
+/G84rand()
+/G8aReturns a uniform pseudorandom unsigned int from the 
+inclusive interval 0 to RAND_MAX
+#include <iostream>
+#include <string>#include <cstdlib>using namespace std;
+int main() {
+f o r( i n ti=1 ;i< =5 ; ++i)
+cout << rand() << endl;
+return 0;
+}
+Different Sequences
+To produce a different sequence, invoke
+void srand(unsigned int);
+Consider seed.cpp
+int main() {
+cout << "Enter a seed: ";unsigned int Seed;cin >> Seed;srand(Seed);
+f o r( i n ti=1 ;i< =5 ; ++i)
+cout << rand() << endl;
+return 0;
+}
+
+--- Page Break ---
+
+25Different Sequences
+To automatically get a different sequence each time
+/G84Need a method of setting the seed to a random value
+/G8aThe standard method is to use the computer's clock as 
+the value of the seed
+/G8aThe function invocation time() can be used
+/G84Returns an integral value of type time_t
+/G84Invocation time(0) returns a suitable value for 
+generating a random sequence
+Randseed.cpp
+#include <iostream>
+#include <string>#include <cstdlib>#include <ctime>using namespace std;
+int main() {
+srand((unsigned int) time(0));
+f o r( i n ti=1 ;i< =5 ; ++i)
+cout << rand() << endl;
+return 0;
+}
+
+--- Page Break ---
+
+26Recursion
+Recursion is the ability of a function to call itself. 
+Consider the mathematical function n!
+n! =  n* (n-1) … * 2 * 1
+is not mathematically  precise because we use an ellipsis (…). 
+Consider the following formal definition
+/G84n! = 0, if n= 0
+/G84n! = n* (n-1)!, if n> 0
+/G8aThe factorial function is defined in terms of itself
+Consider
+#include <iostream>
+#include <string>using namespace std;
+int main() {
+cout << "Enter a positive integer: ";int n;cin >> n;cout << n << "!="< <Factorial(n) << endl;
+return 0;
+}
+
+--- Page Break ---
+
+27Using
+int Factorial(int n) {
+if (n == 0) {
+return 1;
+}
+else {
+return n * Factorial(n-1);
+}
+}
+C++ function mirrors the mathematical factorial  definition
+/G84If the value of nis 0, the value 1 is returned.
+/G84Otherwise, the product of nand Factorial(n-1) is 
+returned.
+Recursion Visualization
+Consider cout <<n!="< <Factorial(3) << endl;
+cout << "n! = " << Factorial(3) << endl;
+n = 3
+n = 2
+n = 1
+n = 0Factorial(3) = 3 * Factorial(2) = 3 * 2 = 6
+Factorial(2) = 2 * Factorial(1) = 2 * 1 = 2
+Factorial(1) = 1 * Factorial(0) = 1 * 1 = 1
+Factorial(0) =                            1Activation records
+call Factorial(0)return 1call Factorial(1)call Factorial(2)call Factorial(3)
+return 1return 2return 6
+
+--- Page Break ---
+

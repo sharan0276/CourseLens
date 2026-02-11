@@ -1,0 +1,377 @@
+1Basics
+Machine, software, and program 
+design
+JPC and JWD © 2002 McGraw-Hill, Inc.
+Computer Organization
+CPU - central processing unit
+Memory
+Input devices
+Output devices
+CPU - central processing unit
+Where decisions are made, computations are performed, 
+and input/output requests are delegated
+Memory
+Stores information being processed by the CPU
+Input devices
+Allows people to supply information to computers
+Output devices
+Allows people to receive information from computers
+
+--- Page Break ---
+
+2Computer Organization
+Memory
+CPUInput
+DevicesOutput
+Devices
+CPU
+Brains of the computer
+Arithmetic calculations are performed using the Arithmetic/Logical Unit  or ALU
+Control unit decodes and executes instructions
+Arithmetic operations are performed using binary number system
+
+
+--- Page Break ---
+
+3Control Unit
+The fetch/execute cycle is 
+the steps the CPU takes to execute an instruction
+Performing the action specified by an instruction is known as 
+executing the 
+instruction
+The program counter (PC) holds the memory address of the next instructionFetch the instruction to
+which the PC points
+Increment the PC
+Execute the fetched
+instruction
+Input and Output Devices
+Accessories that allow computer to perform specific tasks
+Receive information for processing
+Return the results of processing
+Store information
+Accessories that allow computer to perform specific tasks
+Receive information for processing
+Return the results of processing
+Store information
+Common input and output devices
+Speakers Mouse Scanner
+Printer Joystick CD-ROM
+Keyboard Microphone DVD
+Accessories that allow computer to perform specific tasks
+Receive information for processing
+Return the results of processing
+Store information
+Common input and output devices
+Speakers Mouse Scanner
+Printer Joystick CD-ROM
+Keyboard Microphone DVD
+Some devices are capable of both input and output
+Floppy drive Hard drive Magnetic tape
+units
+
+--- Page Break ---
+
+4Monitor
+Display device that operates like a television
+Also known as CRT (cathode ray tube)
+Controlled by an output device called a graphics card
+Displayable area
+Measured in dots per inch, dots
+are often referred to aspixels (short for pictureelement)
+Standard resolutionis 640 by 480
+Many cards supportresolution of 1280 by1024 or better
+Number of colors supported varies from 16 to billions1280
+pixels
+across
+screen1024
+pixels
+down
+screen
+Application software
+Programs designed to perform specific tasks that are 
+transparent to the user
+System software
+Programs that support the execution and development of other programs
+Two major types
+Operating systems
+Translation systemsSoftware
+
+--- Page Break ---
+
+5Application Software
+Application software is the software that has made using 
+computers indispensable and popular
+Common application software
+Word processors
+Desktop publishing programs
+Spreadsheets
+Presentation managers
+Drawing programs
+Application software is the software that has made using computers indispensable and popular
+Common application software
+Word processors
+Desktop publishing programs
+Spreadsheets
+Presentation managers
+Drawing programs
+Learning how to develop application software is our focus
+Examples
+Windows®, UNIX®, Mac OS X®
+Controls and manages the computing resources
+Important services that an operating system provides
+File system
+Directories, folders, files
+Commands that allow for manipulation of the file system
+Sort, delete, copy
+Ability to perform input and output on a variety of devices
+Management of the running systemsOperating System
+
+--- Page Break ---
+
+6Translation System
+Set of programs used to develop software
+A key component of a translation system is a translator
+Some types of translators
+Compiler
+Converts from one language to another
+Linker
+Combines resources
+Examples
+Microsoft Visual C++®, CBuilder®, g++, Code Warrior®
+Performs compilation, linking, and other activities.
+Software Development Activities
+Editing
+Compiling
+Linking with precompiled files
+Object files
+Library modules
+Loading and executing
+Viewing the behavior of the program
+
+--- Page Break ---
+
+7Software Development Cycle
+Compile
+LinkLibrary routines
+Other object files
+ThinkEdit
+Load
+ExecuteSource Program
+IDEs
+Integrated Development Environments or IDEs
+Supports the entire software development cycle
+E.g., MS Visual C++, Borland, Code Warrior
+Provides all the capabilities for developing software
+Editor
+Compiler
+Linker
+Loader
+Debugger
+Viewer
+
+
+--- Page Break ---
+
+8Engineering Software
+Software engineering
+Area of computer science concerned with building large 
+software systems
+Challenge
+Tremendous advances in hardware have not been accompanied by comparable advances in software
+Complexity Trade-off
+System complexity tends to grow as the system becomes more user friendly
+High
+LowComplexityTotal Software
+Complexity
+User Simplicity
+
+--- Page Break ---
+
+9Software Engineering Goals
+Reliability
+Understandability
+Cost Effectiveness
+Adaptability
+Reusability
+Reliability
+An unreliable life-critical system can be fatal
+Understandability
+Future development is difficult if software is hard to understand
+Cost Effectiveness
+Cost to develop and maintain should not exceed profit
+Adaptability
+System that is adaptive is easier to alter and expand
+Reusability
+Improves reliability, maintainability, and profitability
+Abstraction
+Extract the relevant properties while ignoring inessentials
+Encapsulation
+Hide and protect essential information through a controlled 
+interface
+Modularity
+Hierarchy
+Abstraction
+Extract the relevant properties while ignoring inessentials
+Encapsulation
+Hide and protect essential information through a controlled interface
+Modularity
+Dividing an object into smaller modules so that it is easier to 
+understand and manipulate
+Hierarchy
+Abstraction
+Extract the relevant properties while ignoring inessentials
+Encapsulation
+Hide and protect essential information through a controlled 
+interface
+Modularity
+Dividing an object into smaller modules so that it is easier to 
+understand and manipulate
+Hierarchy
+Ranking or ordering of objects based on some relationship between themSoftware Engineering Principles
+Abstraction
+Encapsulation
+Modularity
+Hierarchy
+Abstraction
+Extract the relevant properties while ignoring inessentials
+Encapsulation
+Modularity
+Hierarchy
+
+--- Page Break ---
+
+10
+Extract the relevant object properties while ignoring inessentials
+Defines a view of the object
+Example - car
+Car dealer views a car from selling features standpoint 
+Price, length of warranty, color, …
+Mechanic views a car from systems maintenance standpoint
+Size of the oil filter, type of spark plugs, …Abstraction
+Price? Oil change?
+Encapsulation
+Steps
+Decompose an object into parts
+Hide and protect essential information
+Supply interface that allows information to be modified in a 
+controlled and useful manner 
+Internal representation can be changed without affecting other system parts
+Example - car radio
+Interface consists of controlsand power and antenna connectors
+The details of how it works is hidden
+To install and use a radio
+Do not need to know anything about the radio’s electronics
+
+
+--- Page Break ---
+
+11Modularity
+Dividing an object into smaller pieces or modules so that the 
+object is easier to understand and manipulate
+Most complex systems are modular
+Example - Automobile can be decomposed into subsystems
+Cooling system
+Radiator Thermostat Water pump
+Ignition system
+Battery Starter Spark plugs
+Hierarchy
+Hierarchy 
+Ranking or ordering of objects based on some relationship between them
+Help us understand complex systems
+Example - a company hierarchy helps employees understand the company and their positions within it
+For complex systems, a useful way of ordering similar abstractions is a taxonomy from least general to most general
+
+--- Page Break ---
+
+12Northern Timber Wolf Taxonomy
+Kingdom Animalia
+Phylum Chordata
+Class Mammalia
+Order Carnivora
+Family Caninae
+Genus Canis
+Species Canis lupus
+Subspecies Canis lupus occidentalis 
+Northern Timber Wolf
+OO Design and Programming
+Object-oriented design and programming methodology supports 
+good software engineering
+Promotes thinking in a way that models the way we think and interact with the real world
+Example - watching television
+The remote is a physical object withproperties
+Weight, size, can send messageto the television
+The television is also a physical objectwith various properties
+
+
+--- Page Break ---
+
+13Objects
+An object is almost anything with the following characteristics
+Name
+Properties
+The ability to act upon receiving a message
+Basic message types
+Directive to perform an action
+Request to change one of its properties
+The individual digits of a binary number are referred to as bits
+Each bit represents a power of two
+01011  =   0 • 24+   1 • 23+   0 • 22+   1 • 21+   1 • 20=   11
+00010  =   0 • 24+   0 • 23+   0 • 22+   1 • 21+   0 • 20=     2Binary Arithmetic
+00010
++ 01011
+01101Binary
+addition2
++ 11
+13Equivalentdecimaladdition
+
+--- Page Break ---
+
+14Binary Arithmetic
+5
+×3
+15Equivalent decimal 
+multiplication
+0101
+× 0011
+0101
+0101
+0000
+0000      
+0001111Binary 
+multiplication
+Two’s Complement
+Representation for signed binary numbers
+Leading bit is a sign bit
+Binary number with leading 0 is positive
+Binary number with leading 1 is negative
+Magnitude of positive numbers is just the binary representation
+Magnitude of negative numbers is found by
+Complement the bits
+Replace all the 1's with 0's, and all the 0's with 1's
+Add one to the complemented number
+The carry in the most significant bit position is thrown away when performing arithmetic
+
+--- Page Break ---
+
+15Two’s Complement
+Performing two's complement on the decimal 7 to get -7
+Using a five-bit representation
+7  =  00111   Convert to binary
+11000   Complement the bits
+11000   Add 1 to the complement
++ 00001
+11001   Result is  -7 in two's complement
+Two's Complement Arithmetic
+Computing 8 - 7 using a two's complement representation with five-bit numbers
+8 - 7  =  8 + (-7)    =  1
+01000  Two's complement of 811001  Two's complement of -7
+01000  Add 8 and -7
++  11001
+100001
+00001  Is the five-bit resultThrow away the 
+high-order
+carry as we are 
+using a five bit representation
+
+--- Page Break ---
+

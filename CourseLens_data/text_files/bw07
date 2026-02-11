@@ -1,0 +1,214 @@
+1The Class Construct
+Defining objects with attributes 
+and behavior
+JPC and JWD © 2002 McGraw-Hill, Inc.
+Class Types
+Class construct
+Allows programmers to define new data types for 
+representing information
+Class type objects can have both attribute components and behavior components
+Provides the object-oriented programming in C++
+Class construct
+Allows programmers to define new data types for representing information
+Class type objects can have both attribute components and behavior components
+Provides the object-oriented programming in C++
+Example we shall consider is
+RectangleShape
+
+--- Page Break ---
+
+2
+Terminology
+Client
+Program using a class
+Object behaviors
+Realized in C++ via member functions (methods)
+Object attributes
+Are known as data members in C++
+Client
+Program using a class
+Object behaviors
+Realized in C++ via member functions (methods)
+RectangleShapes can be drawn or resized
+Object attributes
+Are known as data members in C++
+Client
+Program using a class
+Object behaviors
+Realized in C++ via member functions (methods)
+RectangleShapes can be drawn or resized
+Object attributes
+Are known as data members in C++
+RectangleShapes have width, height, position, color
+Member Functions
+Provide a controlled interface to data members and object 
+access and manipulation
+Create objects of the class
+Inspect, mutate, and manipulate object of the class
+Can be used to keep data members in a correct state
+SetSize()
+SetColor()
+Draw()
+
+--- Page Break ---
+
+3
+Member Functions
+Constructors
+Member functions that initialize an object during its 
+definition
+RectangleShape R(W, x, y, c, w, h);
+Factoid
+Constructors do not have a type
+Considered superfluous
+Member Functions
+Inspectors
+Member functions that act as a messenger that returns the 
+value of an attribute
+Example
+RectangleShapes have an inspector GetColor()
+color CurrColor = R.GetColor();
+
+--- Page Break ---
+
+4
+Member Functions
+Mutators
+Changes the value of an attribute
+Example
+RectangleShapes have a mutator SetColor()
+R.SetColor(Black);
+Member Functions
+Facilitators
+Causes an object to perform some action or service
+Example
+RectangleShapes have a facilitator Draw()
+R.Draw();
+
+--- Page Break ---
+
+5
+A Simple RectangleShape Class
+Consider a simpler version of the RectangleShape than what is 
+defined in rect.h
+Giving the class definition notthe implementation
+The definition in rect.h uses inheritance and member functions with default parameters
+If you are wondering what is missing
+Default constructor parameters
+Member function
+Erase()
+Inherited member functions
+HasBorder(), SetBorder(),  and ClearBorder()
+#ifndef RECT_SHAPE_H
+#define RECT_SHAPE_H#include "ezwin.h"class RectangleShape {
+public:
+// constructorRectangleShape(SimpleWindow &Window,
+float XCoord, float YCoord, const color &c,
+float Width, float Height);
+// facilitatorvoid Draw();SimpleRectangleShapeHeaderFile
+Passed by reference, do not want 
+a copy of the window
+ezwin.h get us definitions of SimpleWindow and colorAccess
+right
+indicates 
+no 
+limitations 
+on who 
+can use 
+these 
+membersPreprocessor directives
+
+--- Page Break ---
+
+6
+// inspectors
+color GetColor() const;float GetWidth() const;
+float GetHeight() const;
+void GetSize(float &Width, float &Height)
+const;
+void GetPosition(float &XCoord, float &YCoord)
+const;
+SimpleWindow& GetWindow() const;Simple RectangleShape
+Reference return, 
+brings actual window (not a copy)Indicates the member functions won’t change the object
+// mutators
+void SetColor(const color &c);
+void SetPosition(float XCoord, float YCoord);void SetSize(float Width, float Height);Simple RectangleShape
+Lack of const indicate the member 
+function might change the object
+
+--- Page Break ---
+
+7
+private:
+// data membersSimpleWindow &Window;
+float thisXCenter;
+float thisYCenter;color thisColor;float thisWidth;float thisHeight;
+};
+#endifSimple RectangleShape
+A client cannot 
+directly access either private or protected data membersAccess right
+Close of #ifndef directive
+Access Tests
+Consider
+SimpleWindow W("Testing", 20, 10);
+RectangleShape R(W, 2, 2, Blue, 4, 3);
+const RectangleShape S(W, 15, 10, Red, 5, 6);
+Can we do the following?
+color c = R.GetColor();
+color d = S.GetColor();
+color d = R.thisColor;
+R.DetColor(Yellow);
+S.SetColor(Black);
+
+--- Page Break ---
+
+8
+The RectangleShape Class
+Public access
+All clients and class members
+have access to the publicmembers
+Private access
+Only classmembershave accessto theprivatemembers
+Public data
+members and
+member functionsPrivate data
+members and
+member functions
+Access from
+outside of classAccess
+denied
+O: R1
+DM:  Window: &W,
+Color: Cyan,
+XCenter: 1, YCenter: 4
+Width: 3, Height: 3InstantiationsC: RectangleShape
+ DM: Window, Color,
+XCenter, YCenter,
+Width, Height
+MF: Draw(), GetColor(), GetSize(),
+GetWidth(), GetHeight(), GetPosition(),
+ GetWindow(), SetColor(),
+SetPosition(),SetSize()
+O: R2
+DM:  Window: &W,
+Color: Red,
+XCenter: 6, YCenter: 4
+Width: 1, Height: 2
+
+--- Page Break ---
+
+9
+#include "rect.h”
+SimpleWindow ColorWindow("Color Palette", 8.0, 8.0);int ApiMain() {
+const int SideSize = 1;float XPosition = 1.5;const float YPosition = 4;ColorWindow.Open();
+RectangleShape ColorPatch(ColorWindow,
+XPosition, YPosition, White, SideSize, SideSize);
+for (int c = Red; c <= Magenta; c = color(c + 1)) {
+ColorPatch.SetColor(color(c));ColorPatch.SetPosition(XPosition, YPosition);ColorPatch.Draw();XPosition += SideSize;
+}return 0;
+}
+
+
+--- Page Break ---
+
