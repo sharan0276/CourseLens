@@ -1,0 +1,7 @@
+CourseLens_data/
+Milestone1.pptx
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+
