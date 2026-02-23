@@ -64,7 +64,7 @@ class ImageExtractor:
             for rel in shape.part.rels.values():
                 if "image" in rel.reltype:
                     image_blob = rel.target_part.blob
-                    image_filename = f"{os.path.basename(filepath).replace('.pptx', '')}_slide_{slide_number}_image_{shape.shape_id}.png"
+                    image_filename = f"{os.path.basename(filepath).replace('.pptx', '')}_slide_{slide_number}_image_{shape.shape_id}.emf"
                     image_path = os.path.join(self.image_folder_path, image_filename)
                     with open(image_path, "wb") as f:
                         f.write(image_blob)

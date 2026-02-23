@@ -6,6 +6,7 @@ from pptx.enum.shapes import MSO_SHAPE_TYPE
 from domain.slide import Slide
 from services.ingestion.content_extractor import ContentExtractor
 from services.ingestion.image_extractor import ImageExtractor
+import re
 
 
 class PPTXParser:
@@ -22,7 +23,10 @@ class PPTXParser:
         """
         presentation = Presentation(filepath)
         slides = []
-
+        
+        # Extracting digits from filepath
+        lec_num = int(re.search(r'\d+', filepath).group())
+        only_images = False
         for slide_number, slide in enumerate(presentation.slides, start = 1):
 
             #Extract title
@@ -31,6 +35,10 @@ class PPTXParser:
             txt_blocks = self.content_extractor.extract(slide, slide_number)
             images = self.image_extractor.extract(slide, slide_number, filepath)
 
-            slides.append(Slide(slide_number = slide_number, title = title, content = txt_blocks, images = images, source_file = os.path.basename(filepath)))
+            if not txt_blocks :
+                only_images = True
+
+            slides.append(Slide(slide_number = slide_number, title = title, content = txt_blocks, images = images, source_file = os.path.basename(filepath), lecture_number = lec_num, source_type = "pptx", only_images = only_images))
+            only_images = False                 
 
         return slides
