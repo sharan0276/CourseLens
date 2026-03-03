@@ -41,10 +41,10 @@ def main():
             google_api_key=os.environ.get("GEMINI_API_KEY", "dummy_key"),
         )
     
-    pipeline = RAGPipeline(llm=llm, embeddings=embeddings, search_type=args.search_type)
+    pipeline = RAGPipeline(llm=llm, embeddings=embeddings, search_type=args.search_type,data_dir='CourseLens_data/processed_data')
 
-    #if args.ingest:
-    #    pipeline.ingest_data()
+    if args.ingest:
+        pipeline.ingest_data()
         
     if args.query:
         print(f"\nQuestion: {args.query}")
