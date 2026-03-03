@@ -11,7 +11,7 @@ class IngestionService:
     """
     Responsible for orchestrating the ingestion process.
     """
-    def __init__(self, db_path: str = "./CourseLens_data/chroma_db"):
+    def __init__(self, db_path: str = "./courselens_db"):
         self.pptx_parser = PPTXParser(image_folder_path="CourseLens_data/images")
         self.slide_cleaner = SlideCleaner()
         self.chunk_builder = ChunkBuilder()
