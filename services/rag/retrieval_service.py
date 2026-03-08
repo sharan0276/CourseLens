@@ -33,7 +33,7 @@ class RetrievalService:
         retrieved_docs = self._handle_image_slides(retrieved_docs)
 
         # Step 3: Parent-Child Swap (Broader Context)
-        retrieved_docs = self._parent_child_swap(retrieved_docs)
+        #retrieved_docs = self._parent_child_swap(retrieved_docs)
 
         # Step 4: Deduplicate (keep best version of each slide)
         retrieved_docs = self._deduplicate(retrieved_docs)
@@ -54,7 +54,10 @@ class RetrievalService:
             title = doc.metadata.get("title", "")
             slide = doc.metadata.get("slide_number", "None")
             lecture = doc.metadata.get("lecture_number", "")
-            print(f"ID: {chunk_type} - {title} - Slide {slide} - Lecture {lecture}")
+            if chunk_type == "parent":
+                print(f"ID: {chunk_type} - title {title} - Lecture {lecture}")
+            else:
+                print(f"ID: {chunk_type} - title {title} - Slide {slide} - Lecture {lecture}")
         print("------------------------\n")
 
 # Image Only Slide Handler - currently will be fetching the next and previous slide to pack some context to the LLM
@@ -67,7 +70,7 @@ class RetrievalService:
         result = []
         for doc in docs:
             if doc.metadata.get("only_images"):
-                neighbors = self._fetch_neighbors(doc)
+                neighbors = self._fetch_neighbours(doc)
                 result.extend(neighbors)
             else:
                 result.append(doc)

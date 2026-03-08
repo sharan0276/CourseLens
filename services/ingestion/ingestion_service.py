@@ -6,6 +6,7 @@ from services.ingestion.cleaner import SlideCleaner
 from services.chunking.chunk_builder import ChunkBuilder
 from services.embedding.embedder import Embedder
 from db.vector_store import VectorStore
+from services.ingestion.emf_to_png import convert_all_emfs_in_directory
 
 class IngestionService:
     """
@@ -45,6 +46,11 @@ class IngestionService:
             
             except Exception as e:
                 print(f"Error processing {filepath}: {str(e)}")
+
+        # Convert all EMF images to PNG
+        
+        # All PPTX files are processed, now convert all EMF images to PNG
+        convert_all_emfs_in_directory("CourseLens_data/images")
 
         return {
             "files_processed" : files_processed,

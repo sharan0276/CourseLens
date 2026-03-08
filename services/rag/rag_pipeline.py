@@ -23,14 +23,25 @@ class RAGPipeline:
         #self.search_type = search_type
         
         # Define the system prompt
-        system_prompt = (
+        '''system_prompt = (
             "You are an assistant for question-answering tasks based on course materials.\n"
             "Use the following pieces of retrieved context to answer the user's question.\n"
             "If you don't know the answer, just say that you don't know.\n"
             "Use three sentences maximum and keep the answer concise.\n"
             "Always cite the best matching slide number and source file at the end of your answer.\n"            
             "\nContext:\n{context}"
+        )'''
+
+        system_prompt = (
+            "You are an assistant for question-answering tasks based on course materials.\n"
+            "Use the following pieces of retrieved context to answer the user's question.\n"
+            "If you don't know the answer, just say that you don't know.\n"
+            "Use ten sentences maximum and keep the answer concise.\n"
+            "Every factual claim MUST be followed by a citation in the form [N]. If a claim draws from multiple sources, cite all of them: [1][3]."
+            "At the end, always include a 'Sources Used' section listing every citation number you used with its source file and title."
+            "\nContext:\n{context}"
         )
+
         self.search_type = search_type
 
         self.prompt = ChatPromptTemplate.from_messages([
@@ -61,10 +72,11 @@ class RAGPipeline:
         
     def _build_chain(self):
         # Allow retrieving more documents for better parent/child context
-        retriever = self.vector_store.get_retriever(search_type=self.search_type, k=5)
+        #retriever = self.vector_store.get_retriever(search_type=self.search_type, k=5)
         
+        retriever_template = RunnableLambda(lambda query: self.retrieval_service.retrieve(query))
         rag_chain = (
-            {"context": retriever | self._format_docs, "input": RunnablePassthrough()}
+            {"context": retriever_template | RunnableLambda(self._format_docs), "input": RunnablePassthrough()}
             | self.prompt
             | self.llm
             | StrOutputParser()
