@@ -19,7 +19,7 @@ def main():
         print("Ingestion completed successfully!")
         print(f"Result: {result}")
 
-        service.create_embeddings_for_folder(json_folder)
+        # service.create_embeddings_for_folder(json_folder)
         print("Embeddings created successfully!")
     
     except Exception as e:
