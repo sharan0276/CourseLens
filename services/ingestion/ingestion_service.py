@@ -6,6 +6,8 @@ from services.ingestion.cleaner import SlideCleaner
 from services.chunking.chunk_builder import ChunkBuilder
 from services.embedding.embedder import Embedder
 from db.vector_store import VectorStore
+from services.ingestion.emf_to_png import convert_all_emfs_in_directory
+from services.ingestion.pdf_parser import PDFParser
 
 class IngestionService:
     """
@@ -13,6 +15,7 @@ class IngestionService:
     """
     def __init__(self, db_path: str = "./courselens_db"):
         self.pptx_parser = PPTXParser(image_folder_path="CourseLens_data/images")
+        self.pdf_parser = PDFParser(image_folder_path="CourseLens_data/images")
         self.slide_cleaner = SlideCleaner()
         self.chunk_builder = ChunkBuilder()
         self.embedding_service = Embedder()
@@ -20,7 +23,32 @@ class IngestionService:
         os.makedirs("CourseLens_data/processed_data", exist_ok=True)
         os.makedirs("CourseLens_data/images", exist_ok=True)
 
+
     def ingest_folder(self, folder_path: str):
+        """
+        Orchestrates full ingestion for a folder (PPTX + PDF)
+        """
+
+        print("Processing PPTX files...")
+        pptx_metrics = self.ingest_folder_pptx(folder_path)
+
+        print("Processing PDF files...")
+        pdf_metrics = self.ingest_folder_pdf(folder_path)
+
+        # Combined metrics
+        return {
+                "pptx_files_processed": pptx_metrics["files_processed"],
+                "total_extracted_slides": pptx_metrics["total_extractedslides"],
+                "pdf_files_processed": pdf_metrics["pdf_files_processed"],
+                "total_extracted_pages": pdf_metrics["total_extracted_sections"],
+                "total_files_processed": (
+                    pptx_metrics["files_processed"] + 
+                    pdf_metrics["pdf_files_processed"]
+                )
+        }
+
+
+    def ingest_folder_pptx(self, folder_path: str):
         """
         Orchestrates the ingestion process for a folder of PPTX files.
         """
@@ -46,11 +74,48 @@ class IngestionService:
             except Exception as e:
                 print(f"Error processing {filepath}: {str(e)}")
 
+        # Convert all EMF images to PNG
+        
+        # All PPTX files are processed, now convert all EMF images to PNG
+        convert_all_emfs_in_directory("CourseLens_data/images")
+
         return {
             "files_processed" : files_processed,
             "total_extractedslides" : total_slides
         }
 
+    def ingest_folder_pdf(self, folder_path: str):
+        """
+        Handles ingestion of all pdf files in the folder locationm
+        Deetct orientation internally and calls appropriate functions
+        """
+        files_processed = 0
+        total_sections = 0
+
+        for filepath in glob.glob(os.path.join(folder_path, "*.pdf")):
+            try:
+                slides = self.pdf_parser.parse_pdf(filepath)
+                cleaned_slides = [ self.slide_cleaner.clean(slide) for slide in slides]
+                output_file = os.path.join("CourseLens_data/processed_data", os.path.basename(filepath).replace(".pdf", ".json"))
+                output_data = {
+                    "source_file": os.path.basename(filepath),
+                    "total_slides": len(cleaned_slides),
+                    "slides" : [slide.to_dict() for slide in cleaned_slides]
+                }
+                with open(output_file, "w") as f:
+                    json.dump(output_data, f, indent = 4)
+                
+                files_processed += 1
+
+                total_sections += len(cleaned_slides)
+
+            except Exception as e : 
+                print(f"Error processing {filepath}: {str(e)}")
+            
+        return {
+            "pdf_files_processed": files_processed,
+            "total_extracted_sections": total_sections
+        }
 
     def create_embeddings_for_file(self, json_path: str):
         """

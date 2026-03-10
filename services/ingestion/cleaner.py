@@ -19,7 +19,7 @@ class SlideCleaner:
         for block in slide.content:
             text = block["text"].strip()
 
-            if not text and text in seen:
+            if not text or text in seen:
                 continue
 
             seen.add(text)

@@ -195,6 +195,7 @@ class ChunkBuilder:
     def _build_parent_chunks(self, slides: list, lecture_number: int, source_file: str) -> list:
         """
         Groups slides by title to create one parent chunk per title group.
+        Only creates a parent chunk if the group has more than 1 slide.
         """
 
         title_groups = defaultdict(list)    
@@ -205,6 +206,10 @@ class ChunkBuilder:
 
         parent_chunks = []
         for title, group_slides in title_groups.items():
+            # Skip creating a parent chunk if this title only appears on 1 slide
+            if len(group_slides) <= 1:
+                continue
+                
             combined_lines = [title]
             for slide in group_slides:
                 slide_text = self._flatten_content(slide.get("content", []))

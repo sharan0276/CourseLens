@@ -40,10 +40,11 @@ class RAGPipeline:
         
     def _build_chain(self):
         # Allow retrieving more documents for better parent/child context
-        retriever = self.vector_store.get_retriever(search_type=self.search_type, k=5)
+        #retriever = self.vector_store.get_retriever(search_type=self.search_type, k=5)
         
+        retriever_template = RunnableLambda(lambda query: self.retrieval_service.retrieve(query))
         rag_chain = (
-            {"context": retriever | self._format_docs, "input": RunnablePassthrough()}
+            {"context": retriever_template | RunnableLambda(self._format_docs), "input": RunnablePassthrough()}
             | self.prompt
             | self.llm
             | StrOutputParser()
