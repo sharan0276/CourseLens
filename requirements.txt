@@ -80,6 +80,7 @@ pycparser==3.0
 pydantic==2.12.5
 pydantic_core==2.41.5
 Pygments==2.19.2
+PyMuPDF==1.27.1
 PyPika==0.51.1
 pyproject_hooks==1.2.0
 python-dateutil==2.9.0.post0
@@ -118,6 +119,7 @@ urllib3==2.6.3
 uuid_utils==0.14.1
 uvicorn==0.40.0
 uvloop==0.22.1
+Wand==0.7.0
 watchfiles==1.1.1
 websocket-client==1.9.0
 websockets==16.0

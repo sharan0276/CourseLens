@@ -68,6 +68,7 @@ class ImageExtractor:
                     image_path = os.path.join(self.image_folder_path, image_filename)
                     with open(image_path, "wb") as f:
                         f.write(image_blob)
+                        
                     images.append({
                         "filename" : image_filename,
                         "slide_number" : slide_number,
