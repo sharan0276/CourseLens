@@ -6,6 +6,7 @@ import argparse
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__))))
 
 from services.rag.rag_pipeline import RAGPipeline
+from services.rag.rag_pipeline_coding import RAGPipelineCoding
 from services.rag.embeddings_adapter import CourseLensEmbeddings
 from services.embedding.embedder import Embedder
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -14,6 +15,7 @@ def main():
     parser = argparse.ArgumentParser(description="CourseLens RAG Pipeline")
     parser.add_argument("--ingest", action="store_true", help="Ingest documents into the vector store")
     parser.add_argument("--query", type=str, help="Question to ask the RAG pipeline")
+    parser.add_argument("--debug", type=str, help="C++ code/error to debug using the coding RAG pipeline")
     parser.add_argument("--search-type", type=str, default="similarity", choices=["similarity", "mmr", "similarity_score_threshold"], help="Retrieval method to use")
     parser.add_argument("--lecture_number", type=int, default=None, help="Lecture number to filter by")
     
@@ -40,8 +42,15 @@ def main():
             model="gemini-2.5-flash",
             google_api_key=os.environ.get("GEMINI_API_KEY", "dummy_key"),
         )
-    
-    pipeline = RAGPipeline(llm=llm, embeddings=embeddings, search_type=args.search_type,data_dir='CourseLens_data/processed_data')
+    if args.debug:
+        # Use the coding-specific RAG pipeline for debugging queries
+        pipeline = RAGPipelineCoding(llm=llm, embeddings=embeddings, search_type=args.search_type, data_dir='CourseLens_data/processed_data')
+        print(f"\nDebugging Query:\n{args.debug}")
+        print("\nCourseLens Debug Assistant: ", end="", flush=True)
+        answer = pipeline.query(args.debug)
+        print(answer)
+    else:
+        pipeline = RAGPipeline(llm=llm, embeddings=embeddings, search_type=args.search_type,data_dir='CourseLens_data/processed_data')
 
     if args.ingest:
         pipeline.ingest_data()
