@@ -20,21 +20,30 @@ class RAGPipelineCoding:
         self.vector_store = VectorStoreManager(embeddings_model=self.embeddings, persist_directory=persist_dir)
         self.search_type = search_type
 
-        # System prompt: grounded in course material, beginner-friendly debugging
-        system_prompt = (
-            "You are CourseLens, a C++ debugging assistant for an introductory programming course.\n"
-            "Your job is to help students understand and fix errors in their C++ code.\n\n"
-            "When a student shares code with an error, follow these steps:\n"
-            "1. Identify the error type (compilation, runtime, logic, etc.)\n"
-            "2. Explain WHY the error occurred in simple terms a beginner can understand.\n"
-            "3. Ground your explanation in the course material provided in the context below — "
-            "reference specific slides or topics the student has already covered when relevant.\n"
-            "4. Suggest a fix using only concepts the student has already learned per the course slides.\n"
-            "5. Do not just give the answer — guide the student toward understanding.\n\n"
-            "If the question is not about debugging or C++, answer using the course context as normal.\n"
-            "If the answer is not in the context, say you don't know rather than guessing.\n"
-            "Always cite the most relevant slide number and source file at the end of your response.\n\n"
-            "Course Material Context:\n{context}"
+        system_prompt = (            
+                    """You are a debugging assistant for a C++ programming course.
+                Your role is to guide students to find the fix themselves — never give it to them directly.
+
+                STRICT RULES — you must follow all of these:
+                1. NEVER write corrected code. Do not rewrite, patch, or show a fixed version of the student's code.
+                2. NEVER say things like "change line X to Y" or "replace X with Y".
+                3. Instead, ask the student a question that leads them toward the bug.
+                e.g. "What do you think happens when i equals the length of the array?"
+                4. Give at most ONE hint per response. Do not over-explain.
+                5. If the student asks "just give me the answer" or "tell me the fix", refuse politely
+                and redirect with a guiding question.
+                6. If the student is completely stuck after 3 turns, you may give a stronger hint
+                but still no direct code fix.
+                7. Acknowledge what the student got right before pointing out what's wrong.
+                8. Always cite the most relevant slide number and source file at the end of your response.
+                    Course Material Context:.
+
+                RESPONSE FORMAT — every response must follow this structure:
+                - One sentence acknowledging the error type
+                - One guiding question or observation pointing toward the bug
+                - (Optional) One concept reminder if relevant to the error
+
+                {context} """
         )
 
         self.prompt = ChatPromptTemplate.from_messages([
@@ -43,6 +52,63 @@ class RAGPipelineCoding:
         ])
 
         self.chain = self._build_chain()
+
+    # ── Level 2 Guardrail Helpers ─────────────────────────────────────────────
+
+    def _contains_direct_fix(self, reply: str, student_input: str) -> bool:
+        """Heuristic checks to detect if the model gave away the answer."""
+        reply_lower = reply.lower()
+
+        # Check 1: response contains a code block
+        if "```" in reply:
+            return True
+
+        # Check 2: giveaway phrases
+        giveaway_phrases = [
+            "change line", "replace", "should be", "correct code",
+            "fix is", "solution is", "here's the fix", "the answer is",
+            "you need to write", "use this instead"
+        ]
+        if any(phrase in reply_lower for phrase in giveaway_phrases):
+            return True
+
+        # Check 3: significant overlap with student's submitted code lines
+        student_lines = set(
+            l.strip() for l in student_input.splitlines()
+            if len(l.strip()) > 10
+        )
+        reply_lines = set(
+            l.strip() for l in reply.splitlines()
+            if len(l.strip()) > 10
+        )
+        if len(student_lines & reply_lines) >= 2:
+            return True
+
+        return False
+
+    def _generate_fallback(self, student_input: str) -> str:
+        """
+        Uses the existing LLM to generate a Socratic fallback hint
+        specific to the student's code and error, with no direct fix.
+        """
+        fallback_prompt = ChatPromptTemplate.from_messages([
+            ("system", 
+             "You are a strict Socratic tutor. Your only job is to ask ONE guiding question "
+             "that helps a student find their bug. You must NEVER include code, fixes, or direct answers."),
+            ("human", 
+             "A student submitted this input and got a bad response:\n\n{input}\n\n"
+             "Write ONE short guiding question (1-2 sentences) specific to their code and error.")
+        ])
+        fallback_chain = fallback_prompt | self.llm | StrOutputParser()
+        return fallback_chain.invoke({"input": student_input})
+
+    def _validate_response(self, reply: str, student_input: str) -> str:
+        """If a direct fix is detected, generate a Socratic fallback."""
+        if self._contains_direct_fix(reply, student_input):
+            return self._generate_fallback(student_input)
+        return reply
+
+    # ── Chain Helpers ─────────────────────────────────────────────────────────
 
     def _format_docs(self, docs: List[Document]) -> str:
         """Formats retrieved course slide chunks with citations for model input."""
@@ -73,6 +139,8 @@ class RAGPipelineCoding:
         )
         return rag_chain
 
+    # ── Public Methods ────────────────────────────────────────────────────────
+
     def ingest_data(self) -> None:
         """Loads data from the JSON directory and stores it in the vector DB."""
         print("Loading documents using ChunkBuilder...")
@@ -85,10 +153,13 @@ class RAGPipelineCoding:
             print("No documents found to ingest.")
 
     def query(self, question: str) -> str:
-        """Queries the RAG pipeline and returns the answer."""
-        return self.chain.invoke(question)
+        """Queries the RAG pipeline, validates, and returns the answer."""
+        reply = self.chain.invoke(question)
+        return self._validate_response(reply, question)  # ← Level 2 here
 
     def query_stream(self, question: str) -> Generator[str, None, None]:
-        """Queries the RAG pipeline and streams the answer."""
-        for chunk in self.chain.stream(question):
-            yield chunk
+        """Queries the RAG pipeline, validates, then streams the answer."""
+        # Stream the full response first, then validate before yielding
+        full_reply = "".join(chunk for chunk in self.chain.stream(question))
+        validated  = self._validate_response(full_reply, question)  # ← Level 2 here
+        yield validated
