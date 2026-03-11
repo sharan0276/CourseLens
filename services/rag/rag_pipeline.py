@@ -37,8 +37,9 @@ class RAGPipeline:
             "Use the following pieces of retrieved context to answer the user's question.\n"
             "If you don't know the answer, just say that you don't know.\n"
             "Use ten sentences maximum and keep the answer concise.\n"
-            "Every factual claim MUST be followed by a citation in the form [N]. If a claim draws from multiple sources, cite all of them: [1][3]."
-            "At the end, always include a 'Sources Used' section listing every citation number you used with its source file and title."
+            "Every factual claim MUST be followed by a citation in the form [N]. If a claim draws from multiple sources, cite all of them: [1][3].\n"
+            "At the end, always include a 'Sources Used' section listing every citation number you used with its source file and title.\n"
+            "IMPORTANT: If a retrieved document contains 'Attached Images: <filename>', and the image is relevant to your answer, you MUST include it in your response using markdown syntax: `![Image Description](CourseLens_data/images/<filename>)`\n"
             "\nContext:\n{context}"
         )
 
@@ -60,11 +61,17 @@ class RAGPipeline:
             title = doc.metadata.get("title", "")
             lecture_number = doc.metadata.get("lecture_number", "")
             chunk_type = doc.metadata.get("chunk_type", "")
+            image_filenames = doc.metadata.get("image_filenames", "")
 
             if chunk_type == "parent":
                 citation =f"Source: {source_file}, Title: {title}"
             else:
                 citation = f"Source: {source_file}, Title: {title}, Slide: {slide_number}"
+
+            if image_filenames:
+                # Replace .emf with .png since they are converted during ingestion
+                image_filenames = image_filenames.replace(".emf", ".png")
+                citation += f", Attached Images: {image_filenames}"
 
             formatted_docs.append(f"{citation}\n{doc.page_content}")
         

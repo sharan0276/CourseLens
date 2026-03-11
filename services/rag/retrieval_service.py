@@ -33,7 +33,7 @@ class RetrievalService:
         retrieved_docs = self._handle_image_slides(retrieved_docs)
 
         # Step 3: Parent-Child Swap (Broader Context)
-        #retrieved_docs = self._parent_child_swap(retrieved_docs)
+        retrieved_docs = self._parent_child_swap(retrieved_docs)
 
         # Step 4: Deduplicate (keep best version of each slide)
         retrieved_docs = self._deduplicate(retrieved_docs)
@@ -54,10 +54,18 @@ class RetrievalService:
             title = doc.metadata.get("title", "")
             slide = doc.metadata.get("slide_number", "None")
             lecture = doc.metadata.get("lecture_number", "")
+            
+            only_images = doc.metadata.get("only_images", False)
+            source_type = doc.metadata.get("source_type", "")
+            source_file = doc.metadata.get("source_file", "")
+            
             if chunk_type == "parent":
                 print(f"ID: {chunk_type} - title {title} - Lecture {lecture}")
             else:
-                print(f"ID: {chunk_type} - title {title} - Slide {slide} - Lecture {lecture}")
+                base_log = f"ID: {chunk_type} - title {title} - Slide {slide} - Lecture {lecture}"
+                if only_images and source_type in ["pptx", "pdf_slideshow"]:
+                    base_log += f" - [Image Source: {source_file}]"
+                print(base_log)
         print("------------------------\n")
 
 # Image Only Slide Handler - currently will be fetching the next and previous slide to pack some context to the LLM
@@ -83,8 +91,8 @@ class RetrievalService:
         """
         
         neighbours = []
-        prev_id = doc.metadata.get("prev_slide_id")
-        next_id = doc.metadata.get("next_slide_id")
+        prev_id = doc.metadata.get("prev_slide")
+        next_id = doc.metadata.get("next_slide")
 
         for chunk_id in [prev_id, next_id]:
             if chunk_id:
@@ -134,16 +142,21 @@ class RetrievalService:
         parents = [d for d in docs if d.metadata.get("chunk_type") == "parent"]
         children = [d for d in docs if d.metadata.get("chunk_type") == "child"]
 
-        # group children by parent_id
+        result = list(parents)  # keep any directly retrieved parents
+        swapped_parent_ids = set(d.metadata.get("parent_id", "") for d in parents)
+
+        # group children by parent_id, but only for allowed source types
         from collections import defaultdict
         children_by_parent = defaultdict(list)
         for child in children:
-            parent_id = child.metadata.get("parent_id", "")
-            if parent_id:
-                children_by_parent[parent_id].append(child)
-
-        result = list(parents)  # keep any directly retrieved parents
-        swapped_parent_ids = set(d.metadata.get("parent_id", "") for d in parents)
+            source_type = child.metadata.get("source_type", "")
+            if source_type in ["pptx", "pdf_slideshow"]:
+                parent_id = child.metadata.get("parent_id", "")
+                if parent_id:
+                    children_by_parent[parent_id].append(child)
+            else:
+                # If not eligible for swap, just keep it directly in the results
+                result.append(child)
 
         for parent_id, child_group in children_by_parent.items():
             if len(child_group) >= self.parent_swap_threshold:

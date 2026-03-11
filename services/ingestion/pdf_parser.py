@@ -73,14 +73,17 @@ class PDFParser:
 
         extractor = PDFSlideshowContentExtractor()
         slides = []
+        prev_title = None
 
         for pagenumber, page in enumerate(doc, start = 1):
-            content = extractor.extract(page)
+            content = extractor.extract(page, prev_title=prev_title)
             images = self.image_extractor.extract(
                 page, pagenumber, source_file
             )
             only_images = len(content) == 0 and len(images) > 0
             title = self._extract_title(content, pagenumber)
+            if content and content[0].get("text"):
+                prev_title = title
 
             slides.append(Slide(
                 slide_number=pagenumber,

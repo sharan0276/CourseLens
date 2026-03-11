@@ -1,8 +1,3 @@
-# Extracts text content from landscape/slideshow PDF pages.
-# Uses font size to detect slide titles reliably rather than
-# assuming first line is always the title.
-# One page = one slide worth of content blocks.
-
 import fitz  # PyMuPDF
 
 
@@ -14,13 +9,19 @@ class PDFSlideshowContentExtractor:
     Returns content blocks matching PPTX pipeline format.
     """
 
-    def extract(self, page) -> list:
+    # Code boundary markers - when we see these we stop joining fragments
+    # These signal the end of a logical code line or block
+    CODE_BOUNDARIES = (";", "{", "}", "//")
+
+    def extract(self, page, prev_title: str = None) -> list:
         """
         Extracts content from a single PDF page.
         Returns list of content blocks with level, text, children.
         Title block is always level 0, body lines are level 1.
-        
+
         page - PyMuPDF page object
+        prev_title - title of the previous slide, used as fallback
+                     when this slide has no detectable title
         """
 
         # get_text("dict") returns full layout info including font sizes
@@ -46,30 +47,48 @@ class PDFSlideshowContentExtractor:
         # the 2pt tolerance handles slight font size variations
         # in exported PDFs where title might be 23.9pt vs 24pt
         title_spans = [
-            s for s in spans 
+            s for s in spans
             if abs(s["size"] - max_font_size) <= 2
         ]
         body_spans = [
-            s for s in spans 
+            s for s in spans
             if abs(s["size"] - max_font_size) > 2
         ]
 
         # Step 4 - merge title spans into one clean title string
-        # multiple spans can form one title line e.g. 
+        # multiple spans can form one title line e.g.
         # "Function" + " Declaration" + " Syntax" are 3 spans
         title_text = " ".join(
-            s["text"].strip() for s in title_spans 
+            s["text"].strip() for s in title_spans
             if s["text"].strip()
         )
 
-        # Step 5 - build content blocks in PPTX pipeline format
+        # Step 4a - titleless slide fallback
+        # some slides are pure code with no heading, so the largest
+        # font ends up being the code itself - we detect this by
+        # checking if the title looks like code rather than a heading
+        # if so, we inherit the previous slide title so the chunk
+        # still has a meaningful label for retrieval and citation
+        if self._looks_like_code(title_text) and prev_title:
+            # move the "title" spans back into body since they are code
+            body_spans = title_spans + body_spans
+            title_text = prev_title
+
+        # Step 5 - reassemble fragmented code lines in body spans
+        # slideshow PDFs often split code into individual token spans
+        # e.g. "int", "main()", "{" are three separate spans
+        # we join them back into complete logical lines using
+        # code boundary markers as the stopping signal
+        reassembled_body = self._reassemble_code_spans(body_spans)
+
+        # Step 6 - build content blocks in PPTX pipeline format
         content = []
 
         # Title becomes level 0 block with body as children
         if title_text:
             children = [
                 {"level": 1, "text": s["text"].strip()}
-                for s in body_spans
+                for s in reassembled_body
                 if s["text"].strip()
             ]
             content.append({
@@ -79,6 +98,48 @@ class PDFSlideshowContentExtractor:
             })
 
         return content
+
+    def _looks_like_code(self, text: str) -> bool:
+        """
+        Checks if a string looks like code rather than a slide title.
+        Used to detect titleless slides where code was picked up as title.
+        Looks for common code markers that would never appear in a heading.
+        """
+        code_markers = ["{", "}", "#include", "<<", ">>", "int main", "return", "//"]
+        return any(marker in text for marker in code_markers)
+
+    def _reassemble_code_spans(self, spans: list) -> list:
+        """
+        Joins fragmented code spans back into complete logical lines.
+        Slideshow PDFs split code into individual tokens as separate spans.
+        We buffer tokens and flush when we hit a natural code boundary
+        such as semicolon, brace, or comment marker.
+        Returns a new list of spans with reassembled text.
+        """
+        reassembled = []
+        buffer = ""
+
+        for span in spans:
+            text = span["text"].strip()
+            if not text:
+                continue
+
+            # accumulate tokens into buffer
+            buffer = (buffer + " " + text).strip()
+
+            # flush buffer when we hit a natural code boundary
+            # semicolon = end of statement, braces = block delimiter
+            # // = comment line end
+            if text.endswith(";") or text in ["{", "}"] or text.startswith("//"):
+                reassembled.append({"text": buffer, "size": span["size"]})
+                buffer = ""
+
+        # flush any remaining buffer that didnt end with a boundary
+        # this handles the last line of a slide if it has no semicolon
+        if buffer:
+            reassembled.append({"text": buffer, "size": spans[-1]["size"]})
+
+        return reassembled
 
     def _extract_spans(self, page_dict: dict) -> list:
         """

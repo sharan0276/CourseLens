@@ -23,11 +23,18 @@ class ChunkBuilder:
         with open(json_path, "r") as f:
             data = json.load(f)
         
-        source_type = data.get("source_file").split(".")[-1]
-        if source_type == "pptx":
+        #source_type = data.get("source_file").split(".")[-1]
+        slide = data.get("slides", [])
+        if not slide:
+            return [], []
+        
+        source_type = slide[0].get("source_type")
+        if source_type == "pptx" or source_type == "pdf_slideshow":
             return self._build_pptx_chunks(data)
-        elif source_type == "pdf":
-            return self._build_pdf_chunks(data)
+        elif source_type == "pdf_notes":
+            return self._build_pdf_notes_chunks(data)
+        
+        return self._build_pptx_chunks(data)
 
 
 
@@ -47,101 +54,75 @@ class ChunkBuilder:
 
         return parent_chunks, child_chunks
 
-    def _build_pdf_chunks(self, data: dict) -> tuple[list, list]:
+    def _build_pdf_notes_chunks(self, data: dict) -> tuple[list, list]:
         """
-        Builds parent and child chunks from the PDF data.
-        Since PDFs are long documents, we map pages to child chunks and group
-        them into parent chunks.
+        Builds parent and child chunks from the PDF notes data.
+        Uses sectrion number heirartchy instead of title matching to greoup parent and child.
+        Example : 2.1.1, 2.1.2 and 2.1.3 will groped as children of 2.1 
+        And sectiosn with no child chunks will be classified as standalone child chunks.
         """
-        pages = data.get("slides", []) # Note: data structure seems to reuse the "slides" key for PDF pages
+        slides = data.get("slides", []) # Note: data structure seems to reuse the "slides" key for PDF pages
         source_file = data.get("source_file")
         
-        child_chunks = []
-        for page in pages:
-            child_chunks.append(self._build_single_pdf_child(page))
-            
+        if not slides:
+            return [], []
+    
+        lecture_number = slides[0].get("lecture_number")
+
+        child_chunks = self._build_pdf_notes_child_chunks(slides, source_file, lecture_number)
+
         child_chunks = self._add_navigation_links(child_chunks)
 
-        # Assuming pages have a lecture_number just like slides; default to 0 if not
-        lecture_number = pages[0].get("lecture_number", 0) if pages else 0
-        
-        # We can reuse _build_parent_chunks if we map page_number to slide_number
-        # but let's just create a single parent for the whole PDF for now, or group by title
-        title_groups = defaultdict(list)    
-        for page in pages:
-            title = page.get("title", "Untitled")
-            
-            # Map page_number to slide_number temporarily so _build_parent_chunks works
-            page_mapped = page.copy()
-            page_mapped["slide_number"] = page.get("page_number", 0)
-            
-            title_groups[title].append(page_mapped)
-            
-        parent_chunks = []
-        for title, group_pages in title_groups.items():
-            combined_lines = [title]
-            for page in group_pages:
-                page_text = self._flatten_content(page.get("content", []))
-                if page_text:
-                    combined_lines.append(page_text)
+        #parent_chunks = self._build_pdf_notes_parent_chunks(slides, lecture_number, source_file)
 
-            combined_text = "\n".join(combined_lines)
-            parent_id = f"chap{lecture_number:02d}_{self._clean_text(title)}"
-            child_ids = ",".join([f"chap{lecture_number:02d}_page{page['page_number']:02d}" for page in group_pages])
-        
+        return [] , child_chunks
+    
+    
+    def _build_pdf_notes_child_chunks(self, slides: list, source_file: str, lecture_number: int) -> list:
+        """
+        Builds child chunks from the PDF notes data.
+        """
+        child_chunks = []
+
+        for slide in slides:
+            title = slide.get("title", "Untitled")
+            slide_number = slide.get("slide_number", 0)
+
+            flat_text  = self._flatten_content(slide.get("content", []))
+            full_text = f"{title}\n{flat_text}".strip()
+
+            chunk_id = (f"pdf_notes-{title}-page{slide_number}-lecture{lecture_number}")
+
+            # get parent section number
+            parent_section = self._get_parent_section_number(title)
+
+            # find the parent chunk id given the parent section number
+            parent_id = self._find_parent_id(parent_section, slides, lecture_number) if parent_section else None
+
             metadata = {
                 "source_file": source_file,
                 "lecture_number": lecture_number,
+                "slide_number": slide_number,
                 "title": title,
-                "source_type": "pdf",
-                "chunk_type" : "parent",
-                "child_ids": child_ids,
-                "page_count": len(group_pages),
+                "source_type": "pdf_notes",
+                "chunk_type" : "child",
+                "parent_id": parent_id,
+                "only_images": slide.get("only_images", False),
+                "has_images": len(slide.get("images", [])) > 0,
+                "image_filenames": ",".join([img.get("filename", "") for img in slide.get("images", [])]) if slide.get("images") else "",
+                "prev_slide" : None,
+                "next_slide" : None,
             }
 
-            parent_chunks.append({
-                "id" : parent_id,
-                "text" : combined_text,
+            child_chunks.append({
+                "id" : chunk_id,
+                "text" : full_text,
                 "metadata" : metadata
             })
 
-        return parent_chunks, child_chunks
+        return child_chunks
 
-    def _build_single_pdf_child(self, page: dict) -> dict:
-        """
-        Builds one child chunk from a PDF page.
-        """
-        source_file = page.get("source_file")
-        page_number = page.get("page_number", 0)
-        lecture_number = page.get("lecture_number", 0)
-        title = page.get("title", "Untitled")
-
-        flat_text = self._flatten_content(page.get("content", []))
-        full_text = f"{title}\n{flat_text}".strip()
-
-        chunk_id = f"chap{lecture_number:02d}_page{page_number:02d}"
-        parent_id = f"chap{lecture_number:02d}_{self._clean_text(title)}"
-
-        metadata = {
-            "source_file": source_file,
-            "lecture_number": lecture_number,
-            "page_number": page_number,
-            "title": title,
-            "source_type": "pdf",
-            "chunk_type" : "child",
-            "parent_id": parent_id,
-            "has_images": len(page.get("images", [])) > 0,
-            "prev_slide" : None,
-            "next_slide" : None,
-        }
-        
-        return {
-            "id" : chunk_id,
-            "text" : full_text,
-            "metadata" : metadata
-        }
-
-
+    
     def _build_child_chunks(self, slides: list) -> list:
         """
         Builds child chunks from the slides.
@@ -172,11 +153,12 @@ class ChunkBuilder:
             "lecture_number": lecture_number,
             "slide_number": slide_number,
             "title": title,
-            "source_type": "pptx",
+            "source_type": slide.get("source_type", "pptx"),
             "chunk_type" : "child",
             "parent_id": parent_id,
             "only_images": only_images,
             "has_images": len(slide.get("images", [])) > 0,
+            "image_filenames": ",".join([img.get("filename", "") for img in slide.get("images", [])]) if slide.get("images") else "",
             "prev_slide" : None,
             "next_slide" : None,
         }
@@ -224,7 +206,7 @@ class ChunkBuilder:
                 "source_file": source_file,
                 "lecture_number": lecture_number,
                 "title": title,
-                "source_type": "pptx",
+                "source_type": group_slides[0].get("source_type", "pptx") if group_slides else "pptx",
                 "chunk_type" : "parent",
                 "child_ids": child_ids,
                 "slide_count": len(group_slides),
@@ -272,5 +254,39 @@ class ChunkBuilder:
         """
         return re.sub(r'[^a-z0-9_]', '_', text.lower().strip().replace(" ", "_"))[:50]
 
+    def _get_parent_section_number(self, title:str):
+        """
+        Derives parent section number from heading title
+        Works by removing the last segment of the section number
+        """
+
+        parts = title.strip().split()
+        if not parts:
+            return None
+        
+        number = parts[0]
+
+        # if title does not have . it definitely must be a parent with section in whole number
+        if "." not in number:
+            return None
+        
+        return number.rsplit(".", 1)[0]
+
+
+    def _find_parent_id(self, parent_number: str, slides: list, lecture_number: int) -> str:
+        """
+        Finds the chunk id of the parent section given its number.
+        Searches slides for a title starting with parent_number.
+        Returns formatted parent chunk id string.
+        """
+
+        for slide in slides:
+            title = slide.get("title", "")
+            parts = title.strip().split()
+            if parts and parts[0] == parent_number:
+                slide_number = slide.get("slide_number", 0)
+                return f"pdf_notes-{title}-page{slide_number}-lecture{lecture_number}"      
+        
+        return None  
 
 
