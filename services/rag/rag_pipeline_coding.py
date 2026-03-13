@@ -1,11 +1,12 @@
 import os
-from typing import List, Generator
+from typing import List, Generator, Dict
 from langchain_core.documents import Document
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.embeddings import Embeddings
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.messages import HumanMessage, AIMessage
 
 from services.rag.loader import JSONSlideLoader
 from services.rag.vector_store import VectorStoreManager
@@ -163,3 +164,76 @@ class RAGPipelineCoding:
         full_reply = "".join(chunk for chunk in self.chain.stream(question))
         validated  = self._validate_response(full_reply, question)  # ← Level 2 here
         yield validated
+
+    # ── History-aware (session) methods ──────────────────────────────────────
+
+    def _build_history_chain_coding(self):
+        """Builds a Socratic history-aware chain using MessagesPlaceholder."""
+        retriever = self.vector_store.get_retriever(search_type=self.search_type, k=5)
+
+        system_prompt = (
+            "You are a debugging assistant for a C++ programming course.\n"
+            "Your role is to guide students to find the fix themselves — never give it to them directly.\n"
+            "STRICT RULES:\n"
+            "1. NEVER write corrected code.\n"
+            "2. Ask guiding questions instead of giving direct answers.\n"
+            "3. Give at most ONE hint per response.\n"
+            "4. Acknowledge what the student got right before pointing out what's wrong.\n"
+            "Use the conversation history to track the student's progress.\n"
+            "\nCourse Material Context:\n{context}"
+        )
+
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_prompt),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("human", "{input}"),
+        ])
+
+        def retrieve_and_format(inputs):
+            docs = retriever.invoke(inputs["input"])
+            return self._format_docs(docs)
+
+        chain = (
+            {
+                "context": RunnableLambda(retrieve_and_format),
+                "input": RunnablePassthrough(),
+                "chat_history": RunnablePassthrough(),
+            }
+            | prompt
+            | self.llm
+            | StrOutputParser()
+        )
+        return chain
+
+    @staticmethod
+    def _to_lc_messages(history: List[Dict[str, str]]):
+        """Converts stored {role, content} dicts to LangChain message objects."""
+        msgs = []
+        for msg in history:
+            if msg["role"] == "human":
+                msgs.append(HumanMessage(content=msg["content"]))
+            else:
+                msgs.append(AIMessage(content=msg["content"]))
+        return msgs
+
+    def query_with_history(self, question: str, history: List[Dict[str, str]]) -> str:
+        """
+        Queries the Socratic coding pipeline using prior conversation history.
+        Guardrails (no direct code fix) are preserved.
+
+        Args:
+            question: The new student message.
+            history: List of {"role": "human"|"assistant", "content": str} dicts.
+
+        Returns:
+            Validated Socratic response string.
+        """
+        if not hasattr(self, "_history_chain_coding"):
+            self._history_chain_coding = self._build_history_chain_coding()
+
+        lc_history = self._to_lc_messages(history)
+        reply = self._history_chain_coding.invoke({
+            "input": question,
+            "chat_history": lc_history,
+        })
+        return self._validate_response(reply, question)
