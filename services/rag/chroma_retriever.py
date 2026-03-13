@@ -28,9 +28,12 @@ class VectorStoreManager:
         return self.vector_store.as_retriever(search_type=search_type, search_kwargs=search_kwargs)
 
         
-    def similarity_search(self, query: str, k: int = 5) -> List[Document]:
+    def similarity_search(self, query: str, k: int = 5, filter: dict = None) -> List[Document]:
         """Performs a raw similarity search - return LangChain Documents"""
-        return self.vector_store.similarity_search(query, k=k)
+        kwargs = {"k": k}
+        if filter is not None:
+            kwargs["filter"] = filter
+        return self.vector_store.similarity_search(query, **kwargs)
 
     def similarity_search_with_score(self, query: str, k: int = 5) -> List[Document]:
         """Performs a raw similarity search - return LangChain Documents with scores"""

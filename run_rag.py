@@ -15,6 +15,7 @@ def main():
     parser.add_argument("--ingest", action="store_true", help="Ingest documents into the vector store")
     parser.add_argument("--query", type=str, help="Question to ask the RAG pipeline")
     parser.add_argument("--search-type", type=str, default="similarity", choices=["similarity", "mmr", "similarity_score_threshold"], help="Retrieval method to use")
+    parser.add_argument("--lecture_number", type=int, default=None, help="Lecture number to filter by")
     
     args = parser.parse_args()
 
@@ -49,7 +50,8 @@ def main():
         print(f"\nQuestion: {args.query}")
         print("Answer: ", end="", flush=True)
         # We can stream or just print
-        answer = pipeline.query(args.query)
+        lecture_num = getattr(args, 'lecture_number', None)
+        answer = pipeline.query(args.query, lecture_number=lecture_num)
         print(answer)
 
 if __name__ == "__main__":

@@ -81,18 +81,23 @@ class RAGPipeline:
         # Allow retrieving more documents for better parent/child context
         #retriever = self.vector_store.get_retriever(search_type=self.search_type, k=5)
         
-        retriever_template = RunnableLambda(lambda query: self.retrieval_service.retrieve(query))
+        def retrieve_with_filter(inputs):
+            query = inputs["question"]
+            lecture_number = inputs.get("lecture_number")
+            return self.retrieval_service.retrieve(query, lecture_number=lecture_number)
+            
+        retriever_template = RunnableLambda(retrieve_with_filter)
         rag_chain = (
-            {"context": retriever_template | RunnableLambda(self._format_docs), "input": RunnablePassthrough()}
+            {"context": retriever_template | RunnableLambda(self._format_docs), "input": RunnableLambda(lambda x: x["question"])}
             | self.prompt
             | self.llm
             | StrOutputParser()
         )
         return rag_chain
 
-    def query(self, question: str) -> str:
+    def query(self, question: str, lecture_number: int = None) -> str:
         """Queries the RAG pipeline and returns the answer."""
-        response = self.chain.invoke(question)
+        response = self.chain.invoke({"question": question, "lecture_number": lecture_number})
         return response
         
     def query_stream(self, question: str) -> Generator[str, None, None]:

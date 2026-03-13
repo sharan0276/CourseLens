@@ -21,13 +21,16 @@ class RetrievalService:
         self.collection = self.client.get_collection(collection_name)
     
         
-    def retrieve(self, query: str) -> List[Document]:
+    def retrieve(self, query: str, lecture_number: int = None) -> List[Document]:
         """
         Retrieve documents on the basis of query similarity, and account methods to enrich chunks 
         """
+        filter_dict = None
+        if lecture_number is not None:
+            filter_dict = {"lecture_number": {"$lte": lecture_number}}
 
         # Step 1  Similarity Search
-        retrieved_docs = self.vector_store_manager.similarity_search(query, k=self.k)
+        retrieved_docs = self.vector_store_manager.similarity_search(query, k=self.k, filter=filter_dict)
         
         # Step 2: Handle image-only slides
         retrieved_docs = self._handle_image_slides(retrieved_docs)
