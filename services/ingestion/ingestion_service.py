@@ -1,11 +1,13 @@
 import os
 import glob
 import json
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__))))
 from services.ingestion.ppt_parser import PPTXParser
 from services.ingestion.cleaner import SlideCleaner
 from services.chunking.chunk_builder import ChunkBuilder
 from services.embedding.embedder import Embedder
-from db.vector_store import VectorStore
+from db.vector_store import VectorStore 
 from services.ingestion.emf_to_png import convert_all_emfs_in_directory
 from services.ingestion.pdf_parser import PDFParser
 

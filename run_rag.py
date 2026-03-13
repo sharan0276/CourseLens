@@ -33,7 +33,6 @@ def main():
     parser = argparse.ArgumentParser(description="CourseLens RAG Pipeline")
 
     # ── Existing flags ────────────────────────────────────────────────────────
-    parser.add_argument("--ingest", action="store_true", help="Ingest documents into the vector store")
     parser.add_argument("--query", type=str, help="Question to ask the RAG pipeline (single-turn)")
     parser.add_argument("--debug", type=str, help="C++ code/error to debug using the coding RAG pipeline (single-turn)")
     parser.add_argument("--search-type", type=str, default="similarity",
@@ -145,12 +144,8 @@ def main():
         print(pipeline.query(args.debug))
 
     else:
-        pipeline = RAGPipeline(llm=llm, embeddings=embeddings,
-                               search_type=args.search_type,
-                               data_dir="CourseLens_data/processed_data")
+        pipeline = RAGPipeline(llm=llm, embeddings=embeddings, search_type=args.search_type)
 
-    if args.ingest:
-        pipeline.ingest_data()
         
     if args.query:
         print(f"\nQuestion: {args.query}")
