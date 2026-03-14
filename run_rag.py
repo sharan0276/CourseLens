@@ -29,6 +29,22 @@ def build_embeddings():
     return CourseLensEmbeddings(embedder=base_embedder)
 
 
+
+def build_llm():
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        print("Error: GEMINI_API_KEY environment variable not set.")
+        print("Example: export GEMINI_API_KEY='your-key-here'")
+        sys.exit(1)
+    return ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=api_key)
+
+
+def build_embeddings():
+    print("Loading local embeddings model (BAAI/bge-m3)...")
+    base_embedder = Embedder()
+    return CourseLensEmbeddings(embedder=base_embedder)
+
+
 def main():
     parser = argparse.ArgumentParser(description="CourseLens RAG Pipeline")
 
@@ -85,10 +101,82 @@ def main():
             print(f"Session '{args.delete_session}' deleted.")
         else:
             print(f"Session '{args.delete_session}' not found.")
+    store = SessionStore()  # shared JSON store at CourseLens_data/chat_sessions.json
+
+    # ── Session management (no LLM needed) ────────────────────────────────────
+
+    if args.new_session:
+        sid = store.create_session(pipeline_type="general")
+        print(f"New general session created: {sid}")
+        return
+
+    if args.new_debug_session:
+        sid = store.create_session(pipeline_type="coding")
+        print(f"New coding/debug session created: {sid}")
+        return
+
+    if args.list_sessions:
+        sessions = store.list_sessions()
+        if not sessions:
+            print("No sessions found.")
+        else:
+            print(f"{'Session ID':<40} {'Type':<10} {'Turns'}")
+            print("-" * 60)
+            for s in sessions:
+                print(f"{s['session_id']:<40} {s['pipeline_type']:<10} {s['turns']}")
+        return
+
+    if args.delete_session:
+        removed = store.delete_session(args.delete_session)
+        if removed:
+            print(f"Session '{args.delete_session}' deleted.")
+        else:
+            print(f"Session '{args.delete_session}' not found.")
         return
 
     # ── Build shared components ────────────────────────────────────────────────
+
+    # ── Build shared components ────────────────────────────────────────────────
     print("Initializing RAG Pipeline...")
+    embeddings = build_embeddings()
+
+    # ── Session-based multi-turn chat ─────────────────────────────────────────
+
+    if args.session:
+        session_info = store.get_session(args.session)
+        if session_info is None:
+            print(f"Error: Session '{args.session}' not found. Create one with --new-session.")
+            sys.exit(1)
+
+        llm = build_llm()
+        pipeline_type = session_info.get("pipeline_type", "general")
+
+        if pipeline_type == "coding":
+            pipeline = RAGPipelineCoding(llm=llm, embeddings=embeddings,
+                                         search_type=args.search_type,
+                                         data_dir="CourseLens_data/processed_data")
+        else:
+            pipeline = RAGPipeline(llm=llm, embeddings=embeddings,
+                                   search_type=args.search_type,
+                                   data_dir="CourseLens_data/processed_data")
+
+        chat = ChatSession(pipeline=pipeline, session_store=store)
+
+        message = args.query or args.debug
+        if not message:
+            print("Error: Provide a message with --query or --debug when using --session.")
+            sys.exit(1)
+
+        print(f"\nYou: {message}")
+        print("Assistant: ", end="", flush=True)
+        reply = chat.send_message(args.session, message)
+        print(reply)
+        turns = len(store.get_history(args.session)) // 2
+        print(f"\n[Session {args.session[:8]}... | {turns} turn(s) stored]")
+        return
+
+    # ── Original single-turn flow ─────────────────────────────────────────────
+
     embeddings = build_embeddings()
 
     # ── Session-based multi-turn chat ─────────────────────────────────────────

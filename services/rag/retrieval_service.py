@@ -36,7 +36,7 @@ class RetrievalService:
         retrieved_docs = self._handle_image_slides(retrieved_docs)
 
         # Step 3: Parent-Child Swap (Broader Context)
-        retrieved_docs = self._parent_child_swap(retrieved_docs)
+        #retrieved_docs = self._parent_child_swap(retrieved_docs)
 
         # Step 4: Deduplicate (keep best version of each slide)
         retrieved_docs = self._deduplicate(retrieved_docs)
@@ -81,6 +81,7 @@ class RetrievalService:
         result = []
         for doc in docs:
             if doc.metadata.get("only_images"):
+                neighbors = self._fetch_neighbours(doc)
                 neighbors = self._fetch_neighbours(doc)
                 result.extend(neighbors)
             else:
