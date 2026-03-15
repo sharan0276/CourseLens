@@ -72,12 +72,6 @@ def _build_dependencies(api_key: str, mode: str, search_type: str):
     base_embedder = Embedder()
     embeddings    = CourseLensEmbeddings(embedder=base_embedder)
 
-    print("Connecting to vector store …")
-    vector_store = VectorStoreManager(
-        embeddings_model=embeddings,
-        persist_directory=PERSIST_DIR,
-    )
-
     print("Initialising LLM (Gemini) …")
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
@@ -87,7 +81,7 @@ def _build_dependencies(api_key: str, mode: str, search_type: str):
     history_store = ChatHistoryStore(storage_dir=SESSIONS_DIR)
 
     pipeline = ChatPipeline(
-        vector_store_manager=vector_store,
+        embeddings=embeddings,
         history_store=history_store,
         llm=llm,
         mode=mode,
