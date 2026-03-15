@@ -1,27 +1,27 @@
-import os
-from typing import List, Generator, Dict
+
+from typing import List, Generator
 from langchain_core.documents import Document
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.embeddings import Embeddings
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.messages import HumanMessage, AIMessage
-from langchain_core.runnables.base import Runnable
 
-from services.rag.loader import JSONSlideLoader
-from services.rag.vector_store import VectorStoreManager
+from services.rag.retrieval_service import RetrievalService
+from services.rag.chroma_retriever import VectorStoreManager
 
 class RAGPipeline:
-    _history_chain: "Runnable | None" = None
-
-    def __init__(self, llm: BaseChatModel, embeddings: Embeddings, data_dir: str = "CourseLens_data/processed_data/", persist_dir: str = "CourseLens_data/chroma_db", search_type: str = "similarity"):
+    def __init__(self, llm: BaseChatModel, embeddings: Embeddings, persist_dir: str = "CourseLens_data/chroma_db",
+                 collection_name: str = "course_lens", search_type: str = "similarity", k: int = 5):
         self.llm = llm
-        self.embeddings = embeddings
         
-        self.loader = JSONSlideLoader(data_dir=data_dir)
-        self.vector_store = VectorStoreManager(embeddings_model=self.embeddings, persist_directory=persist_dir)
-        self.search_type = search_type
+        # vector store - read only setup
+        self.vector_store = VectorStoreManager(embeddings_model=embeddings, persist_directory=persist_dir, collection_name = collection_name)
+
+        # retrieval service - handles retrieval and enrichment of chunks
+        self.retrieval_service = RetrievalService(vector_store_manager=self.vector_store, db_path=persist_dir, collection_name=collection_name, k=k)
+
+        #self.search_type = search_type
         
         # Define the system prompt
         '''system_prompt = (
@@ -29,6 +29,7 @@ class RAGPipeline:
             "Use the following pieces of retrieved context to answer the user's question.\n"
             "If you don't know the answer, just say that you don't know.\n"
             "Use three sentences maximum and keep the answer concise.\n"
+            "Always cite the best matching slide number and source file at the end of your answer.\n"            
             "\nContext:\n{context}"
         )'''
 

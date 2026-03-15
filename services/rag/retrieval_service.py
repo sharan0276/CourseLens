@@ -82,7 +82,6 @@ class RetrievalService:
         for doc in docs:
             if doc.metadata.get("only_images"):
                 neighbors = self._fetch_neighbours(doc)
-                neighbors = self._fetch_neighbours(doc)
                 result.extend(neighbors)
             else:
                 result.append(doc)
