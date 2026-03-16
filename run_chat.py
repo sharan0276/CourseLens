@@ -204,6 +204,13 @@ def main():
     # ── REPL ──────────────────────────────────────────────────────────────────
     try:
         print("\n(Multi-line input enabled. Press Enter, then Ctrl-D on a new line to submit.)")
+        
+        print("\nMax lecture number to filter by (press Enter for all): ", end="", flush=True)
+        lecture_input = input().strip()
+        lecture_number = None
+        if lecture_input.isdigit():
+            lecture_number = int(lecture_input)
+
         while True:
             print("You:")
             lines = []
@@ -226,11 +233,11 @@ def main():
 
             try:
                 if args.stream:
-                    for chunk in pipeline.chat_stream(session.session_id, user_input):
+                    for chunk in pipeline.chat_stream(session.session_id, user_input, lecture_number=lecture_number):
                         print(chunk, end="", flush=True)
                     print("\n")
                 else:
-                    reply = pipeline.chat(session.session_id, user_input)
+                    reply = pipeline.chat(session.session_id, user_input, lecture_number=lecture_number)
                     print(reply, "\n")
 
             except Exception as e:

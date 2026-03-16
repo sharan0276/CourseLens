@@ -35,11 +35,11 @@ class RetrievalService:
         # Step 2: Handle image-only slides
         retrieved_docs = self._handle_image_slides(retrieved_docs)
 
-        # Step 3: Parent-Child Swap (Broader Context)
-        #retrieved_docs = self._parent_child_swap(retrieved_docs)
-
-        # Step 4: Deduplicate (keep best version of each slide)
+        # Step 3: Deduplicate (keep best version of each slide)
         retrieved_docs = self._deduplicate(retrieved_docs)
+
+        # Step 4: Parent-Child Swap (Broader Context)
+        retrieved_docs = self._parent_child_swap(retrieved_docs)
 
         self._log_retrieved_chunks(retrieved_docs)
 

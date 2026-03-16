@@ -154,7 +154,7 @@ class ChatPipeline:
 
     # ── Public API ────────────────────────────────────────────────────────────
 
-    def chat(self, session_id: str, user_input: str) -> str:
+    def chat(self, session_id: str, user_input: str, lecture_number: int = None) -> str:
         """
         Single-turn chat that is multi-turn aware.
         Loads history → condenses question → retrieves → answers → saves.
@@ -170,7 +170,7 @@ class ChatPipeline:
         standalone_q = self._condense_question(lc_history, user_input)
 
         # Retrieve relevant docs via the RetrievalService
-        docs = self.retrieval_service.retrieve(standalone_q)
+        docs = self.retrieval_service.retrieve(standalone_q, lecture_number=lecture_number)
         context = self._format_docs(docs)
 
         # Generate the answer
@@ -192,7 +192,7 @@ class ChatPipeline:
 
         return reply
 
-    def chat_stream(self, session_id: str, user_input: str) -> Generator[str, None, None]:
+    def chat_stream(self, session_id: str, user_input: str, lecture_number: int = None) -> Generator[str, None, None]:
         """
         Streaming variant — yields chunks then persists when complete.
         """
@@ -204,7 +204,7 @@ class ChatPipeline:
         standalone_q = self._condense_question(lc_history, user_input)
 
         # Retrieve relevant docs via the RetrievalService
-        docs = self.retrieval_service.retrieve(standalone_q)
+        docs = self.retrieval_service.retrieve(standalone_q, lecture_number=lecture_number)
         context = self._format_docs(docs)
 
         answer_chain = self._answer_prompt | self.llm | StrOutputParser()
