@@ -1,0 +1,53 @@
+{
+    "1": {
+        "topics": [
+            "Computer Organization",
+            "CPU",
+            "Control Unit",
+            "Input and Output Devices",
+            "Software",
+            "Operating System",
+            "Software Development Cycle",
+            "IDEs",
+            "Software Engineering Goals",
+            "Abstraction",
+            "Encapsulation",
+            "Modularity",
+            "Hierarchy",
+            "Object Oriented Design and Programming",
+            "Objects",
+            "Binary Arithmetic",
+            "Two's Complement"
+        ]
+    },
+    "2": {
+        "topics": [
+            "Program Organization",
+            "Fundamental C++ Objects",
+            "Integer Object Types",
+            "Integer Constants",
+            "Character Object Types",
+            "Character Constants",
+            "Floating-Point Object Types",
+            "Keywords",
+            "Identifiers",
+            "Arithmetic Operators",
+            "Integer Division",
+            "Modulus Operator",
+            "Operator Precedence",
+            "Definitions and Initialization"
+        ]
+    },
+    "3": {
+        "topics": [
+            "Memory Depiction",
+            "Assignment Statement",
+            "Incrementing",
+            "Const Definitions",
+            "Assignment Conversions",
+            "Class String",
+            "Compound Assignment",
+            "Increment and Decrement Operators"
+        ]
+    }
+}
