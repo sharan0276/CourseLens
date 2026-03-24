@@ -21,7 +21,7 @@ class RetrievalService:
         self.collection = self.client.get_collection(collection_name)
     
         
-    def retrieve(self, query: str, lecture_number: int = None) -> List[Document]:
+    def retrieve(self, query: str, lecture_number: int = None, k: int = None) -> List[Document]:
         """
         Retrieve documents on the basis of query similarity, and account methods to enrich chunks 
         """
@@ -29,8 +29,11 @@ class RetrievalService:
         if lecture_number is not None:
             filter_dict = {"lecture_number": {"$lte": lecture_number}}
 
+        # Use the provided k, or fallback to the instance default k
+        search_k = k if k is not None else self.k
+
         # Step 1  Similarity Search
-        retrieved_docs = self.vector_store_manager.similarity_search(query, k=self.k, filter=filter_dict)
+        retrieved_docs = self.vector_store_manager.similarity_search(query, k=search_k, filter=filter_dict)
         
         # Step 2: Handle image-only slides
         retrieved_docs = self._handle_image_slides(retrieved_docs)
@@ -124,7 +127,8 @@ class RetrievalService:
             if result["documents"]:
                 return Document(
                     page_content=result["documents"][0],
-                    metadata=result["metadatas"][0]
+                    metadata=result["metadatas"][0],
+                    id=chunk_id
                 )
         except Exception as e:
             print(f"Error fetching chunk {chunk_id}: {e}")
