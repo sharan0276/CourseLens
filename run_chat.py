@@ -77,6 +77,11 @@ def _build_dependencies(api_key: str, mode: str, search_type: str):
         model="gemini-2.5-flash",
         google_api_key=api_key,
     )
+    
+    flash_llm = ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash",
+        google_api_key=api_key,
+    )
 
     history_store = ChatHistoryStore(storage_dir=SESSIONS_DIR)
 
@@ -84,6 +89,7 @@ def _build_dependencies(api_key: str, mode: str, search_type: str):
         embeddings=embeddings,
         history_store=history_store,
         llm=llm,
+        flash_llm=flash_llm,
         mode=mode,
         search_type=search_type,
     )

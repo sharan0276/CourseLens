@@ -62,18 +62,28 @@ class QueryClassifier:
         Single Flash call — returns classification label and verified selected topics.
         Defaults to SOCRATIC for any ambiguous or malformed response.
         """
+        if lecture_number is None:
+            lecture_number = 14  # assume entire course is available
+
         loader = SyllabusLoader()
         all_topics = loader.get_all_topics_up_to(lecture_number)
         current_topics = loader.get_topics(lecture_number)
 
-        # use current lecture topics for selection, fall back to all if empty
-        selection_pool = current_topics if current_topics else all_topics
+        # provide the LLM with all topics covered up to this point
+        # so it doesn't wrongly flag older concepts as out-of-scope
+        selection_pool = all_topics
         topics_str = "\n".join(f"- {t}" for t in selection_pool)
 
         chain = self._prompt | self.llm | self.parser
         raw = chain.invoke({"query": query, "topics": topics_str}).strip()
 
-        return self._parse(raw, selection_pool)
+        result = self._parse(raw, selection_pool)
+        
+        print(f"\n[Classifier] Classified query as: {result.query_type.value}")
+        if result.selected_topics:
+            print(f"[Classifier] Selected syllabus topics: {', '.join(result.selected_topics)}")
+            
+        return result
 
     def _parse(self, raw: str, valid_topics: List[str]) -> ClassificationResult:
         """
