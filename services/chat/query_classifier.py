@@ -43,10 +43,9 @@ class QueryClassifier:
              "   SOCRATIC    — requires guided understanding, not just a fact\n"
              "                 includes conceptual confusion, debugging help, and background adjacent questions\n"
              "                 when in doubt, use SOCRATIC\n"
-             "   OUT_OF_SCOPE — no meaningful connection to C++ programming fundamentals.\n"
-             "                 Topics like machine learning, neural networks, web development,\n"
-             "                 databases, or anything not taught in a C++ fundamentals course\n"
-             "                 should be OUT_OF_SCOPE even if they loosely relate to software.\n\n"
+             "   OUT_OF_SCOPE — query has no meaningful connection to C++ programming fundamentals AND does not match any of the provided course topics.\n"
+             "                 Topics completely unrelated to C++ or the provided syllabus should be OUT_OF_SCOPE.\n"
+             "                 IMPORTANT: If the query mentions keywords or concepts present in the provided course topics, it is NEVER OUT_OF_SCOPE.\n\n"
              "2. Select 2-3 most relevant topics from the provided course topic list that relate to this query.\n"
              "   Only pick from the list — never invent topics.\n"
              "   For OUT_OF_SCOPE queries, return no topics.\n\n"
@@ -72,6 +71,7 @@ class QueryClassifier:
         # provide the LLM with all topics covered up to this point
         # so it doesn't wrongly flag older concepts as out-of-scope
         selection_pool = all_topics
+            
         topics_str = "\n".join(f"- {t}" for t in selection_pool)
 
         chain = self._prompt | self.llm | self.parser

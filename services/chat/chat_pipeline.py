@@ -119,7 +119,8 @@ class ChatPipeline:
             system_answer = (
                 "You are an assistant for question-answering tasks based on course materials.\n"
                 "Use the following pieces of retrieved context to answer the user's question.\n"
-                "If you don't know the answer, just say that you don't know.\n"
+                "You may synthesize foundational concepts or background understanding if the exact answer is not stated verbatim, BUT YOU MUST do so strictly using only the provided context chunks.\n"
+                "Do not introduce external knowledge. If the provided context chunks do not contain enough information to reasonably infer the answer, just say that you don't know.\n"
                 "Use ten sentences maximum and keep the answer concise.\n"
                 "Every factual claim MUST be followed by a citation in the form [N]. If a claim draws from multiple sources, cite all of them: [1][3].\n"
                 "At the end, always include a 'Sources Used' section listing every citation number you used with its source file and title.\n"

@@ -50,24 +50,12 @@ class QueryRouter:
                              signature: direct_handler(standalone_q, user_input) -> str
         """
 
-        # ── Stale loop check ─────────────────────────────────────────────────
-        # if student is mid-loop but asks something Direct or Out of Scope
-        # reset the stale loop first then handle the new query fresh
+        # ── Mid-Loop Direct Passthrough ──────────────────────────────────────────────
+        # If the student is actively engaged in a Socratic loop, bypass the generic 
+        # router classifier. The Socratic Engine's Flash Assessor is infinitely better 
+        # equipped to handle tracking conversational answers, topic changes, and distractions.
         if session.in_socratic_loop():
-            result = self.classifier.classify(standalone_q, lecture_number)
-            if result.query_type in [QueryType.DIRECT, QueryType.OUT_OF_SCOPE]:
-                print("\n[Router] Stale Socratic loop detected. Resetting state.")
-                session.reset_socratic_state()
-                # fall through to normal routing below with fresh state
-
-        # ── Active Socratic loop continuation ────────────────────────────────
-        # if still in a loop after stale check, continue the existing stages
-        if session.in_socratic_loop():
-            print(f"\n[Router] Continuing active Socratic loop at Stage {session.ta_stage}")
-            return self.socratic_engine.respond(
-                session=session,
-                user_input=user_input
-            )
+            return self.socratic_engine.respond(session, user_input)
 
         # ── Fresh query — classify and route ─────────────────────────────────
         result = self.classifier.classify(standalone_q, lecture_number)

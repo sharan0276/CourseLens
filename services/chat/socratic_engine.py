@@ -64,7 +64,8 @@ class SocraticEngine:
              "1. Do NOT answer the question\n"
              "2. Do NOT give any hints toward the answer\n"
              "3. Ask only ONE question\n"
-             "4. Keep it short — one or two sentences maximum\n\n"
+             "4. Keep it short — one or two sentences maximum\n"
+             "5. You may synthesize background concepts to frame the question, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -83,7 +84,10 @@ class SocraticEngine:
              "STRICT RULES:\n"
              "1. Do NOT give the full answer\n"
              "2. Guide them exactly ONE step forward, building firmly on what they already understand.\n"
-             "3. Teach sequentially: always address foundational concepts before dependent steps.\n\n"
+             "3. Teach sequentially: always address foundational concepts before dependent steps.\n"
+             "4. You may synthesize background concepts to frame your hint, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n"
+             "5. Explicitly encourage the student to review a specific slide number or source file (provided in the context citations) to reinforce reading the material.\n"
+             "6. If the student's original code contains MULTIPLE errors, silently identify all of them. Guide them to fix ONE error at a time. If they just fixed an error but others remain, explicitly tell them there is another bug in their code, and seamlessly begin guiding them to locate the next one.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -100,7 +104,10 @@ class SocraticEngine:
              "STRICT RULES:\n"
              "1. Do NOT give the full answer\n"
              "2. Correct the specific misconception, then give ONE hint toward the right path.\n"
-             "3. Do not overwhelm — one correction + one hint only.\n\n"
+             "3. Do not overwhelm — one correction + one hint only.\n"
+             "4. You may synthesize background concepts to frame your hint, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n"
+             "5. Explicitly encourage the student to review a specific slide number or source file (provided in the context citations) to reinforce reading the material.\n"
+             "6. If the student's original code contains MULTIPLE errors, silently identify all of them. Guide them to fix ONE error at a time. If they just fixed an error but others remain, explicitly tell them there is another bug in their code, and seamlessly begin guiding them to locate the next one.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -117,7 +124,10 @@ class SocraticEngine:
              "STRICT RULES:\n"
              "1. Keep the explanation brief — one short paragraph\n"
              "2. End by connecting back to the original question\n"
-             "3. Do NOT give the full answer to the original question yet\n\n"
+             "3. Do NOT give the full answer to the original question yet\n"
+             "4. You may synthesize background concepts to explain the foundation, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n"
+             "5. Explicitly encourage the student to review a specific slide number or source file (provided in the context citations) to reinforce reading the material.\n"
+             "6. If the student's original code contains MULTIPLE errors, silently identify all of them. Guide them to fix ONE error at a time. If they just fixed an error but others remain, explicitly tell them there is another bug in their code, and seamlessly begin guiding them to locate the next one.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -136,7 +146,10 @@ class SocraticEngine:
              "STRICT RULES:\n"
              "1. Still do NOT give the full answer directly\n"
              "2. Be specific and concrete — vague nudges are not helpful at this stage\n"
-             "3. One or two sentences maximum\n\n"
+             "3. One or two sentences maximum\n"
+             "4. You may synthesize background concepts, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n"
+             "5. Explicitly encourage the student to review a specific slide number or source file (provided in the context citations) to reinforce reading the material.\n"
+             "6. If the student's original code contains MULTIPLE errors, silently identify all of them. Guide them to fix ONE error at a time. If they just fixed an error but others remain, explicitly tell them there is another bug in their code, and seamlessly begin guiding them to locate the next one.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -149,8 +162,12 @@ class SocraticEngine:
              "You are a course assistant for a C++ programming course.\n"
              "Provide a complete, direct answer to the student's original question.\n\n"
              "Original question: {active_problem_query}\n\n"
-             "Give a clear, complete answer grounded in the course material provided.\n"
-             "Use ten sentences maximum. Cite sources at the end.\n\n"
+             "Give a clear, complete answer strictly grounded in the course material provided.\n"
+             "You may synthesize a background understanding if not stated verbatim, but DO NOT introduce external knowledge.\n"
+             "Use ten sentences maximum and keep the answer concise.\n"
+             "Every factual claim MUST be followed by a citation in the form [N]. If a claim draws from multiple sources, cite all of them: [1][3].\n"
+             "At the end, always include a 'Sources Used' section listing every citation number you used with its source file and title.\n"
+             "IMPORTANT: If a retrieved document contains 'Attached Images: <filename>', and the image is relevant to your answer, you MUST include it in your response using markdown syntax: `![Image Description](CourseLens_data/images/<filename>)`\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -215,6 +232,7 @@ class SocraticEngine:
             # first turn — ask the locating question
             print("\n[Socratic Engine] Executing Stage 1 (Locating Question)")
             reply = self._run(self._stage1_prompt, base_args)
+            reply = f"[💡 Stage 1 - Locating Concept]\n\n{reply}"
             session.advance_stage()
 
         elif session.ta_stage == 2:
@@ -224,18 +242,21 @@ class SocraticEngine:
             print(f"[Socratic Engine] Executing Stage 2 ({assessment})")
             prompt = self._pick_stage2_prompt(assessment)
             reply = self._run(prompt, base_args)
+            reply = f"[🧭 Stage 2 - Leading (Assessment: {assessment})]\n\n{reply}"
             session.advance_stage()
 
         elif session.ta_stage == 3:
             # final push regardless of what student said
             print("\n[Socratic Engine] Executing Stage 3 (Final Push)")
             reply = self._run(self._stage3_prompt, base_args)
+            reply = f"[🎯 Stage 3 - Final Push]\n\n{reply}"
             session.advance_stage()
 
         else:
             # stage 4 — overflow direct answer, then reset
             print("\n[Socratic Engine] Executing Stage 4 (Direct Overflow)")
             reply = self._run(self._stage4_prompt, base_args)
+            reply = f"[📘 Stage 4 - Direct Answer]\n\n{reply}"
             session.reset_socratic_state()
 
         return reply
