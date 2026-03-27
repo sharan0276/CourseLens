@@ -11,6 +11,7 @@ class QueryType(Enum):
     DIRECT = "DIRECT"
     SOCRATIC = "SOCRATIC"
     OUT_OF_SCOPE = "OUT_OF_SCOPE"
+    CONVERSATIONAL = "CONVERSATIONAL"
 
 
 @dataclass
@@ -40,9 +41,11 @@ class QueryClassifier:
              "1. Classify the query using only the query itself:\n"
              "   DIRECT      — factual question with a clear answer in the material\n"
              "                 e.g. 'What is a pointer?', 'What does const do?'\n"
+             "                 ALSO use DIRECT if the student explicitly asks to validate if their code is correct, or if there are any remaining bugs.\n"
              "   SOCRATIC    — requires guided understanding, not just a fact\n"
              "                 includes conceptual confusion, debugging help, and background adjacent questions\n"
              "                 when in doubt, use SOCRATIC\n"
+             "   CONVERSATIONAL — casual greetings, pleasantries, or meta-questions about the chat history itself (e.g. 'hello', 'thanks', 'what did I just ask?').\n"
              "   OUT_OF_SCOPE — query has no meaningful connection to C++ programming fundamentals AND does not match any of the provided course topics.\n"
              "                 Topics completely unrelated to C++ or the provided syllabus should be OUT_OF_SCOPE.\n"
              "                 IMPORTANT: If the query mentions keywords or concepts present in the provided course topics, it is NEVER OUT_OF_SCOPE.\n\n"
@@ -50,7 +53,7 @@ class QueryClassifier:
              "   Only pick from the list — never invent topics.\n"
              "   For OUT_OF_SCOPE queries, return no topics.\n\n"
              "Reply in exactly this format, nothing else:\n"
-             "LABEL: <DIRECT|SOCRATIC|OUT_OF_SCOPE>\n"
+             "LABEL: <DIRECT|SOCRATIC|OUT_OF_SCOPE|CONVERSATIONAL>\n"
              "TOPICS: <topic1|topic2|topic3>\n\n"
              "Available course topics:\n{topics}"),
             ("human", "{query}")

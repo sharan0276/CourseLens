@@ -14,6 +14,7 @@ class ReplyAssessment:
     LOCATED = "LOCATED"           # student correctly identified the concept area
     WRONG_DIRECTION = "WRONG_DIRECTION"  # student identified something but it's off
     NO_ATTEMPT = "NO_ATTEMPT"     # student is lost or said they don't know
+    BUG_RESOLVED = "BUG_RESOLVED" # student successfully fixed the specific bug being discussed, but other bugs remain
 
 
 class SocraticEngine:
@@ -45,7 +46,8 @@ class SocraticEngine:
              "Assess the student's reply as exactly one of:\n"
              "LOCATED — student correctly identified the concept area or topic\n"
              "WRONG_DIRECTION — student identified something but it is off or incomplete\n"
-             "NO_ATTEMPT — student said they don't know, gave no answer, or is clearly lost\n\n"
+             "NO_ATTEMPT — student said they don't know, gave no answer, or is clearly lost\n"
+             "BUG_RESOLVED — student successfully fixed or correctly answered the specific issue being discussed, but other bugs might remain\n\n"
              "Reply with ONLY the label. No explanation."),
             ("human", "{student_reply}")
         ])
@@ -63,8 +65,8 @@ class SocraticEngine:
              "STRICT RULES:\n"
              "1. Do NOT answer the question\n"
              "2. Do NOT give any hints toward the answer\n"
-             "3. Ask only ONE question\n"
-             "4. Keep it short — one or two sentences maximum\n"
+             "3. Do NOT explicitly list the course topics (like 'Program Organization') to the student. Make it a natural, human-like, open-ended question.\n"
+             "4. Keep it extremely brief and conversational — one or two sentences maximum.\n"
              "5. You may synthesize background concepts to frame the question, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
@@ -87,7 +89,8 @@ class SocraticEngine:
              "3. Teach sequentially: always address foundational concepts before dependent steps.\n"
              "4. You may synthesize background concepts to frame your hint, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n"
              "5. Explicitly encourage the student to review a specific slide number or source file (provided in the context citations) to reinforce reading the material.\n"
-             "6. If the student's original code contains MULTIPLE errors, silently identify all of them. Guide them to fix ONE error at a time. If they just fixed an error but others remain, explicitly tell them there is another bug in their code, and seamlessly begin guiding them to locate the next one.\n\n"
+             "6. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
+             "7. ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -107,7 +110,8 @@ class SocraticEngine:
              "3. Do not overwhelm — one correction + one hint only.\n"
              "4. You may synthesize background concepts to frame your hint, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n"
              "5. Explicitly encourage the student to review a specific slide number or source file (provided in the context citations) to reinforce reading the material.\n"
-             "6. If the student's original code contains MULTIPLE errors, silently identify all of them. Guide them to fix ONE error at a time. If they just fixed an error but others remain, explicitly tell them there is another bug in their code, and seamlessly begin guiding them to locate the next one.\n\n"
+             "6. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
+             "7. ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -127,7 +131,8 @@ class SocraticEngine:
              "3. Do NOT give the full answer to the original question yet\n"
              "4. You may synthesize background concepts to explain the foundation, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n"
              "5. Explicitly encourage the student to review a specific slide number or source file (provided in the context citations) to reinforce reading the material.\n"
-             "6. If the student's original code contains MULTIPLE errors, silently identify all of them. Guide them to fix ONE error at a time. If they just fixed an error but others remain, explicitly tell them there is another bug in their code, and seamlessly begin guiding them to locate the next one.\n\n"
+             "6. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
+             "7. ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -149,7 +154,8 @@ class SocraticEngine:
              "3. One or two sentences maximum\n"
              "4. You may synthesize background concepts, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n"
              "5. Explicitly encourage the student to review a specific slide number or source file (provided in the context citations) to reinforce reading the material.\n"
-             "6. If the student's original code contains MULTIPLE errors, silently identify all of them. Guide them to fix ONE error at a time. If they just fixed an error but others remain, explicitly tell them there is another bug in their code, and seamlessly begin guiding them to locate the next one.\n\n"
+             "6. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
+             "7. ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -204,6 +210,22 @@ class SocraticEngine:
             ("human", "{input}")
         ])
 
+        # ── Success Summary Prompt ───────────────────────────────────────────
+        self._success_summary_prompt = ChatPromptTemplate.from_messages([
+            ("system",
+             "You are a C++ teaching assistant.\n"
+             "The student has successfully resolved the bugs in their code through a guided Socratic process, or they submitted completely correct code.\n"
+             "Your job is to provide a brief, encouraging summary of what they just accomplished.\n\n"
+             "STRICT RULES:\n"
+             "1. Congratulate the student on their success.\n"
+             "2. Briefly list the specific logic or syntax errors they corrected during this conversation. If their original code had no bugs to begin with, just congratulate them on a perfect implementation.\n"
+             "3. Keep the summary encouraging and concise (bullet points are great).\n"
+             "4. Do NOT ask any further Socratic questions.\n\n"
+             "Context from course material:\n{context}"),
+            MessagesPlaceholder("history"),
+            ("human", "{input}")
+        ])
+
     # ── Public API ────────────────────────────────────────────────────────────
 
     def respond(self, session: ChatSession, user_input: str) -> str:
@@ -235,29 +257,57 @@ class SocraticEngine:
             reply = f"[💡 Stage 1 - Locating Concept]\n\n{reply}"
             session.advance_stage()
 
-        elif session.ta_stage == 2:
-            # assess student's reply to stage 1 then branch
+        elif session.ta_stage in [2, 3, 4]:
+            # We must assess even in Stage 3 and 4 to see if they resolved the bug before overflowing
             assessment = self._assess_reply(session, user_input)
             print(f"\n[Socratic Engine] Flash assessed student reply as: {assessment}")
-            print(f"[Socratic Engine] Executing Stage 2 ({assessment})")
-            prompt = self._pick_stage2_prompt(assessment)
-            reply = self._run(prompt, base_args)
-            reply = f"[🧭 Stage 2 - Leading (Assessment: {assessment})]\n\n{reply}"
-            session.advance_stage()
 
-        elif session.ta_stage == 3:
-            # final push regardless of what student said
-            print("\n[Socratic Engine] Executing Stage 3 (Final Push)")
-            reply = self._run(self._stage3_prompt, base_args)
-            reply = f"[🎯 Stage 3 - Final Push]\n\n{reply}"
-            session.advance_stage()
+            if assessment == ReplyAssessment.BUG_RESOLVED:
+                # Student fixed the bug! Reset the Socratic counter for the NEXT bug
+                print("[Socratic Engine] Bug resolved! Resetting stage to 2 for next bug.")
+                session.ta_stage = 2
+                prompt = self._stage2_located_prompt
+                reply = self._run(prompt, base_args)
+                
+                if "[COMPLETE]" in reply:
+                    print("[Socratic Engine] LLM detected NO BUGS! Generating Success Summary.")
+                    reply = self._run(self._success_summary_prompt, base_args)
+                    session.reset_socratic_state()
+                    reply = f"[🎉 Socratic Loop Complete! Validation Summary]\n\n{reply}"
+                else:
+                    reply = f"[✔️ BUG RESOLVED! Refreshing Loop for Next Bug]\n\n{reply}"
+            
+            elif session.ta_stage == 2:
+                print(f"[Socratic Engine] Executing Stage 2 ({assessment})")
+                prompt = self._pick_stage2_prompt(assessment)
+                reply = self._run(prompt, base_args)
+                if "[COMPLETE]" in reply:
+                    print("[Socratic Engine] LLM detected NO BUGS! Generating Success Summary.")
+                    reply = self._run(self._success_summary_prompt, base_args)
+                    session.reset_socratic_state()
+                    reply = f"[🎉 Socratic Loop Complete! Validation Summary]\n\n{reply}"
+                else:
+                    reply = f"[🧭 Stage 2 - Leading (Assessment: {assessment})]\n\n{reply}"
+                    session.advance_stage()
+            
+            elif session.ta_stage == 3:
+                print("\n[Socratic Engine] Executing Stage 3 (Final Push)")
+                reply = self._run(self._stage3_prompt, base_args)
+                if "[COMPLETE]" in reply:
+                    print("[Socratic Engine] LLM detected NO BUGS! Generating Success Summary.")
+                    reply = self._run(self._success_summary_prompt, base_args)
+                    session.reset_socratic_state()
+                    reply = f"[🎉 Socratic Loop Complete! Validation Summary]\n\n{reply}"
+                else:
+                    reply = f"[🎯 Stage 3 - Final Push]\n\n{reply}"
+                    session.advance_stage()
 
-        else:
-            # stage 4 — overflow direct answer, then reset
-            print("\n[Socratic Engine] Executing Stage 4 (Direct Overflow)")
-            reply = self._run(self._stage4_prompt, base_args)
-            reply = f"[📘 Stage 4 - Direct Answer]\n\n{reply}"
-            session.reset_socratic_state()
+            elif session.ta_stage == 4:
+                # stage 4 — overflow direct answer, then reset
+                print("\n[Socratic Engine] Executing Stage 4 (Direct Overflow)")
+                reply = self._run(self._stage4_prompt, base_args)
+                reply = f"[📘 Stage 4 - Direct Answer]\n\n{reply}"
+                session.reset_socratic_state()
 
         return reply
 
@@ -357,7 +407,8 @@ class SocraticEngine:
         return result if result in [
             ReplyAssessment.LOCATED,
             ReplyAssessment.WRONG_DIRECTION,
-            ReplyAssessment.NO_ATTEMPT
+            ReplyAssessment.NO_ATTEMPT,
+            ReplyAssessment.BUG_RESOLVED
         ] else ReplyAssessment.NO_ATTEMPT
 
     def _pick_stage2_prompt(self, assessment: str) -> ChatPromptTemplate:

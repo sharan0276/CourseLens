@@ -40,11 +40,13 @@ class ChatPipeline:
         persist_dir: str = "CourseLens_data/chroma_db",
         collection_name: str = "course_lens"
     ):
+        from services.rag.bm25_retriever import BM25Manager
         self.vector_store = VectorStoreManager(
             embeddings_model=embeddings,
             persist_directory=persist_dir,
             collection_name=collection_name
         )
+        self.bm25_manager = BM25Manager()
         self.history_store = history_store
         self.llm = llm
         self.flash_llm = flash_llm  # added: stored so QueryRouter components can use it
@@ -56,6 +58,7 @@ class ChatPipeline:
         # unchanged from before — QueryRouter reuses the same instance for both paths
         self.retrieval_service = RetrievalService(
             vector_store_manager=self.vector_store,
+            bm25_manager=self.bm25_manager,
             db_path=persist_dir,
             collection_name=collection_name,
             k=k
@@ -108,7 +111,8 @@ class ChatPipeline:
                 "6. If the student is completely stuck after 3 turns, you may give a stronger hint\n"
                 "but still no direct code fix.\n"
                 "7. Acknowledge what the student got right before pointing out what's wrong.\n"
-                "8. Always cite the most relevant slide number and source file at the end of your response.\n\n"
+                "8. EXCEPTION: If the student asks if their code is completely correct, and you review it and find absolutely ZERO bugs, you MUST explicitly validate their code ('Your code is completely correct!') and bypass all Socratic rules.\n"
+                "9. Always cite the most relevant slide number and source file at the end of your response.\n\n"
                 "RESPONSE FORMAT — every response must follow this structure:\n"
                 "- One sentence acknowledging the error type\n"
                 "- One guiding question or observation pointing toward the bug\n"
@@ -133,6 +137,18 @@ class ChatPipeline:
             MessagesPlaceholder("history"),
             ("human", "{input}"),
         ])
+
+        self._conversational_prompt = ChatPromptTemplate.from_messages([
+            ("system",
+             "You are a friendly C++ course assistant. Respond naturally to the user's greeting, pleasantry, or meta-question about the conversation history. Answer using the chat history provided. Do not invent course material."),
+            MessagesPlaceholder("history"),
+            ("human", "{input}")
+        ])
+
+    def _conversational_answer(self, session: ChatSession, standalone_q: str, user_input: str) -> str:
+        lc_history = self._session_to_lc_history(session)
+        answer_chain = self._conversational_prompt | self.llm | StrOutputParser()
+        return answer_chain.invoke({"history": lc_history, "input": user_input})
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -175,6 +191,7 @@ class ChatPipeline:
         """
         if not history:
             return user_input
+        
         chain = self._condense_prompt | self.llm | StrOutputParser()
         return chain.invoke({"history": history, "input": user_input})
 
@@ -223,7 +240,8 @@ class ChatPipeline:
             user_input=user_input,
             standalone_q=standalone_q,
             lecture_number=lecture_number,
-            direct_handler=lambda sq, ui: self._direct_answer(session, sq, ui)
+            direct_handler=lambda sq, ui: self._direct_answer(session, sq, ui),
+            conversational_handler=lambda sq, ui: self._conversational_answer(session, sq, ui)
         )
 
         session.add_message(role="user", content=user_input)
@@ -257,7 +275,8 @@ class ChatPipeline:
                 user_input=user_input,
                 standalone_q=standalone_q,
                 lecture_number=lecture_number,
-                direct_handler=lambda sq, ui: self._direct_answer(session, sq, ui)
+                direct_handler=lambda sq, ui: self._direct_answer(session, sq, ui),
+                conversational_handler=lambda sq, ui: self._conversational_answer(session, sq, ui)
             )
             session.add_message(role="user", content=user_input)
             session.add_message(role="assistant", content=reply)
@@ -296,7 +315,8 @@ class ChatPipeline:
         Only called when not already in an active Socratic loop.
         """
         result = self.query_router.classifier.classify(standalone_q, lecture_number)
-        return result.query_type in ["SOCRATIC", "OUT_OF_SCOPE"]
+        q_type = getattr(result.query_type, "value", result.query_type)
+        return q_type in ["SOCRATIC", "OUT_OF_SCOPE", "CONVERSATIONAL"]
 
     # ── Guardrail (coding mode) ────────────────────────────────────────────────
 

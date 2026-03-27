@@ -37,6 +37,7 @@ class QueryRouter:
         standalone_q: str,
         lecture_number: int,
         direct_handler,
+        conversational_handler,
     ) -> str:
         """
         Routes the query to the correct path and returns the assistant reply.
@@ -59,6 +60,10 @@ class QueryRouter:
 
         # ── Fresh query — classify and route ─────────────────────────────────
         result = self.classifier.classify(standalone_q, lecture_number)
+
+        if getattr(result.query_type, "value", result.query_type) == "CONVERSATIONAL" or result.query_type == QueryType.CONVERSATIONAL:
+            print("\n[Router] Routing to Conversational handler (No Retrieval)")
+            return conversational_handler(standalone_q, user_input)
 
         if result.query_type == QueryType.OUT_OF_SCOPE:
             print("\n[Router] Routing to Out Of Scope handler")
