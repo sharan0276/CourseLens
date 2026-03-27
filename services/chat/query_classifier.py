@@ -1,5 +1,4 @@
-
-from typing import List
+from typing import List, Optional
 from dataclasses import dataclass
 from enum import Enum
 from langchain_core.output_parsers import StrOutputParser
@@ -11,12 +10,14 @@ class QueryType(Enum):
     DIRECT = "DIRECT"
     SOCRATIC = "SOCRATIC"
     OUT_OF_SCOPE = "OUT_OF_SCOPE"
+    SUMMARIZE_LECTURE = "SUMMARIZE_LECTURE"
 
 
 @dataclass
 class ClassificationResult:
     query_type: QueryType
     selected_topics: List[str]
+    target_lecture: Optional[int] = None
 
 
 class QueryClassifier:
@@ -37,12 +38,13 @@ class QueryClassifier:
             ("system",
              "You are a query classifier for a C++ university course assistant.\n\n"
              "Given a student query and the available course topics, do two things:\n\n"
-             "1. Classify the query using only the query itself:\n"
              "   DIRECT      — factual question with a clear answer in the material\n"
              "                 e.g. 'What is a pointer?', 'What does const do?'\n"
              "   SOCRATIC    — requires guided understanding, not just a fact\n"
              "                 includes conceptual confusion, debugging help, and background adjacent questions\n"
              "                 when in doubt, use SOCRATIC\n"
+             "   SUMMARIZE_LECTURE — requests to summarize an entire lecture or a specific week's material\n"
+             "                 e.g. 'Summarize lecture 3', 'What did we learn in week 2?'\n"
              "   OUT_OF_SCOPE — query has no meaningful connection to C++ programming fundamentals AND does not match any of the provided course topics.\n"
              "                 Topics completely unrelated to C++ or the provided syllabus should be OUT_OF_SCOPE.\n"
              "                 IMPORTANT: If the query mentions keywords or concepts present in the provided course topics, it is NEVER OUT_OF_SCOPE.\n\n"
@@ -50,8 +52,9 @@ class QueryClassifier:
              "   Only pick from the list — never invent topics.\n"
              "   For OUT_OF_SCOPE queries, return no topics.\n\n"
              "Reply in exactly this format, nothing else:\n"
-             "LABEL: <DIRECT|SOCRATIC|OUT_OF_SCOPE>\n"
-             "TOPICS: <topic1|topic2|topic3>\n\n"
+             "LABEL: <DIRECT|SOCRATIC|SUMMARIZE_LECTURE|OUT_OF_SCOPE>\n"
+             "TOPICS: <topic1|topic2|topic3>\n"
+             "TARGET_LECTURE: <lecture_number if specified, otherwise None>\n\n"
              "Available course topics:\n{topics}"),
             ("human", "{query}")
         ])
@@ -92,6 +95,7 @@ class QueryClassifier:
         """
         label = QueryType.SOCRATIC
         topics = []
+        target_lecture = None
 
         for line in raw.splitlines():
             line = line.strip()
@@ -101,6 +105,7 @@ class QueryClassifier:
                     "DIRECT": QueryType.DIRECT,
                     "SOCRATIC": QueryType.SOCRATIC,
                     "OUT_OF_SCOPE": QueryType.OUT_OF_SCOPE,
+                    "SUMMARIZE_LECTURE": QueryType.SUMMARIZE_LECTURE,
                 }.get(value, QueryType.SOCRATIC)
 
             elif line.startswith("TOPICS:"):
@@ -108,6 +113,11 @@ class QueryClassifier:
                 parsed = [t.strip() for t in raw_topics.split("|") if t.strip()]
                 # verify each topic exists in the syllabus pool
                 topics = [t for t in parsed if t in valid_topics]
+            
+            elif line.startswith("TARGET_LECTURE:"):
+                val = line.replace("TARGET_LECTURE:", "").strip()
+                if val and val.lower() != "none" and val.isdigit():
+                    target_lecture = int(val)
 
         # if OUT_OF_SCOPE, clear topics regardless
         if label == QueryType.OUT_OF_SCOPE:
@@ -117,4 +127,4 @@ class QueryClassifier:
         if not topics and label != QueryType.OUT_OF_SCOPE:
             topics = valid_topics[:2]
 
-        return ClassificationResult(query_type=label, selected_topics=topics)
+        return ClassificationResult(query_type=label, selected_topics=topics, target_lecture=target_lecture)

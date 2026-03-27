@@ -13,6 +13,7 @@ from services.rag.chroma_retriever import VectorStoreManager
 from services.chat.query_classifier import QueryClassifier
 from services.chat.anchor_retrieval import AnchorRetrieval
 from services.chat.socratic_engine import SocraticEngine
+from services.chat.summarization_engine import SummarizationEngine
 from services.chat.query_router import QueryRouter
 
 
@@ -70,13 +71,18 @@ class ChatPipeline:
             flash_llm=flash_llm,
             anchor_retrieval=anchor_retrieval
         )
+        summarization_engine = SummarizationEngine(
+            llm=llm,
+            retrieval_service=self.retrieval_service
+        )
 
         # added: QueryRouter wires classifier, anchor retrieval, and socratic engine
         # replaces the inline retrieval call that previously lived in chat() and chat_stream()
         self.query_router = QueryRouter(
             classifier=classifier,
             anchor_retrieval=anchor_retrieval,
-            socratic_engine=socratic_engine
+            socratic_engine=socratic_engine,
+            summarization_engine=summarization_engine
         )
 
         # ── Prompts ──────────────────────────────────────────────────────────
@@ -296,7 +302,7 @@ class ChatPipeline:
         Only called when not already in an active Socratic loop.
         """
         result = self.query_router.classifier.classify(standalone_q, lecture_number)
-        return result.query_type in ["SOCRATIC", "OUT_OF_SCOPE"]
+        return result.query_type.value in ["SOCRATIC", "OUT_OF_SCOPE", "SUMMARIZE_LECTURE"]
 
     # ── Guardrail (coding mode) ────────────────────────────────────────────────
 
