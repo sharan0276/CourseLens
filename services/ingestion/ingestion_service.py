@@ -216,7 +216,7 @@ class IngestionService:
             from langchain_core.documents import Document
             import pickle
 
-            all_data = self.vector_store.vector_store.get(include=["documents", "metadatas"])
+            all_data = self.vector_store.collection.get(include=["documents", "metadatas"])
             docs = []
             for t, m, i in zip(all_data['documents'], all_data['metadatas'], all_data['ids']):
                 docs.append(Document(page_content=t, metadata=m, id=i))
