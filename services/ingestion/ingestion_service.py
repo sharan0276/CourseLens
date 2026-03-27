@@ -8,17 +8,19 @@ from services.embedding.embedder import Embedder
 from db.vector_store import VectorStore
 from services.ingestion.emf_to_png import convert_all_emfs_in_directory
 from services.ingestion.pdf_parser import PDFParser
+from services.ingestion.chunk_summarizer import ChunkSummarizer
 
 class IngestionService:
     """
     Responsible for orchestrating the ingestion process.
     """
-    def __init__(self, db_path: str = "./CourseLens_data/chroma_db"):
+    def __init__(self, llm=None, db_path: str = "./CourseLens_data/chroma_db"):
         self.pptx_parser = PPTXParser(image_folder_path="CourseLens_data/images")
         self.pdf_parser = PDFParser(image_folder_path="CourseLens_data/images")
         self.slide_cleaner = SlideCleaner()
         self.chunk_builder = ChunkBuilder()
         self.embedding_service = Embedder()
+        self.chunk_summarizer = ChunkSummarizer(llm) if llm else None
         self.vector_store = VectorStore(db_path)
         os.makedirs("CourseLens_data/processed_data", exist_ok=True)
         os.makedirs("CourseLens_data/images", exist_ok=True)
@@ -162,6 +164,12 @@ class IngestionService:
         print(f"\nImage only slides: {len(image_only)}")
         if image_only:
             print(f"Sample: {image_only[0]['id']} — context_strategy: {image_only[0]['metadata'].get('context_strategy', 'NOT SET')}")
+
+        # Step 1.5: Summarize Chunks for runtime assembly
+        if self.chunk_summarizer:
+            print("\nSummarizing parent and child chunks...")
+            parent_chunks = self.chunk_summarizer.summarize_chunks(parent_chunks)
+            child_chunks = self.chunk_summarizer.summarize_chunks(child_chunks)
 
         # Step 2: Embed Chunks
         parent_chunks = self.embedding_service.embed_chunks(parent_chunks)

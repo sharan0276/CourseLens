@@ -41,12 +41,17 @@ class SummarizationEngine:
         if not docs:
             return f"I couldn't find any material for lecture {lecture_number}."
             
-        # Concatenate all docs sequentially
+        # Concatenate all docs sequentially using the pre-computed ingestion summaries
         context_parts = []
         for doc in docs:
             slide_no = doc.metadata.get("slide_number", "Unknown")
             title = doc.metadata.get("title", "")
-            context_parts.append(f"--- Slide {slide_no}: {title} ---\n{doc.page_content}")
+            
+            # Use metadata summary if available, fallback to full text
+            summary = doc.metadata.get("chunk_summary")
+            content = summary if summary else doc.page_content
+            
+            context_parts.append(f"--- Slide {slide_no}: {title} ---\n{content}")
             
         full_context = "\n\n".join(context_parts)
         
