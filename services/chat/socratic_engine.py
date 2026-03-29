@@ -48,7 +48,9 @@ class SocraticEngine:
              "WRONG_DIRECTION — student identified something but it is off or incomplete\n"
              "NO_ATTEMPT — student said they don't know, gave no answer, or is clearly lost\n"
              "BUG_RESOLVED — student successfully fixed or correctly answered the specific issue being discussed, but other bugs might remain\n\n"
+             "IMPORTANT: Use the conversation history to understand what the tutor just asked or hinted. If the student correctly provided the information the tutor was looking for, mark it as LOCATED or BUG_RESOLVED accordingly.\n\n"
              "Reply with ONLY the label. No explanation."),
+            MessagesPlaceholder("history"),
             ("human", "{student_reply}")
         ])
 
@@ -67,9 +69,9 @@ class SocraticEngine:
              "2. Do NOT give any hints toward the answer\n"
              "3. Do NOT explicitly list the course topics (like 'Program Organization') to the student. Make it a natural, human-like, open-ended question.\n"
              "4. Keep it extremely brief and conversational — one or two sentences maximum.\n"
-             "5. You may synthesize background concepts to frame the question, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n\n"
+             "5. Check the conversation history. If the history contains discussions about OTHER topics or previous questions, IGNORE them for your opening. ONLY if the history shows you are already mid-discussion about THIS SPECIFIC question ({active_problem_query}), you may use words like 'As we discussed' or 'We've talked about'. If this is the FIRST response to this specific doubt, you MUST start naturally and freshly without referencing the past.\n"
+             "6. You may synthesize background concepts to frame the question, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n\n"
              "Context from course material:\n{context}"),
-            MessagesPlaceholder("history"),
             ("human", "{input}")
         ])
 
@@ -87,10 +89,11 @@ class SocraticEngine:
              "1. Do NOT give the full answer\n"
              "2. Guide them exactly ONE step forward, building firmly on what they already understand.\n"
              "3. Teach sequentially: always address foundational concepts before dependent steps.\n"
-             "4. You may synthesize background concepts to frame your hint, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n"
-             "5. Explicitly encourage the student to review a specific slide number or source file (provided in the context citations) to reinforce reading the material.\n"
-             "6. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
-             "7. ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
+             "4. Check the conversation history. ONLY if you find that you have already discussed a related concept *within this specific Socratic loop* for the current question ({active_problem_query}), you MUST start your response with 'As we already discussed...' to acknowledge it. If the history is about a completely different previous question, do NOT use this phrase.\n"
+             "5. You may synthesize background concepts to frame your hint, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n"
+             "6. Explicitly encourage the student to review a specific slide number or source file (provided in the context citations) to reinforce reading the material.\n"
+             "7. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
+             "8. ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -107,11 +110,12 @@ class SocraticEngine:
              "STRICT RULES:\n"
              "1. Do NOT give the full answer\n"
              "2. Correct the specific misconception, then give ONE hint toward the right path.\n"
-             "3. Do not overwhelm — one correction + one hint only.\n"
-             "4. You may synthesize background concepts to frame your hint, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n"
-             "5. Explicitly encourage the student to review a specific slide number or source file (provided in the context citations) to reinforce reading the material.\n"
-             "6. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
-             "7. ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
+             "3. Check the conversation history. ONLY if you find that you have already discussed a related concept *within this specific Socratic loop* for the current question ({active_problem_query}), you MUST start your response with 'As we already discussed...' to acknowledge it. If the history is about a completely different previous question, do NOT use this phrase.\n"
+             "4. Do not overwhelm — one correction + one hint only.\n"
+             "5. You may synthesize background concepts to frame your hint, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n"
+             "6. Explicitly encourage the student to review a specific slide number or source file (provided in the context citations) to reinforce reading the material.\n"
+             "7. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
+             "8. ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -128,11 +132,12 @@ class SocraticEngine:
              "STRICT RULES:\n"
              "1. Keep the explanation brief — one short paragraph\n"
              "2. End by connecting back to the original question\n"
-             "3. Do NOT give the full answer to the original question yet\n"
-             "4. You may synthesize background concepts to explain the foundation, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n"
-             "5. Explicitly encourage the student to review a specific slide number or source file (provided in the context citations) to reinforce reading the material.\n"
-             "6. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
-             "7. ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
+             "3. Check the conversation history. ONLY if you find that you have already discussed a related concept *within this specific Socratic loop* for the current question ({active_problem_query}), you MUST start your response with 'As we already discussed...' to acknowledge it. If the history is about a completely different previous question, do NOT use this phrase.\n"
+             "4. Do NOT give the full answer to the original question yet\n"
+             "5. You may synthesize background concepts to explain the foundation, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n"
+             "6. Explicitly encourage the student to review a specific slide number or source file (provided in the context citations) to reinforce reading the material.\n"
+             "7. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
+             "8. ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -151,11 +156,13 @@ class SocraticEngine:
              "STRICT RULES:\n"
              "1. Still do NOT give the full answer directly\n"
              "2. Be specific and concrete — vague nudges are not helpful at this stage\n"
-             "3. One or two sentences maximum\n"
-             "4. You may synthesize background concepts, but ONLY using the provided context chunks. Do NOT introduce external knowledge.\n"
-             "5. Explicitly encourage the student to review a specific slide number or source file (provided in the context citations) to reinforce reading the material.\n"
-             "6. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
-             "7. ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
+             "3. Check the conversation history. ONLY if you find that you have already discussed a related concept *within this specific Socratic loop* for the current question ({active_problem_query}), you MUST start your response with 'As we already discussed...' to acknowledge it. If the history is about a completely different previous question, do NOT use this phrase.\n"
+             "CITATION RULES:\n"
+             "1. Number your sources sequentially starting from [1] in the order they first appear in your answer. Your first citation MUST be [1].\n"
+             "2. Every factual claim MUST be followed by a citation in the form [N]. If a claim draws from multiple sources, cite all of them: [1][2].\n"
+             "3. NEVER include a source in the 'Sources Used' section if it was not actually cited in your answer. Do not list all provided context chunks; list ONLY those you used.\n"
+             "4. At the end, always include a 'Sources Used' section listing every citation number you created (e.g., [1], [2]) with its source file and title.\n\n"
+             "ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -170,9 +177,12 @@ class SocraticEngine:
              "Original question: {active_problem_query}\n\n"
              "Give a clear, complete answer strictly grounded in the course material provided.\n"
              "You may synthesize a background understanding if not stated verbatim, but DO NOT introduce external knowledge.\n"
-             "Use ten sentences maximum and keep the answer concise.\n"
-             "Every factual claim MUST be followed by a citation in the form [N]. If a claim draws from multiple sources, cite all of them: [1][3].\n"
-             "At the end, always include a 'Sources Used' section listing every citation number you used with its source file and title.\n"
+             "Use ten sentences maximum and keep the answer concise.\n\n"
+                "CITATION RULES:\n"
+                "1. Number your sources sequentially starting from [1] in the order they first appear in your answer. Your first citation MUST be [1].\n"
+                "2. Every factual claim MUST be followed by a citation in the form [N]. If a claim draws from multiple sources, cite all of them: [1][2].\n"
+                "3. NEVER include a source in the 'Sources Used' section if it was not actually cited in your answer. Do not list all provided context chunks; list ONLY those you used.\n"
+                "4. At the end, always include a 'Sources Used' section listing every citation number you created (e.g., [1], [2]) with its source file and title.\n\n"
              "IMPORTANT: If a retrieved document contains 'Attached Images: <filename>', and the image is relevant to your answer, you MUST include it in your response using markdown syntax: `![Image Description](CourseLens_data/images/<filename>)`\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
@@ -221,6 +231,11 @@ class SocraticEngine:
              "2. Briefly list the specific logic or syntax errors they corrected during this conversation. If their original code had no bugs to begin with, just congratulate them on a perfect implementation.\n"
              "3. Keep the summary encouraging and concise (bullet points are great).\n"
              "4. Do NOT ask any further Socratic questions.\n\n"
+             "CITATION RULES:\n"
+             "1. Number your sources sequentially starting from [1] in the order they first appear in your answer. Your first citation MUST be [1].\n"
+             "2. Every factual claim MUST be followed by a citation in the form [N]. If a claim draws from multiple sources, cite all of them: [1][2].\n"
+             "3. NEVER include a source in the 'Sources Used' section if it was not actually cited in your answer. Do not list all provided context chunks; list ONLY those you used.\n"
+             "4. At the end, always include a 'Sources Used' section listing every citation number you created (e.g., [1], [2]) with its source file and title.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -397,9 +412,11 @@ class SocraticEngine:
         Returns one of: LOCATED, WRONG_DIRECTION, NO_ATTEMPT
         """
         chain = self._assessor_prompt | self.flash_llm | self.parser
+        lc_history = self._build_history(session)
         result = chain.invoke({
             "active_problem_query": session.active_problem_query,
             "selected_topics": ", ".join(session.selected_topics),
+            "history": lc_history,
             "student_reply": student_reply
         }).strip().upper()
 

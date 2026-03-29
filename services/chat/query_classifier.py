@@ -44,11 +44,10 @@ class QueryClassifier:
              "                 ALSO use DIRECT if the student explicitly asks to validate if their code is correct, or if there are any remaining bugs.\n"
              "   SOCRATIC    — requires guided understanding, not just a fact\n"
              "                 includes conceptual confusion, debugging help, and background adjacent questions\n"
-             "                 when in doubt, use SOCRATIC\n"
+             "                 includes conceptual confusion, debugging help, and background adjacent questions. Only use SOCRATIC if the query is clearly about a course-related C++ concept.\n"
              "   CONVERSATIONAL — casual greetings, pleasantries, or meta-questions about the chat history itself (e.g. 'hello', 'thanks', 'what did I just ask?').\n"
-             "   OUT_OF_SCOPE — query has no meaningful connection to C++ programming fundamentals AND does not match any of the provided course topics.\n"
-             "                 Topics completely unrelated to C++ or the provided syllabus should be OUT_OF_SCOPE.\n"
-             "                 IMPORTANT: If the query mentions keywords or concepts present in the provided course topics, it is NEVER OUT_OF_SCOPE.\n\n"
+             "   OUT_OF_SCOPE — query has no meaningful connection to C++ programming fundamentals AND does not match any of the provided course topics. This includes general knowledge trivia (politics, history, sports), calculations unrelated to programming logic, and queries about the AI assistant's own identity or other non-course topics.\n"
+             "                 IMPORTANT: If the query is completely unrelated to C++, it MUST be OUT_OF_SCOPE. Only use DIRECT or SOCRATIC if there is a clear link to the provided syllabus topics.\n\n"
              "2. Select 2-3 most relevant topics from the provided course topic list that relate to this query.\n"
              "   Only pick from the list — never invent topics.\n"
              "   For OUT_OF_SCOPE queries, return no topics.\n\n"
@@ -116,8 +115,12 @@ class QueryClassifier:
         if label == QueryType.OUT_OF_SCOPE:
             topics = []
 
-        # if nothing verified and not out of scope, fall back to first 2 topics
+        # if nothing verified and not out of scope, it's likely a conversational tangent or out of scope
         if not topics and label != QueryType.OUT_OF_SCOPE:
-            topics = valid_topics[:2]
+            if label == QueryType.SOCRATIC or label == QueryType.DIRECT:
+                # If we were sure it was course-related but couldn't find a topic, 
+                # downgrade to OUT_OF_SCOPE to prevent hallucinating a syllabus match
+                label = QueryType.OUT_OF_SCOPE
+            topics = []
 
         return ClassificationResult(query_type=label, selected_topics=topics)
