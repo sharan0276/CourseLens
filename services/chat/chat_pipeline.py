@@ -1,7 +1,7 @@
 import os
 from typing import Generator, List
 
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.documents import Document
@@ -140,6 +140,16 @@ class ChatPipeline:
             ("human", "{input}"),
         ])
 
+        # Step 3: Summarize history
+        self._summarize_history_prompt = ChatPromptTemplate.from_messages([
+            ("system",
+             "You are a helpful assistant that summarizes conversation history."),
+            ("human", 
+             "Given the previous summary and the new conversation lines, provide a concise updated summary "
+             "of the entire conversation up to this point. Focus on key facts, questions asked, and answers given."
+             "\n\nPrevious Summary:\n{previous_summary}\n\nNew Conversation:\n{new_lines}"),
+        ])
+
     # ── Helpers ───────────────────────────────────────────────────────────────
 
     def _format_docs(self, docs: List[Document]) -> str:
@@ -165,14 +175,38 @@ class ChatPipeline:
         return "\n\n".join(formatted_docs)
 
     def _session_to_lc_history(self, session: ChatSession) -> list:
-        """Convert ChatSession messages to LangChain message objects."""
+        """Convert ChatSession messages to LangChain message objects, including summary if present."""
         lc_msgs = []
-        for msg in session.messages:
+        if session.history_summary:
+            lc_msgs.append(SystemMessage(content=f"Summary of previous conversation:\n{session.history_summary}"))
+            
+        for msg in session.messages[session.summary_index:]:
             if msg.role == "user":
                 lc_msgs.append(HumanMessage(content=msg.content))
             else:
                 lc_msgs.append(AIMessage(content=msg.content))
         return lc_msgs
+
+    def _update_session_summary(self, session: ChatSession):
+        """Summarizes older messages if we exceed the threshold of 2 interactions (4 messages)."""
+        # Keep the last 4 messages unsummarized.
+        if len(session.messages) - session.summary_index > 4:
+            end_idx = len(session.messages) - 4
+            msgs_to_summarize = session.messages[session.summary_index:end_idx]
+            
+            new_lines = ""
+            for m in msgs_to_summarize:
+                role = "User" if m.role == "user" else "Assistant"
+                new_lines += f"{role}: {m.content}\n"
+                
+            chain = self._summarize_history_prompt | self.flash_llm | StrOutputParser()
+            new_summary = chain.invoke({
+                "previous_summary": session.history_summary or "No previous summary.",
+                "new_lines": new_lines
+            })
+            
+            session.history_summary = new_summary
+            session.summary_index = end_idx
 
     def _condense_question(self, history: list, user_input: str) -> str:
         """
@@ -234,6 +268,7 @@ class ChatPipeline:
 
         session.add_message(role="user", content=user_input)
         session.add_message(role="assistant", content=reply)
+        self._update_session_summary(session)
         self.history_store.save_session(session)
 
         return reply
@@ -267,6 +302,7 @@ class ChatPipeline:
             )
             session.add_message(role="user", content=user_input)
             session.add_message(role="assistant", content=reply)
+            self._update_session_summary(session)
             self.history_store.save_session(session)
             yield reply
             return
@@ -291,6 +327,7 @@ class ChatPipeline:
 
         session.add_message(role="user", content=user_input)
         session.add_message(role="assistant", content=full_reply)
+        self._update_session_summary(session)
         self.history_store.save_session(session)
 
     def _should_use_socratic(self, standalone_q: str, lecture_number: int) -> bool:
