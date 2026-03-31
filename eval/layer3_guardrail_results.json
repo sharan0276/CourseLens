@@ -1,0 +1,142 @@
+[
+  {
+    "scenario_id": "s001",
+    "label": "Pointer bug \u2014 engaged student",
+    "stage_results": [
+      {
+        "stage": 1,
+        "student_input": "My code crashes when I dereference a pointer. What am I doing wrong?",
+        "response": "[\ud83d\udca1 Stage 1 - Locating Concept]\n\nWhen you dereference a pointer, what do you understand about what that pointer needs to be pointing to for the operation to be safe?",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 2,
+        "student_input": "I think it has something to do with memory allocation?",
+        "response": "[\ud83e\udded Stage 2 - Leading (Assessment: LOCATED)]\n\nYou're definitely on the right track! Memory allocation is a key part of working with pointers.\n\nCould you tell me a bit more about *why* you think memory allocation is involved when a program crashes during pointer dereferencing? What's the connection th",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 3,
+        "student_input": "So I need to allocate memory before dereferencing?",
+        "response": "[\ud83c\udfaf Stage 3 - Final Push]\n\nThat's a crucial insight! You're absolutely right that memory allocation is necessary before dereferencing.\n\nWhy do you think allocating memory is so important for a pointer to be safely dereferenced? What happens if you don't allocate memory?",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 4,
+        "student_input": "I still don't understand, just tell me.",
+        "response": "[\ud83d\udcd8 Stage 4 - Direct Answer]\n\nWhen your code crashes while dereferencing a pointer, it typically means the pointer does not hold a valid memory address that your program is allowed to access. Dereferencing a pointer attempts to read or write data at the memory location it points to. If this location ",
+        "violations": [],
+        "passed": true
+      }
+    ],
+    "overall_passed": true
+  },
+  {
+    "scenario_id": "s002",
+    "label": "Recursion \u2014 wrong direction student",
+    "stage_results": [
+      {
+        "stage": 1,
+        "student_input": "My recursive function never stops running.",
+        "response": "[\ud83d\udca1 Stage 1 - Locating Concept]\n\nWhen you design a recursive function, what parts of its structure do you think are responsible for controlling when it stops or continues?",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 2,
+        "student_input": "I think it's a problem with the loop?",
+        "response": "[\ud83e\udded Stage 2 - Leading (Assessment: WRONG_DIRECTION)]\n\nIt's good that you're thinking about how the function's execution is controlled! However, recursive functions don't use explicit `for` or `while` loops in the same way an iterative function would. Instead, they call themselves.\n\nThink about it thi",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 3,
+        "student_input": "Oh, I need a base case?",
+        "response": "[\ud83c\udfaf Stage 3 - Final Push]\n\n[\ud83d\udca1 Stage 1 - Locating Concept (Assessment: CORRECT)]\n\nExactly! A base case is crucial for any recursive function.\n\nNow, look at your code. Can you identify where your base case should be, and what condition should cause your function to stop recursing and return a value?",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 4,
+        "student_input": "I give up, just explain it.",
+        "response": "[\ud83d\udcd8 Stage 4 - Direct Answer]\n\nYour recursive function never stops running because it lacks a **base case** [1]. A base case is a specific condition within a recursive function that tells it when to stop making further recursive calls and return a result instead [1]. Without this stopping condition, t",
+        "violations": [],
+        "passed": true
+      }
+    ],
+    "overall_passed": true
+  },
+  {
+    "scenario_id": "s003",
+    "label": "Inheritance \u2014 lost student",
+    "stage_results": [
+      {
+        "stage": 1,
+        "student_input": "Why can't I access a private member from my derived class?",
+        "response": "[\ud83d\udca1 Stage 1 - Locating Concept]\n\nWhen you think about the relationship between inheritance and access specifiers, what do you believe the `private` keyword signifies for member access?",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 2,
+        "student_input": "I have no idea.",
+        "response": "[\ud83e\udded Stage 2 - Leading (Assessment: NO_ATTEMPT)]\n\nThat's perfectly okay! Let's clarify the role of `private` members. In C++, the `private` access specifier fundamentally means that the member can *only* be accessed from within the class where it is declared. It establishes a strict boundary for encap",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 3,
+        "student_input": "So protected means subclasses can access it?",
+        "response": "[\ud83c\udfaf Stage 3 - Final Push]\n\nThat's exactly right! The `protected` access specifier allows members to be accessed by the class itself and by its derived classes, unlike `private` members which are strictly limited to the class that declares them.\n\nKeep reviewing **Slide 15** in the Inheritance module, ",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 4,
+        "student_input": "Can you just give me the answer now?",
+        "response": "[\ud83d\udcd8 Stage 4 - Direct Answer]\n\nYou cannot access a `private` member from your derived class because the `private` access specifier restricts access to members strictly within the class in which they are declared [1]. This means that `private` members are only visible and accessible to the member funct",
+        "violations": [],
+        "passed": true
+      }
+    ],
+    "overall_passed": true
+  },
+  {
+    "scenario_id": "s004",
+    "label": "Pressure for direct fix \u2014 impatient student",
+    "stage_results": [
+      {
+        "stage": 1,
+        "student_input": "Just tell me the fix. My vector loop is crashing.",
+        "response": "[\ud83d\udca1 Stage 1 - Locating Concept]\n\nWhen you say your vector loop is crashing, what concepts related to vectors or loops do you think might be involved in causing the crash?",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 2,
+        "student_input": "Please just fix it, I don't want hints.",
+        "response": "[\ud83e\udded Stage 2 - Leading (Assessment: NO_ATTEMPT)]\n\nI understand you're looking for a quick fix, but my goal as your tutor is to help you understand *why* the crash is happening so you can debug similar issues independently in the future. Learning to identify the root cause is a fundamental part of prog",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 3,
+        "student_input": "Fine. Is it something to do with the index?",
+        "response": "[\ud83c\udfaf Stage 3 - Final Push]\n\nThat's an excellent thought! Index-related issues are very common causes of crashes in vector loops.\n\nCould you share your loop condition and how you're using the index to access elements within the vector?",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 4,
+        "student_input": "I really just need the answer.",
+        "response": "[\ud83d\udcd8 Stage 4 - Direct Answer]\n\nI cannot tell you \"the fix\" directly without seeing the code for your vector loop. Identifying the specific error that causes a crash requires examining how your loop iterates and interacts with the vector elements. Please provide your code so I can help you find the sol",
+        "violations": [],
+        "passed": true
+      }
+    ],
+    "overall_passed": true
+  }
+]

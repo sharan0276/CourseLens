@@ -1,7 +1,7 @@
 import os
 from typing import Generator, List
 
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.documents import Document
@@ -13,6 +13,7 @@ from services.rag.chroma_retriever import VectorStoreManager
 from services.chat.query_classifier import QueryClassifier
 from services.chat.anchor_retrieval import AnchorRetrieval
 from services.chat.socratic_engine import SocraticEngine
+from services.chat.summarization_engine import SummarizationEngine
 from services.chat.query_router import QueryRouter
 
 
@@ -73,13 +74,18 @@ class ChatPipeline:
             flash_llm=flash_llm,
             anchor_retrieval=anchor_retrieval
         )
+        summarization_engine = SummarizationEngine(
+            llm=llm,
+            retrieval_service=self.retrieval_service
+        )
 
         # added: QueryRouter wires classifier, anchor retrieval, and socratic engine
         # replaces the inline retrieval call that previously lived in chat() and chat_stream()
         self.query_router = QueryRouter(
             classifier=classifier,
             anchor_retrieval=anchor_retrieval,
-            socratic_engine=socratic_engine
+            socratic_engine=socratic_engine,
+            summarization_engine=summarization_engine
         )
 
         # ── Prompts ──────────────────────────────────────────────────────────
@@ -139,17 +145,15 @@ class ChatPipeline:
             ("human", "{input}"),
         ])
 
-        self._conversational_prompt = ChatPromptTemplate.from_messages([
+        # Step 3: Summarize history
+        self._summarize_history_prompt = ChatPromptTemplate.from_messages([
             ("system",
-             "You are the friendly CourseLens Socratic Tutor (General Computing + C++). Respond naturally to the user's greeting, pleasantry, or meta-question about the conversation history. Answer using the chat history provided. Do not invent course material."),
-            MessagesPlaceholder("history"),
-            ("human", "{input}")
+             "You are a helpful assistant that summarizes conversation history."),
+            ("human", 
+             "Given the previous summary and the new conversation lines, provide a concise updated summary "
+             "of the entire conversation up to this point. Focus on key facts, questions asked, and answers given."
+             "\n\nPrevious Summary:\n{previous_summary}\n\nNew Conversation:\n{new_lines}"),
         ])
-
-    def _conversational_answer(self, session: ChatSession, standalone_q: str, user_input: str) -> str:
-        lc_history = self._session_to_lc_history(session)
-        answer_chain = self._conversational_prompt | self.llm | StrOutputParser()
-        return answer_chain.invoke({"history": lc_history, "input": user_input})
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -176,14 +180,38 @@ class ChatPipeline:
         return "\n\n".join(formatted_docs)
 
     def _session_to_lc_history(self, session: ChatSession) -> list:
-        """Convert ChatSession messages to LangChain message objects."""
+        """Convert ChatSession messages to LangChain message objects, including summary if present."""
         lc_msgs = []
-        for msg in session.messages:
+        if session.history_summary:
+            lc_msgs.append(SystemMessage(content=f"Summary of previous conversation:\n{session.history_summary}"))
+            
+        for msg in session.messages[session.summary_index:]:
             if msg.role == "user":
                 lc_msgs.append(HumanMessage(content=msg.content))
             else:
                 lc_msgs.append(AIMessage(content=msg.content))
         return lc_msgs
+
+    def _update_session_summary(self, session: ChatSession):
+        """Summarizes older messages if we exceed the threshold of 2 interactions (4 messages)."""
+        # Keep the last 4 messages unsummarized.
+        if len(session.messages) - session.summary_index > 4:
+            end_idx = len(session.messages) - 4
+            msgs_to_summarize = session.messages[session.summary_index:end_idx]
+            
+            new_lines = ""
+            for m in msgs_to_summarize:
+                role = "User" if m.role == "user" else "Assistant"
+                new_lines += f"{role}: {m.content}\n"
+                
+            chain = self._summarize_history_prompt | self.flash_llm | StrOutputParser()
+            new_summary = chain.invoke({
+                "previous_summary": session.history_summary or "No previous summary.",
+                "new_lines": new_lines
+            })
+            
+            session.history_summary = new_summary
+            session.summary_index = end_idx
 
     def _condense_question(self, history: list, user_input: str) -> str:
         """
@@ -247,6 +275,7 @@ class ChatPipeline:
 
         session.add_message(role="user", content=user_input)
         session.add_message(role="assistant", content=reply)
+        self._update_session_summary(session)
         self.history_store.save_session(session)
 
         return reply
@@ -281,6 +310,7 @@ class ChatPipeline:
             )
             session.add_message(role="user", content=user_input)
             session.add_message(role="assistant", content=reply)
+            self._update_session_summary(session)
             self.history_store.save_session(session)
             yield reply
             return
@@ -305,6 +335,7 @@ class ChatPipeline:
 
         session.add_message(role="user", content=user_input)
         session.add_message(role="assistant", content=full_reply)
+        self._update_session_summary(session)
         self.history_store.save_session(session)
 
     def _should_use_socratic(self, standalone_q: str, lecture_number: int) -> bool:
@@ -316,8 +347,7 @@ class ChatPipeline:
         Only called when not already in an active Socratic loop.
         """
         result = self.query_router.classifier.classify(standalone_q, lecture_number)
-        q_type = getattr(result.query_type, "value", result.query_type)
-        return q_type in ["SOCRATIC", "OUT_OF_SCOPE", "CONVERSATIONAL"]
+        return result.query_type.value in ["SOCRATIC", "OUT_OF_SCOPE", "SUMMARIZE_LECTURE"]
 
     # ── Guardrail (coding mode) ────────────────────────────────────────────────
 
