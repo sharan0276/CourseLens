@@ -212,4 +212,29 @@ class IngestionService:
         for json_path in glob.glob(os.path.join(folder_path, "*.json")):
             self.create_embeddings_for_file(json_path)
             
+        # PROD: Rebuild the BM25 index using the fully updated Chroma DB
+        self._build_bm25_index()
         print("\nEmbeding complete for all files")
+
+    def _build_bm25_index(self):
+        """Builds a persistent BM25 index from all documents currently in Chroma."""
+        print("\nBuilding BM25 Sparse Index...")
+        try:
+            from langchain_community.retrievers import BM25Retriever
+            from langchain_core.documents import Document
+            import pickle
+
+            all_data = self.vector_store.collection.get(include=["documents", "metadatas"])
+            docs = []
+            for t, m, i in zip(all_data['documents'], all_data['metadatas'], all_data['ids']):
+                docs.append(Document(page_content=t, metadata=m, id=i))
+            
+            if docs:
+                bm25 = BM25Retriever.from_documents(docs)
+                with open("CourseLens_data/bm25_retriever.pkl", "wb") as f:
+                    pickle.dump(bm25, f)
+                print(f"Success! Built and securely cached BM25 index over {len(docs)} documents.")
+            else:
+                print("No documents found to build BM25 index.")
+        except Exception as e:
+            print(f"Failed to build BM25 index: {e}")

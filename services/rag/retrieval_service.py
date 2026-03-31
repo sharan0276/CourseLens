@@ -1,17 +1,19 @@
 from typing import List
 from langchain_core.documents import Document
 from services.rag.chroma_retriever import VectorStoreManager
+from services.rag.bm25_retriever import BM25Manager
 import chromadb
 
 
 class RetrievalService:
     """
-    Handles retrieval with parent-child expansion and image-only slide navigation (to fetch relevant context).
+    Handles hybrid retrieval (Dense + Sparse) with parent-child expansion and image-only slide navigation.
     It will be the intermediary between the RAG pipeline and the vector store.
     """
-    def __init__(self, vector_store_manager: VectorStoreManager, db_path: str = "CourseLens_data/chroma_db", 
+    def __init__(self, vector_store_manager: VectorStoreManager, bm25_manager: BM25Manager = None, db_path: str = "CourseLens_data/chroma_db", 
                  collection_name: str = "course_lens", k: int = 5, parent_swap_threshold: int = 2, search_type : str = "similarity"):
         self.vector_store_manager = vector_store_manager
+        self.bm25_manager = bm25_manager
         self.k = k
         self.parent_swap_threshold = parent_swap_threshold
         self.search_type = search_type
@@ -32,8 +34,13 @@ class RetrievalService:
         # Use the provided k, or fallback to the instance default k
         search_k = k if k is not None else self.k
 
-        # Step 1  Similarity Search
-        retrieved_docs = self.vector_store_manager.similarity_search(query, k=search_k, filter=filter_dict)
+        # Step 1: Hybrid Similarity Search (Dense + Sparse Fusion)
+        dense_docs = self.vector_store_manager.similarity_search(query, k=20, filter=filter_dict)
+        if self.bm25_manager:
+            sparse_docs = self.bm25_manager.search(query, k=20, filter=filter_dict)
+            retrieved_docs = self._reciprocal_rank_fusion(dense_docs, sparse_docs, k=search_k)
+        else:
+            retrieved_docs = dense_docs[:search_k]
         
         # Step 2: Handle image-only slides
         retrieved_docs = self._handle_image_slides(retrieved_docs)
@@ -48,7 +55,24 @@ class RetrievalService:
 
         return retrieved_docs
 
-    
+    def _reciprocal_rank_fusion(self, dense_docs: List[Document], sparse_docs: List[Document], k: int) -> List[Document]:
+        """Mathematically merges dense conceptual matches with sparse exact keyword matches."""
+        fused_scores = {}
+        docs_dict = {}
+        
+        for rank, doc in enumerate(dense_docs):
+            doc_id = doc.page_content[:300]
+            fused_scores[doc_id] = fused_scores.get(doc_id, 0.0) + 1.0 / (rank + 60)
+            docs_dict[doc_id] = doc
+            
+        for rank, doc in enumerate(sparse_docs):
+            doc_id = doc.page_content[:300]
+            fused_scores[doc_id] = fused_scores.get(doc_id, 0.0) + 1.0 / (rank + 60)
+            docs_dict[doc_id] = doc
+            
+        reranked = sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
+        return [docs_dict[doc_id] for doc_id, score in reranked[:k]]
+
 
     def _log_retrieved_chunks(self, docs: List[Document]):
         """

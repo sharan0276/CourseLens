@@ -41,11 +41,13 @@ class ChatPipeline:
         persist_dir: str = "CourseLens_data/chroma_db",
         collection_name: str = "course_lens"
     ):
+        from services.rag.bm25_retriever import BM25Manager
         self.vector_store = VectorStoreManager(
             embeddings_model=embeddings,
             persist_directory=persist_dir,
             collection_name=collection_name
         )
+        self.bm25_manager = BM25Manager()
         self.history_store = history_store
         self.llm = llm
         self.flash_llm = flash_llm  # added: stored so QueryRouter components can use it
@@ -57,6 +59,7 @@ class ChatPipeline:
         # unchanged from before — QueryRouter reuses the same instance for both paths
         self.retrieval_service = RetrievalService(
             vector_store_manager=self.vector_store,
+            bm25_manager=self.bm25_manager,
             db_path=persist_dir,
             collection_name=collection_name,
             k=k
@@ -114,7 +117,8 @@ class ChatPipeline:
                 "6. If the student is completely stuck after 3 turns, you may give a stronger hint\n"
                 "but still no direct code fix.\n"
                 "7. Acknowledge what the student got right before pointing out what's wrong.\n"
-                "8. Always cite the most relevant slide number and source file at the end of your response.\n\n"
+                "8. EXCEPTION: If the student asks if their code is completely correct, and you review it and find absolutely ZERO bugs, you MUST explicitly validate their code ('Your code is completely correct!') and bypass all Socratic rules.\n"
+                "9. Always cite the most relevant slide number and source file at the end of your response.\n\n"
                 "RESPONSE FORMAT — every response must follow this structure:\n"
                 "- One sentence acknowledging the error type\n"
                 "- One guiding question or observation pointing toward the bug\n"
@@ -123,13 +127,14 @@ class ChatPipeline:
             )
         else:
             system_answer = (
-                "You are an assistant for question-answering tasks based on course materials.\n"
+                "You are the CourseLens Socratic Tutor, an expert on the entire breadth of this course (from General Computing, Binary, and Architecture basics to C++ Programming).\n"
                 "Use the following pieces of retrieved context to answer the user's question.\n"
-                "You may synthesize foundational concepts or background understanding if the exact answer is not stated verbatim, BUT YOU MUST do so strictly using only the provided context chunks.\n"
-                "Do not introduce external knowledge. If the provided context chunks do not contain enough information to reasonably infer the answer, just say that you don't know.\n"
-                "Use ten sentences maximum and keep the answer concise.\n"
-                "Every factual claim MUST be followed by a citation in the form [N]. If a claim draws from multiple sources, cite all of them: [1][3].\n"
-                "At the end, always include a 'Sources Used' section listing every citation number you used with its source file and title.\n"
+                "You may synthesize foundational concepts or relatable analogies (e.g. 'building blocks', 'car assembly') to clarify technical terms, even if those specific examples are not in the slides. Do NOT introduce advanced C++ features or libraries not mentioned in the text. Your goal is pedagogical clarity.\n"
+                "If the provided context chunks do not contain enough information to reasonably infer the answer, just say that you don't know.\n"
+                "Use ten sentences maximum and keep the answer concise.\n\n"
+                "FORMATTING & CITATION RULES:\n"
+                "1. Use bullet points for technical lists or multi-step explanations to improve readability.\n"
+                "2. Use the exact format [filename, Slide N] directly in the text after factual claims (e.g., 'C++ uses cout for output [chap01.pptx, Slide 7]'). Do NOT use [1] or [2] yourself; the system will automatically convert your bracketed citations into sequential numbers for the user.\n\nCRITICAL: If a retrieved document contains 'Attached Images', and the image is relevant to your answer, you MUST include it using markdown: `![Description](CourseLens_data/images/<filename>)`. Ensure diagrams like the Control Unit are shown when explaining them."
                 "IMPORTANT: If a retrieved document contains 'Attached Images: <filename>', and the image is relevant to your answer, you MUST include it in your response using markdown syntax: `![Image Description](CourseLens_data/images/<filename>)`\n"
                 "\nContext:\n{context}"
             )
@@ -215,6 +220,7 @@ class ChatPipeline:
         """
         if not history:
             return user_input
+        
         chain = self._condense_prompt | self.llm | StrOutputParser()
         return chain.invoke({"history": history, "input": user_input})
 
@@ -263,7 +269,8 @@ class ChatPipeline:
             user_input=user_input,
             standalone_q=standalone_q,
             lecture_number=lecture_number,
-            direct_handler=lambda sq, ui: self._direct_answer(session, sq, ui)
+            direct_handler=lambda sq, ui: self._direct_answer(session, sq, ui),
+            conversational_handler=lambda sq, ui: self._conversational_answer(session, sq, ui)
         )
 
         session.add_message(role="user", content=user_input)
@@ -298,7 +305,8 @@ class ChatPipeline:
                 user_input=user_input,
                 standalone_q=standalone_q,
                 lecture_number=lecture_number,
-                direct_handler=lambda sq, ui: self._direct_answer(session, sq, ui)
+                direct_handler=lambda sq, ui: self._direct_answer(session, sq, ui),
+                conversational_handler=lambda sq, ui: self._conversational_answer(session, sq, ui)
             )
             session.add_message(role="user", content=user_input)
             session.add_message(role="assistant", content=reply)
