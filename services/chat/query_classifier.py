@@ -10,6 +10,7 @@ class QueryType(Enum):
     DIRECT = "DIRECT"
     SOCRATIC = "SOCRATIC"
     OUT_OF_SCOPE = "OUT_OF_SCOPE"
+    CONVERSATIONAL = "CONVERSATIONAL"
     SUMMARIZE_LECTURE = "SUMMARIZE_LECTURE"
 
 
@@ -164,6 +165,7 @@ class QueryClassifier:
                     "DIRECT": QueryType.DIRECT,
                     "SOCRATIC": QueryType.SOCRATIC,
                     "OUT_OF_SCOPE": QueryType.OUT_OF_SCOPE,
+                    "CONVERSATIONAL": QueryType.CONVERSATIONAL,
                     "SUMMARIZE_LECTURE": QueryType.SUMMARIZE_LECTURE,
                 }.get(value, QueryType.SOCRATIC)
 

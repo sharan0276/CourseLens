@@ -138,6 +138,13 @@ class ChatPipeline:
                 "IMPORTANT: If a retrieved document contains 'Attached Images: <filename>', and the image is relevant to your answer, you MUST include it in your response using markdown syntax: `![Image Description](CourseLens_data/images/<filename>)`\n"
                 "\nContext:\n{context}"
             )
+            
+        self._conversational_prompt = ChatPromptTemplate.from_messages([
+            ("system",
+             "You are a friendly C++ course assistant. Respond naturally to the user's greeting, pleasantry, or meta-question about the conversation history. Answer using the chat history provided. Do not invent course material."),
+            MessagesPlaceholder("history"),
+            ("human", "{input}")
+        ])
 
         self._answer_prompt = ChatPromptTemplate.from_messages([
             ("system", system_answer),
@@ -154,6 +161,11 @@ class ChatPipeline:
              "of the entire conversation up to this point. Focus on key facts, questions asked, and answers given."
              "\n\nPrevious Summary:\n{previous_summary}\n\nNew Conversation:\n{new_lines}"),
         ])
+    def _conversational_answer(self, session: ChatSession, standalone_q: str, user_input: str) -> str:
+        lc_history = self._session_to_lc_history(session)
+        answer_chain = self._conversational_prompt | self.llm | StrOutputParser()
+        return answer_chain.invoke({"history": lc_history, "input": user_input})
+
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 
