@@ -51,12 +51,43 @@ class QueryRouter:
                              signature: direct_handler(standalone_q, user_input) -> str
         """
 
-        # ── Mid-Loop Direct Passthrough ──────────────────────────────────────────────
-        # If the student is actively engaged in a Socratic loop, bypass the generic 
-        # router classifier. The Socratic Engine's Flash Assessor is infinitely better 
-        # equipped to handle tracking conversational answers, topic changes, and distractions.
+        # ── Escape signal check — fast-track to Stage 4 if student asks for help ──
+        # Must run before Socratic loop check so it can override mid-loop behaviour.
+        _ESCAPE_SIGNALS = (
+            "just tell me", "can you just explain", "skip to explanation",
+            "skip", "i am still confused", "just explain it",
+        )
+        ui_lower = user_input.strip().lower()
+        if session.in_socratic_loop() and any(ui_lower.startswith(sig) for sig in _ESCAPE_SIGNALS):
+            print("\n[Router] Escape signal detected — fast-tracking to Stage 4 debrief")
+            session.ta_stage = 4
+            return self.socratic_engine.respond(session, user_input)
+
+        # ── Mid-Loop Direct Passthrough ───────────────────────────────────────
         if session.in_socratic_loop():
             return self.socratic_engine.respond(session, user_input)
+
+        # ── Deterministic prefix checks on raw user_input ────────────────────
+        # Run BEFORE classify() so condensing can't strip question starters.
+        if any(ui_lower.startswith(p) for p in self.classifier._DIRECT_PREFIXES):
+            print("\n[Router] Raw input prefix → forcing Direct Answer")
+            return direct_handler(standalone_q, user_input)
+
+        if any(ui_lower.startswith(p) for p in self.classifier._SOCRATIC_PREFIXES):
+            print("\n[Router] Raw input prefix → forcing Socratic Engine")
+            result = self.classifier.classify(standalone_q, lecture_number)
+            topics = result.selected_topics
+            self.anchor_retrieval.anchor(
+                session=session,
+                topics=topics,
+                lecture_number=lecture_number
+            )
+            session.start_socratic_loop(
+                query=user_input,
+                chunk_ids=session.anchored_chunk_ids,
+                topics=topics
+            )
+            return self.socratic_engine.respond(session=session, user_input=user_input)
 
         # ── Fresh query — classify and route ─────────────────────────────────
         result = self.classifier.classify(standalone_q, lecture_number)
@@ -67,7 +98,6 @@ class QueryRouter:
 
         if result.query_type == QueryType.OUT_OF_SCOPE:
             print("\n[Router] Routing to Out Of Scope handler")
-            # check future lectures before redirecting
             return self.socratic_engine.respond_out_of_scope(
                 user_input=user_input,
                 selected_topics=result.selected_topics,
@@ -76,23 +106,17 @@ class QueryRouter:
 
         if result.query_type == QueryType.SOCRATIC:
             print("\n[Router] Routing to Socratic Engine")
-            # anchor retrieval once — stores chunk IDs in session
             self.anchor_retrieval.anchor(
                 session=session,
                 topics=result.selected_topics,
                 lecture_number=lecture_number
             )
-            # start the Socratic loop state on the session
             session.start_socratic_loop(
                 query=user_input,
                 chunk_ids=session.anchored_chunk_ids,
                 topics=result.selected_topics
             )
-            # respond with stage 1 locating question
-            return self.socratic_engine.respond(
-                session=session,
-                user_input=user_input
-            )
+            return self.socratic_engine.respond(session=session, user_input=user_input)
 
         # DIRECT — pass to existing RAG chain via the handler callable
         print("\n[Router] Routing to Direct Answer")

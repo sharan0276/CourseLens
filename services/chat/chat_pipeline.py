@@ -128,8 +128,7 @@ class ChatPipeline:
                 "Use ten sentences maximum and keep the answer concise.\n\n"
                 "FORMATTING & CITATION RULES:\n"
                 "1. Use bullet points for technical lists or multi-step explanations to improve readability.\n"
-                "2. Do NOT use sequential numbering like [1], [2]. Instead, place the [filename, Slide Number] directly in the text after factual claims (e.g., 'C++ uses cout for output [chap01.pptx, Slide 7]').\n"
-                "3. Do NOT include a 'Sources Used' footer section at the end. The inline citations provide all information immediately.\n\n"
+                "2. Use the exact format [filename, Slide N] directly in the text after factual claims (e.g., 'C++ uses cout for output [chap01.pptx, Slide 7]'). Do NOT use [1] or [2] yourself; the system will automatically convert your bracketed citations into sequential numbers for the user.\n\nCRITICAL: If a retrieved document contains 'Attached Images', and the image is relevant to your answer, you MUST include it using markdown: `![Description](CourseLens_data/images/<filename>)`. Ensure diagrams like the Control Unit are shown when explaining them."
                 "IMPORTANT: If a retrieved document contains 'Attached Images: <filename>', and the image is relevant to your answer, you MUST include it in your response using markdown syntax: `![Image Description](CourseLens_data/images/<filename>)`\n"
                 "\nContext:\n{context}"
             )

@@ -49,7 +49,7 @@ class SocraticEngine:
              "NO_ATTEMPT — student said they don't know, gave no answer, or is clearly lost\n"
              "BUG_RESOLVED — student successfully fixed or correctly answered the specific issue being discussed, but other bugs might remain\n\n"
              "IMPORTANT: Use the conversation history to understand what the tutor just asked or hinted. If the student correctly provided the information the tutor was looking for, mark it as LOCATED or BUG_RESOLVED accordingly.\n"
-             "BE GENEROUS AND CONTEXT-AWARE: If the student identifies the core idea or describes a highly related technical process (e.g., 'running code' for 'testing', 'loading/executing' for 'observing behavior'), mark it as BUG_RESOLVED. Avoid pedantry: our goal is to validate their correct intuition even if they don't use the exact textbook term yet.\n\n"
+             "BE GENEROUS AND CONTEXT-AWARE: If the student identifies the core idea or describes a highly related technical process (e.g., 'running code' for 'testing', 'loading/executing' for 'observing behavior'), mark it as BUG_RESOLVED. Avoid pedantry: our goal is to validate their correct intuition even if they don't use the exact textbook term yet.\nIf the student is 80% correct but has one small misconception, you may still use WRONG_DIRECTION to trigger a correction, but ensure you FIRST validate their correct reasoning in your response.\n\n"
              "Reply with ONLY the label. No explanation."),
             MessagesPlaceholder("history"),
             ("human", "{student_reply}")
@@ -72,8 +72,9 @@ class SocraticEngine:
              "4. Keep it extremely brief and conversational — one or two sentences maximum.\n"
              "5. Check the conversation history. If the history contains discussions about OTHER topics or previous questions, IGNORE them for your opening. ONLY if the history shows you are already mid-discussion about THIS SPECIFIC question ({active_problem_query}), you may use words like 'As we discussed' or 'We've talked about'. If this is the FIRST response to this specific doubt, you MUST start naturally and freshly without referencing the past.\n"
              "6. You may synthesize relatable analogies or examples (e.g. 'building blocks') to clarify the foundational concept, provided they do not contradict context. Do NOT introduce advanced C++ features or libraries not mentioned in context. Your goal is pedagogical clarity.\n"
-
+             "CITATION RULE: If you reference any factual claim from the course material, use the exact format [filename, Slide N] inline (e.g., 'C++ uses cout [chap02.pptx, Slide 7]'). Do NOT use [1] or [2] yourself.\n\n"
              "Context from course material:\n{context}"),
+
             ("human", "{input}")
         ])
 
@@ -93,7 +94,7 @@ class SocraticEngine:
              "3. Teach sequentially: always address foundational concepts before dependent steps.\n"
              "4. Check the conversation history. ONLY if you find that you have already discussed a related concept *within this specific Socratic loop* for the current question ({active_problem_query}), you MUST start your response with 'As we already discussed...' to acknowledge it. If the history is about a completely different previous question, do NOT use this phrase.\n"
              "5. You may synthesize relatable analogies or examples (e.g. 'building blocks') to clarify technical terms, even if those specific examples are not in the slides. Do NOT introduce advanced C++ features or libraries not mentioned in the text. Your goal is pedagogical clarity.\n"
-             "6. Use bullet points for technical lists where possible. Before the student answers, you MUST explicitly nudge them to review a specific source/slide from the context (e.g., 'Before you answer, I recommend reviewing [chap01.pptx, Slide 7]'). Do NOT use [1, 2] numbering.\n"
+             "6. Use bullet points for technical lists where possible. You MUST mention the specific slide and file naturally in your response so the student can look it up (e.g., 'Take a look at chap02.pptx, Slide 26' or 'Check Slide 40 of chap03.pptx'). Do NOT use [filename, Slide N] bracket format — no bibliography at this stage.\n"
              "7. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
              "8. ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
              "Context from course material:\n{context}"),
@@ -115,7 +116,7 @@ class SocraticEngine:
              "3. Check the conversation history. ONLY if you find that you have already discussed a related concept *within this specific Socratic loop* for the current question ({active_problem_query}), you MUST start your response with 'As we already discussed...' to acknowledge it. If the history is about a completely different previous question, do NOT use this phrase.\n"
              "4. Do not overwhelm — one correction + one hint only.\n"
              "5. You may synthesize relatable analogies or examples (e.g. 'building blocks') to clarify technical terms, even if those specific examples are not in the slides. Do NOT introduce advanced C++ features or libraries not mentioned in the text. Your goal is pedagogical clarity.\n"
-             "6. Use bullet points for technical lists where possible. Before the student answers, you MUST explicitly nudge them to review a specific source/slide from the context (e.g., 'Before you answer, I recommend reviewing [chap01.pptx, Slide 7]'). Do NOT use [1, 2] numbering.\n"
+             "6. Use bullet points for technical lists where possible. You MUST mention the specific slide and file naturally in your response so the student can look it up (e.g., 'Take a look at chap02.pptx, Slide 26' or 'Check Slide 40 of chap03.pptx'). Do NOT use [filename, Slide N] bracket format — no bibliography at this stage.\n"
              "7. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
              "8. ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
              "Context from course material:\n{context}"),
@@ -137,7 +138,7 @@ class SocraticEngine:
              "3. Check the conversation history. ONLY if you find that you have already discussed a related concept *within this specific Socratic loop* for the current question ({active_problem_query}), you MUST start your response with 'As we already discussed...' to acknowledge it. If the history is about a completely different previous question, do NOT use this phrase.\n"
              "4. Do NOT give the full answer to the original question yet\n"
              "5. You may synthesize relatable analogies or examples (e.g. 'building blocks') to clarify technical terms, even if those specific examples are not in the slides. Do NOT introduce advanced C++ features or libraries not mentioned in the text. Your goal is pedagogical clarity.\n"
-             "6. Use bullet points for technical lists where possible. Before the student answers, you MUST explicitly nudge them to review a specific source/slide from the context (e.g., 'Before you answer, I recommend reviewing [chap01.pptx, Slide 7]'). Do NOT use [1, 2] numbering.\n"
+             "6. Use bullet points for technical lists where possible. You MUST include 1-2 specific slide citations so students can look up the concept. Use the exact format [filename, Slide N] inline (e.g., 'Refer to Compound Assignment [chap03.pptx, Slide 40]'). Do NOT use [1] or [2] yourself.\n"
              "7. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
              "8. ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
              "Context from course material:\n{context}"),
@@ -159,35 +160,39 @@ class SocraticEngine:
              "1. Still do NOT give the full answer directly\n"
              "2. Be specific and concrete — vague nudges are not helpful at this stage\n"
              "3. Check the conversation history. ONLY if you find that you have already discussed a related concept *within this specific Socratic loop* for the current question ({active_problem_query}), you MUST start your response with 'As we already discussed...' to acknowledge it. If the history is about a completely different previous question, do NOT use this phrase.\n"
-             "FORMATTING & CITATION RULES:\n"
+             "CITATION RULE: You MUST mention the specific slide and file naturally in your response so the student can look it up (e.g., 'Take a look at chap02.pptx, Slide 26' or 'Check Slide 40 of chap03.pptx'). Do NOT use [filename, Slide N] bracket format — the student should be looking things up, not receiving a bibliography yet.\n"
              "1. Use bullet points for technical lists or multi-step explanations to improve readability.\n"
-             "2. Do NOT use sequential numbering like [1], [2]. Instead, provide a proactive directional nudge (e.g., 'Before you answer, I recommend reviewing [chap01.pptx, Slide 7]').\n"
-             "3. NO FOOTERS: Do not include a 'Sources Used' section.\n\n"
              "ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your sentence with the exact magic word: '[COMPLETE]'.\n\n"
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
         ])
 
-        # ── Stage 4 Prompt — Direct Answer ───────────────────────────────────
-        # overflow only — drop all Socratic framing entirely
+        # ── Stage 4 Prompt — Debrief + Direct Answer ──────────────────────────
+        # overflow only — structured debrief, NOT another question
         self._stage4_prompt = ChatPromptTemplate.from_messages([
             ("system",
-             "You are the CourseLens Socratic Tutor, an expert on the entire breadth of this course (from General Computing, Binary, and Architecture basics to C++ Programming).\n"
-             "Provide a complete, direct answer to the student's original question.\n\n"
+             "You are the CourseLens Socratic Tutor.\n"
+             "The student has reached the end of the guided session without fully arriving at the answer.\n"
+             "Your job now is to give a warm, structured DEBRIEF — not another question, not a hint. A full answer with context.\n\n"
              "Original question: {active_problem_query}\n\n"
-             "IMPORTANT: Review the entire conversation history. In addition to answering the original query, you MUST address any specific sub-questions, doubts, or related concepts (like the '==' operator) that the student raised during this Socratic session. Ensure the student leaves with all their questions answered.\n\n"
-             "You may synthesize foundational concepts or relatable analogies (e.g. 'building blocks') to clarify technical terms, even if those specific examples are not in the slides. Do NOT introduce advanced C++ features or libraries not mentioned in the text. Your goal is pedagogical clarity.\n"
-             "Use ten sentences maximum and keep the answer concise.\n\n"
-                "FORMATTING & CITATION RULES:\n"
-                "1. Use bullet points for technical lists or multi-step explanations to improve readability.\n"
-                "2. Do NOT use sequential numbering like [1], [2]. Instead, place the [filename, Slide Number] directly in the text after factual claims (e.g., 'C++ uses cout for output [chap01.pptx, Slide 7]').\n"
-                "3. NO FOOTERS: Do not include a 'Sources Used' section at the end.\n\n"
-             "IMPORTANT: If a retrieved document contains 'Attached Images: <filename>', and the image is relevant to your answer, you MUST include it in your response using markdown syntax: `![Image Description](CourseLens_data/images/<filename>)`\n\n"
+             "Structure your response in this exact order:\n"
+             "1. JOURNEY RECAP (1-2 sentences): Briefly acknowledge what we explored together. E.g. 'In our session, we worked through reliability and cost effectiveness...'\n"
+             "2. WHAT YOU GOT RIGHT: Validate the correct ideas the student identified. Be specific and encouraging.\n"
+             "3. THE MISSING PIECE: Clearly and kindly explain the concept(s) the student did not reach, and WHY the hints pointed there.\n"
+             "4. FULL ANSWER: Provide the complete, direct answer to the original question with all key points. Use bullet points for lists.\n\n"
+             "STRICT RULES:\n"
+             "1. ⚠️ MANDATORY — ABSOLUTELY DO NOT ask any questions whatsoever. Not rhetorical, not clarifying, not follow-up. Zero questions. Even if you see unresolved issues or bugs remaining in the code, you MUST present ALL of them in section 4 (FULL ANSWER) and close the loop completely. A student asking another question is their responsibility — yours is to give the full answer NOW.\n"
+             "2. Be warm and encouraging, not dismissive.\n"
+             "3. Keep each section concise. Total response should not exceed 15 sentences.\n"
+             "4. Use the exact format [filename, Slide N] after factual claims for citations. Do NOT use [1] or [2] yourself.\n"
+             "5. If a retrieved document contains 'Attached Images', include it using: `![Description](CourseLens_data/images/<filename>)`.\n\n"
              "Context from course material:\n{context}"),
+
             MessagesPlaceholder("history"),
             ("human", "{input}")
         ])
+
 
         # ── Out of Scope Prompt ───────────────────────────────────────────────
         # no retrieval, no stages — two sentence redirect back to course content
@@ -233,8 +238,7 @@ class SocraticEngine:
              "4. Do NOT ask any further Socratic questions.\n\n"
              "FORMATTING & CITATION RULES:\n"
              "1. Use bullet points for technical lists or multi-step explanations to improve readability.\n"
-             "2. Do NOT use sequential numbering like [1], [2]. Instead, provide a proactive directional nudge (e.g., 'Before you answer, I recommend reviewing [chap01.pptx, Slide 7]').\n"
-             "3. NO FOOTERS: Do not include a 'Sources Used' section.\n\n"
+             "2. Use the exact format [filename, Slide N] directly in the text after factual claims (e.g., 'C++ uses cout for output [chap01.pptx, Slide 7]'). Do NOT use [1] or [2] yourself; the system will automatically convert your bracketed citations into sequential numbers for the user.\n\nCRITICAL: If a retrieved document contains 'Attached Images', and the image is relevant to your answer, you MUST include it using markdown: `![Description](CourseLens_data/images/<filename>)`. Ensure diagrams like the Control Unit are shown when explaining them."
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -268,29 +272,35 @@ class SocraticEngine:
             # first turn — ask the locating question
             print("\n[Socratic Engine] Executing Stage 1 (Locating Question)")
             reply = self._run(self._stage1_prompt, base_args)
+            reply += "\n\n*(Tip: say **\"just tell me\"** or **\"skip to explanation\"** at any point to get the direct answer.)*"
             reply = f"[💡 Stage 1 - Locating Concept]\n\n{reply}"
             session.advance_stage()
 
-        elif session.ta_stage in [2, 3, 4]:
-            # We must assess even in Stage 3 and 4 to see if they resolved the bug before overflowing
+        elif session.ta_stage == 4:
+            # Stage 4 fires UNCONDITIONALLY — no assessment, no more questions
+            print("\n[Socratic Engine] Executing Stage 4 (Debrief + Direct Answer)")
+            reply = self._run(self._stage4_prompt, base_args)
+            reply = f"[\U0001f4d8 Stage 4 - Debrief & Full Answer]\n\n{reply}"
+            session.reset_socratic_state()
+
+        elif session.ta_stage in [2, 3]:
             assessment = self._assess_reply(session, user_input)
             print(f"\n[Socratic Engine] Flash assessed student reply as: {assessment}")
 
             if assessment == ReplyAssessment.BUG_RESOLVED:
-                # Student fixed the bug! Reset the Socratic counter for the NEXT bug
                 print("[Socratic Engine] Bug resolved! Resetting stage to 2 for next bug.")
                 session.ta_stage = 2
                 prompt = self._stage2_located_prompt
                 reply = self._run(prompt, base_args)
-                
+
                 if "[COMPLETE]" in reply:
                     print("[Socratic Engine] LLM detected NO BUGS! Generating Success Summary.")
                     reply = self._run(self._success_summary_prompt, base_args)
                     session.reset_socratic_state()
-                    reply = f"[🎉 Socratic Loop Complete! Validation Summary]\n\n{reply}"
+                    reply = f"[\U0001f389 Socratic Loop Complete! Validation Summary]\n\n{reply}"
                 else:
-                    reply = f"[✔️ BUG RESOLVED! Refreshing Loop for Next Bug]\n\n{reply}"
-            
+                    reply = f"[\u2714\ufe0f BUG RESOLVED! Refreshing Loop for Next Bug]\n\n{reply}"
+
             elif session.ta_stage == 2:
                 print(f"[Socratic Engine] Executing Stage 2 ({assessment})")
                 prompt = self._pick_stage2_prompt(assessment)
@@ -299,11 +309,11 @@ class SocraticEngine:
                     print("[Socratic Engine] LLM detected NO BUGS! Generating Success Summary.")
                     reply = self._run(self._success_summary_prompt, base_args)
                     session.reset_socratic_state()
-                    reply = f"[🎉 Socratic Loop Complete! Validation Summary]\n\n{reply}"
+                    reply = f"[\U0001f389 Socratic Loop Complete! Validation Summary]\n\n{reply}"
                 else:
-                    reply = f"[🧭 Stage 2 - Leading (Assessment: {assessment})]\n\n{reply}"
+                    reply = f"[\U0001f9ed Stage 2 - Leading (Assessment: {assessment})]\n\n{reply}"
                     session.advance_stage()
-            
+
             elif session.ta_stage == 3:
                 print("\n[Socratic Engine] Executing Stage 3 (Final Push)")
                 reply = self._run(self._stage3_prompt, base_args)
@@ -311,17 +321,10 @@ class SocraticEngine:
                     print("[Socratic Engine] LLM detected NO BUGS! Generating Success Summary.")
                     reply = self._run(self._success_summary_prompt, base_args)
                     session.reset_socratic_state()
-                    reply = f"[🎉 Socratic Loop Complete! Validation Summary]\n\n{reply}"
+                    reply = f"[\U0001f389 Socratic Loop Complete! Validation Summary]\n\n{reply}"
                 else:
-                    reply = f"[🎯 Stage 3 - Final Push]\n\n{reply}"
+                    reply = f"[\U0001f3af Stage 3 - Final Push]\n\n{reply}"
                     session.advance_stage()
-
-            elif session.ta_stage == 4:
-                # stage 4 — overflow direct answer, then reset
-                print("\n[Socratic Engine] Executing Stage 4 (Direct Overflow)")
-                reply = self._run(self._stage4_prompt, base_args)
-                reply = f"[📘 Stage 4 - Direct Answer]\n\n{reply}"
-                session.reset_socratic_state()
 
         return reply
 
@@ -455,11 +458,16 @@ class SocraticEngine:
             title = doc.metadata.get("title", "")
             slide = doc.metadata.get("slide_number", "")
             chunk_type = doc.metadata.get("chunk_type", "")
+            image_filenames = doc.metadata.get("image_filenames", "")
 
             if chunk_type == "parent":
                 citation = f"Source: {source}, Title: {title}"
             else:
                 citation = f"Source: {source}, Title: {title}, Slide: {slide}"
+
+            if image_filenames:
+                image_filenames = image_filenames.replace(".emf", ".png")
+                citation += f", Attached Images: {image_filenames}"
 
             formatted.append(f"{citation}\n{doc.page_content}")
 

@@ -202,6 +202,15 @@ class ChunkBuilder:
             parent_id = f"chap{lecture_number:02d}_{self._clean_text(title)}"
             child_ids = ",".join([f"chap{lecture_number:02d}_slide{slide['slide_number']:02d}" for slide in group_slides])
         
+            # Aggregate all image filenames from the slides in this group
+            all_images = []
+            for slide in group_slides:
+                for img in slide.get("images", []):
+                    if img.get("filename") and img.get("filename") not in all_images:
+                        all_images.append(img.get("filename"))
+            
+            image_filenames = ",".join(all_images)
+
             metadata = {
                 "source_file": source_file,
                 "lecture_number": lecture_number,
@@ -210,6 +219,8 @@ class ChunkBuilder:
                 "chunk_type" : "parent",
                 "child_ids": child_ids,
                 "slide_count": len(group_slides),
+                "image_filenames": image_filenames,
+                "has_images": len(all_images) > 0
             }
 
             parent_chunks.append({
