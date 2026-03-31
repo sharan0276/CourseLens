@@ -26,14 +26,6 @@ class ChatSession(BaseModel):
         default_factory=list,
         description="Ordered list of all messages in this session."
     )
-    history_summary: Optional[str] = Field(
-        default=None,
-        description="A running summary of older messages."
-    )
-    summary_index: int = Field(
-        default=0,
-        description="The index in 'messages' up to which the history_summary covers."
-    )
 
     # Socratic state — all optional so existing sessions load without errors
     active_problem_query: Optional[str] = Field(

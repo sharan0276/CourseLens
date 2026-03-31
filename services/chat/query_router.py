@@ -5,7 +5,6 @@ from domain.chat_session import ChatSession
 from services.chat.query_classifier import QueryClassifier, QueryType
 from services.chat.anchor_retrieval import AnchorRetrieval
 from services.chat.socratic_engine import SocraticEngine
-from services.chat.summarization_engine import SummarizationEngine
 
 
 class QueryRouter:
@@ -26,12 +25,10 @@ class QueryRouter:
         classifier: QueryClassifier,
         anchor_retrieval: AnchorRetrieval,
         socratic_engine: SocraticEngine,
-        summarization_engine: SummarizationEngine,
     ):
         self.classifier = classifier
         self.anchor_retrieval = anchor_retrieval
         self.socratic_engine = socratic_engine
-        self.summarization_engine = summarization_engine
 
     def route(
         self,
@@ -95,14 +92,9 @@ class QueryRouter:
         # ── Fresh query — classify and route ─────────────────────────────────
         result = self.classifier.classify(standalone_q, lecture_number)
 
-        if result.query_type == QueryType.SUMMARIZE_LECTURE:
-            print("\n[Router] Routing to Summarization Engine")
-            target = result.target_lecture if result.target_lecture is not None else lecture_number
-            return self.summarization_engine.summarize(
-                session=session,
-                lecture_number=target,
-                user_input=user_input
-            )
+        if getattr(result.query_type, "value", result.query_type) == "CONVERSATIONAL" or result.query_type == QueryType.CONVERSATIONAL:
+            print("\n[Router] Routing to Conversational handler (No Retrieval)")
+            return conversational_handler(standalone_q, user_input)
 
         if result.query_type == QueryType.OUT_OF_SCOPE:
             print("\n[Router] Routing to Out Of Scope handler")
