@@ -155,7 +155,8 @@ class ChatPipeline:
         # Step 3: Summarize history
         self._summarize_history_prompt = ChatPromptTemplate.from_messages([
             ("system",
-             "You are a helpful assistant that summarizes conversation history."),
+             "You are a helpful assistant that summarizes conversation history. "
+             "You MUST preserve any code snippets or exact syntax exactly as they were provided in the original conversation using markdown block formatting. Do not summarize or alter code blocks."),
             ("human", 
              "Given the previous summary and the new conversation lines, provide a concise updated summary "
              "of the entire conversation up to this point. Focus on key facts, questions asked, and answers given."
@@ -195,7 +196,9 @@ class ChatPipeline:
         """Convert ChatSession messages to LangChain message objects, including summary if present."""
         lc_msgs = []
         if session.history_summary:
-            lc_msgs.append(SystemMessage(content=f"Summary of previous conversation:\n{session.history_summary}"))
+            # We pass the summary as an AIMessage so the LLM feels ownership
+            # over the previous code blocks and facts, enabling it to reference them naturally.
+            lc_msgs.append(AIMessage(content=f"[Conversation Memory: Summary of our dialogue so far]\n\n{session.history_summary}"))
             
         for msg in session.messages[session.summary_index:]:
             if msg.role == "user":
@@ -205,10 +208,14 @@ class ChatPipeline:
         return lc_msgs
 
     def _update_session_summary(self, session: ChatSession):
-        """Summarizes older messages if we exceed the threshold of 2 interactions (4 messages)."""
-        # Keep the last 4 messages unsummarized.
-        if len(session.messages) - session.summary_index > 4:
-            end_idx = len(session.messages) - 4
+        """Summarizes unsummarized messages dynamically."""
+        if session.in_socratic_loop():
+            # Defer summarization until the loop concludes
+            return
+
+        # Summarize to the very end
+        if len(session.messages) > session.summary_index:
+            end_idx = len(session.messages)
             msgs_to_summarize = session.messages[session.summary_index:end_idx]
             
             new_lines = ""
@@ -233,8 +240,14 @@ class ChatPipeline:
         if not history:
             return user_input
         
+        # Debugging: Print the formatted condensation prompt
+        prompt_val = self._condense_prompt.format_prompt(history=history, input=user_input)
+        print(f"\n[Debug] Condense Prompt Payload:\n{prompt_val.to_string()}\n")
+
         chain = self._condense_prompt | self.llm | StrOutputParser()
-        return chain.invoke({"history": history, "input": user_input})
+        result = chain.invoke({"history": history, "input": user_input})
+        
+        return result
 
     def _direct_answer(self, session: ChatSession, standalone_q: str, user_input: str) -> str:
         """
