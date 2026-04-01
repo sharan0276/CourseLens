@@ -14,6 +14,7 @@ from services.chat.query_classifier import QueryClassifier
 from services.chat.anchor_retrieval import AnchorRetrieval
 from services.chat.socratic_engine import SocraticEngine
 from services.chat.query_router import QueryRouter
+from services.chat.citation_utils import add_sources_footer
 
 
 class ChatPipeline:
@@ -249,7 +250,8 @@ class ChatPipeline:
         session.add_message(role="assistant", content=reply)
         self.history_store.save_session(session)
 
-        return reply
+        # Apply citation formatting before returning to UI/CLI
+        return add_sources_footer(reply)
 
     def chat_stream(self, session_id: str, user_input: str, lecture_number: int = None) -> Generator[str, None, None]:
         """
@@ -282,7 +284,9 @@ class ChatPipeline:
             session.add_message(role="user", content=user_input)
             session.add_message(role="assistant", content=reply)
             self.history_store.save_session(session)
-            yield reply
+            
+            # Apply citation formatting to Socratic/Out-of-Scope responses
+            yield add_sources_footer(reply)
             return
 
         # Direct path unchanged — streams token by token as before
@@ -299,6 +303,12 @@ class ChatPipeline:
         }):
             full_reply += chunk
             yield chunk
+
+        # Append bibliography at the end of the stream if citations exist
+        formatted_full = add_sources_footer(full_reply)
+        if "Sources Used:" in formatted_full:
+            bibliography = formatted_full.split("Sources Used:")[1]
+            yield f"\n\nSources Used:{bibliography}"
 
         if self.mode == "coding":
             full_reply = self._validate_response(full_reply, user_input)

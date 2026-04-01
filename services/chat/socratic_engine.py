@@ -182,7 +182,7 @@ class SocraticEngine:
              "3. THE MISSING PIECE: Clearly and kindly explain the concept(s) the student did not reach, and WHY the hints pointed there.\n"
              "4. FULL ANSWER: Provide the complete, direct answer to the original question with all key points. Use bullet points for lists.\n\n"
              "STRICT RULES:\n"
-             "1. ⚠️ MANDATORY — ABSOLUTELY DO NOT ask any questions whatsoever. Not rhetorical, not clarifying, not follow-up. Zero questions. Even if you see unresolved issues or bugs remaining in the code, you MUST present ALL of them in section 4 (FULL ANSWER) and close the loop completely. A student asking another question is their responsibility — yours is to give the full answer NOW.\n"
+             "1. MANDATORY — ABSOLUTELY DO NOT ask any questions whatsoever. Not rhetorical, not clarifying, not follow-up. Zero questions. Even if you see unresolved issues or bugs remaining in the code, you MUST present ALL of them in section 4 (FULL ANSWER) and close the loop completely. A student asking another question is their responsibility — yours is to give the full answer NOW.\n"
              "2. Be warm and encouraging, not dismissive.\n"
              "3. Keep each section concise. Total response should not exceed 15 sentences.\n"
              "4. Use the exact format [filename, Slide N] after factual claims for citations. Do NOT use [1] or [2] yourself.\n"

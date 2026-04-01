@@ -35,27 +35,35 @@ class RetrievalService:
         search_k = k if k is not None else self.k
 
         # Step 1: Hybrid Similarity Search (Dense + Sparse Fusion)
-        dense_docs = self.vector_store_manager.similarity_search(query, k=20, filter=filter_dict)
+        # Increase candidate pool k=50 to ensure narrow matches (like "goals") aren't lost early
+        dense_docs = self.vector_store_manager.similarity_search(query, k=50, filter=filter_dict)
         if self.bm25_manager:
-            sparse_docs = self.bm25_manager.search(query, k=20, filter=filter_dict)
-            retrieved_docs = self._reciprocal_rank_fusion(dense_docs, sparse_docs, k=search_k)
+            sparse_docs = self.bm25_manager.search(query, k=50, filter=filter_dict)
+            # RRF fusion — now returns all discovered candidates before we apply title boosting
+            retrieved_docs = self._reciprocal_rank_fusion(dense_docs, sparse_docs)
         else:
-            retrieved_docs = dense_docs[:search_k]
+            retrieved_docs = dense_docs[:50]
         
-        # Step 2: Handle image-only slides
+        # Step 2: Apply Title-Match Boost (Heuristic for slide-based RAG)
+        retrieved_docs = self._apply_title_boost(query, retrieved_docs)
+
+        # Step 3: Keep only the final search_k results
+        retrieved_docs = retrieved_docs[:search_k]
+
+        # Step 4: Handle image-only slides
         retrieved_docs = self._handle_image_slides(retrieved_docs)
 
-        # Step 3: Deduplicate (keep best version of each slide)
+        # Step 5: Deduplicate (keep best version of each slide)
         retrieved_docs = self._deduplicate(retrieved_docs)
 
-        # Step 4: Parent-Child Swap (Broader Context)
+        # Step 6: Parent-Child Swap (Broader Context)
         retrieved_docs = self._parent_child_swap(retrieved_docs)
 
         self._log_retrieved_chunks(retrieved_docs)
 
         return retrieved_docs
 
-    def _reciprocal_rank_fusion(self, dense_docs: List[Document], sparse_docs: List[Document], k: int) -> List[Document]:
+    def _reciprocal_rank_fusion(self, dense_docs: List[Document], sparse_docs: List[Document]) -> List[Document]:
         """Mathematically merges dense conceptual matches with sparse exact keyword matches."""
         fused_scores = {}
         docs_dict = {}
@@ -71,7 +79,39 @@ class RetrievalService:
             docs_dict[doc_id] = doc
             
         reranked = sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
-        return [docs_dict[doc_id] for doc_id, score in reranked[:k]]
+        # Return ALL candidates for the next boosting/filtering steps
+        return [docs_dict[doc_id] for doc_id, score in reranked]
+
+    def _apply_title_boost(self, query: str, docs: List[Document]) -> List[Document]:
+        """
+        Heuristic boosting for documents where the title matches keywords in the search query.
+        Helps thin slides (like "Software Engineering Goals") win over dense slides.
+        """
+        import re
+        # Tokenize query — lowercase and remove punctuation + generic stop words
+        # Only focus on meaningful keywords (length > 2)
+        STOP_WORDS = {"what", "are", "the", "for", "and", "how", "why", "who", "when", "does", "have", "with", "this", "that"}
+        query_terms = set(re.findall(r'\b\w{3,}\b', query.lower()))
+        query_terms = {t for t in query_terms if t not in STOP_WORDS}
+
+        if not query_terms:
+            return docs
+
+        scored_docs = []
+        for doc in docs:
+            title = doc.metadata.get("title", "").lower()
+            # Calculate a simple boost factor based on title overlap
+            match_count = sum(1 for term in query_terms if term in title)
+            
+            # Use original rank as base (implied by position in 'docs')
+            # Higher index = worse rank. We apply the boost by shifting it 'up' in the list.
+            boost_score = match_count * 5 # A match in title is worth jumping roughly 5 spots
+            scored_docs.append((doc, boost_score))
+
+        # Re-sort: lower index is better. We subtract boost from original index.
+        # Stabilize by original position to maintain RRF preference.
+        final = sorted(enumerate(scored_docs), key=lambda x: x[0] - x[1][1])
+        return [item[1][0] for item in final]
 
 
     def _log_retrieved_chunks(self, docs: List[Document]):

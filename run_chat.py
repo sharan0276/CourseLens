@@ -38,7 +38,6 @@ from services.rag.loader import JSONSlideLoader
 from services.chat.chat_history import ChatHistoryStore
 from services.chat.chat_pipeline import ChatPipeline
 
-
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 DATA_DIR     = "CourseLens_data/processed_data"
@@ -85,8 +84,6 @@ def _build_dependencies(api_key: str, mode: str, search_type: str):
         temperature=0,                    # deterministic — always picks most likely label
     )
 
-
-
     history_store = ChatHistoryStore(storage_dir=SESSIONS_DIR)
 
     pipeline = ChatPipeline(
@@ -128,58 +125,6 @@ def _print_history(history_store: ChatHistoryStore, session_id: str):
         prefix = "You:" if msg.role == "user" else "CourseLens:"
         print(f"\n{prefix}\n{msg.content}")
     print("── End of history ─────────────────────────────────\n")
-
-
-def _add_sources_footer(text: str) -> str:
-    """
-    Extracts [filename, Slide N] citations (including multi-slide like [file, Slide 2, Slide 3]),
-    splits them into individual entries, replaces inline with [1][2] style numbers,
-    and appends a clean 'Sources Used' bibliography with one entry per slide.
-    """
-    import re
-
-    # Match citation groups like [chap01.pptx, Slide 2] or [chap01.pptx, Slide 2, Slide 3]
-    pattern = r'\[([^\[\]]*\.[a-zA-Z0-9]+(?:,\s*Slide\s*\d+)+)\]'
-
-    if not re.search(pattern, text):
-        return text
-
-    def _split_citation(raw: str):
-        """
-        Split 'chap01.pptx, Slide 2, Slide 3' → ['chap01.pptx, Slide 2', 'chap01.pptx, Slide 3']
-        Handles single-slide citations too: 'chap01.pptx, Slide 2' → ['chap01.pptx, Slide 2']
-        """
-        parts = re.split(r',\s*', raw.strip())
-        filename = parts[0].strip()
-        slides = [p.strip() for p in parts[1:] if re.match(r'Slide\s*\d+', p.strip(), re.IGNORECASE)]
-        return [f"{filename}, {slide}" for slide in slides] if slides else [raw]
-
-    # First pass — collect all individual citations in order of first appearance
-    unique_citations = []
-    for raw in re.findall(pattern, text):
-        for ind in _split_citation(raw):
-            if ind not in unique_citations:
-                unique_citations.append(ind)
-
-    if not unique_citations:
-        return text
-
-    # Map each individual citation to its number
-    num_map = {src: f"[{i+1}]" for i, src in enumerate(unique_citations)}
-
-    # Second pass — replace each inline citation group with concatenated numbers e.g. [1][2]
-    def _replace(m):
-        return ''.join(num_map.get(ind, '') for ind in _split_citation(m.group(1)))
-
-    processed_text = re.sub(pattern, _replace, text)
-
-    # Append clean bibliography
-    footer = "\n\nSources Used:"
-    for i, src in enumerate(unique_citations, 1):
-        footer += f"\n[{i}] {src}"
-
-    return processed_text + footer
-
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -300,7 +245,7 @@ def main():
                     print("\n")
                 else:
                     reply = pipeline.chat(session.session_id, user_input, lecture_number=lecture_number)
-                    print(_add_sources_footer(reply), "\n")
+                    print(reply, "\n")
 
             except Exception as e:
                 print(f"\n[Error] {e}\n")
