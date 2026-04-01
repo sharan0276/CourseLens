@@ -121,7 +121,10 @@ def _print_history(history_store: ChatHistoryStore, session_id: str):
     if not session or not session.messages:
         return
     print("\n── Previous conversation ──────────────────────────")
-    for msg in session.messages:
+    if session.history_summary:
+        print(f"\n[Summary of Older Messages]\n{session.history_summary}")
+
+    for msg in session.messages[session.summary_index:]:
         prefix = "You:" if msg.role == "user" else "CourseLens:"
         print(f"\n{prefix}\n{msg.content}")
     print("── End of history ─────────────────────────────────\n")

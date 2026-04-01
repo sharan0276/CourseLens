@@ -255,3 +255,23 @@ class RetrievalService:
                 seen.add(content_key)
                 unique.append(doc)
         return unique
+
+    def fetch_lecture_for_summary(self, lecture_number: int) -> List[Document]:
+        """
+        Fetches all chunks matching the lecture number without vector embeddings,
+        skipping parent chunks to get full slide level granularity.
+        """
+        result = self.collection.get(
+            where={"lecture_number": lecture_number},
+            include=["documents", "metadatas"]
+        )
+        
+        docs = []
+        if result and result.get("documents"):
+            for doc_content, meta in zip(result["documents"], result["metadatas"]):
+                if meta.get("chunk_type") != "parent":
+                    docs.append(Document(page_content=doc_content, metadata=meta))
+                    
+        # Sort the documents by slide number so the LLM reads it in order
+        docs.sort(key=lambda x: x.metadata.get("slide_number") or 0)
+        return docs
