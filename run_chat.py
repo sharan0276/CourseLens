@@ -135,51 +135,87 @@ def _print_history(history_store: ChatHistoryStore, session_id: str):
 
 def _add_sources_footer(text: str) -> str:
     """
-    Extracts [filename, Slide N] citations (including multi-slide like [file, Slide 2, Slide 3]),
-    splits them into individual entries, replaces inline with [1][2] style numbers,
-    and appends a clean 'Sources Used' bibliography with one entry per slide.
+    Extracts [filename, Slide N] and [SiteName: Title] citations,
+    replaces inline with [1][2] style numbers,
+    and appends a single clean 'Sources Used' bibliography.
+
+    Also strips any LLM-generated 'Sources Used' section to prevent duplicates.
     """
     import re
 
-    # Match citation groups like [chap01.pptx, Slide 2] or [chap01.pptx, Slide 2, Slide 3]
-    pattern = r'\[([^\[\]]*\.[a-zA-Z0-9]+(?:,\s*Slide\s*\d+)+)\]'
+    # ── Step 0: Strip any existing LLM-generated "Sources Used" sections ──────
+    # Matches "Sources Used:" followed by bulleted/numbered list items until end or double newline
+    text = re.sub(
+        r'\n*Sources Used:\s*\n(?:\s*[\*\-•]?\s*(?:\[\d+\]\s*)?[^\n]+\n?)+',
+        '',
+        text
+    ).rstrip()
 
-    if not re.search(pattern, text):
-        return text
+    # ── Step 1: Collect slide citations [filename.ext, Slide N] ──────────────
+    slide_pattern = r'\[([^\[\]]*\.[a-zA-Z0-9]+(?:,\s*Slide\s*\d+)+)\]'
 
     def _split_citation(raw: str):
         """
         Split 'chap01.pptx, Slide 2, Slide 3' → ['chap01.pptx, Slide 2', 'chap01.pptx, Slide 3']
-        Handles single-slide citations too: 'chap01.pptx, Slide 2' → ['chap01.pptx, Slide 2']
         """
         parts = re.split(r',\s*', raw.strip())
         filename = parts[0].strip()
         slides = [p.strip() for p in parts[1:] if re.match(r'Slide\s*\d+', p.strip(), re.IGNORECASE)]
         return [f"{filename}, {slide}" for slide in slides] if slides else [raw]
 
-    # First pass — collect all individual citations in order of first appearance
-    unique_citations = []
-    for raw in re.findall(pattern, text):
+    # ── Step 2: Collect web citations [SiteName: Title] ──────────────────────
+    web_pattern = r'\[(GeeksForGeeks|W3Schools|LearnCpp):\s*([^\]]+)\]'
+
+    # Gather all unique citations in order of appearance
+    unique_citations = []  # list of (display_text, citation_type)
+
+    # Slide citations
+    for raw in re.findall(slide_pattern, text):
         for ind in _split_citation(raw):
-            if ind not in unique_citations:
-                unique_citations.append(ind)
+            entry = (ind, "slide")
+            if entry not in unique_citations:
+                unique_citations.append(entry)
+
+    # Web citations
+    for match in re.finditer(web_pattern, text):
+        site = match.group(1)
+        title = match.group(2).strip()
+        display = f"{site}: {title}"
+        entry = (display, "web")
+        if entry not in unique_citations:
+            unique_citations.append(entry)
 
     if not unique_citations:
         return text
 
-    # Map each individual citation to its number
-    num_map = {src: f"[{i+1}]" for i, src in enumerate(unique_citations)}
+    # Build number map
+    num_map_slide = {}
+    num_map_web = {}
+    for i, (display, ctype) in enumerate(unique_citations, 1):
+        if ctype == "slide":
+            num_map_slide[display] = f"[{i}]"
+        else:
+            num_map_web[display] = f"[{i}]"
 
-    # Second pass — replace each inline citation group with concatenated numbers e.g. [1][2]
-    def _replace(m):
-        return ''.join(num_map.get(ind, '') for ind in _split_citation(m.group(1)))
+    # ── Step 3: Replace inline slide citations ───────────────────────────────
+    def _replace_slide(m):
+        return ''.join(num_map_slide.get(ind, '') for ind in _split_citation(m.group(1)))
 
-    processed_text = re.sub(pattern, _replace, text)
+    processed_text = re.sub(slide_pattern, _replace_slide, text)
 
-    # Append clean bibliography
+    # ── Step 4: Replace inline web citations ─────────────────────────────────
+    def _replace_web(m):
+        site = m.group(1)
+        title = m.group(2).strip()
+        display = f"{site}: {title}"
+        return num_map_web.get(display, m.group(0))
+
+    processed_text = re.sub(web_pattern, _replace_web, processed_text)
+
+    # ── Step 5: Append unified bibliography ──────────────────────────────────
     footer = "\n\nSources Used:"
-    for i, src in enumerate(unique_citations, 1):
-        footer += f"\n[{i}] {src}"
+    for i, (display, _) in enumerate(unique_citations, 1):
+        footer += f"\n[{i}] {display}"
 
     return processed_text + footer
 

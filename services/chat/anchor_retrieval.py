@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from langchain_core.documents import Document
 
 from domain.chat_session import ChatSession
@@ -18,8 +18,9 @@ class AnchorRetrieval:
     content-key approach RetrievalService uses internally.
     """
 
-    def __init__(self, retrieval_service: RetrievalService, chunks_per_topic: int = 5):
+    def __init__(self, retrieval_service: RetrievalService, web_scraper=None, chunks_per_topic: int = 5):
         self.retrieval_service = retrieval_service
+        self.web_scraper = web_scraper
         self.chunks_per_topic = chunks_per_topic
 
     def anchor(self, session: ChatSession, topics: List[str], lecture_number: int) -> List[Document]:
@@ -43,7 +44,15 @@ class AnchorRetrieval:
         # deduplicate across topics using same content-key approach as RetrievalService
         deduplicated = self._deduplicate_across_topics(all_docs)
 
+        # Enrich with web content if scraper is available
+        if self.web_scraper and topics:
+            print(f"[AnchorRetrieval] Fetching web content for Socratic topics: {topics}")
+            web_docs = self.web_scraper.search_topics(topics)
+            if web_docs:
+                deduplicated = deduplicated + web_docs
+
         # store only chunk IDs in session — not full text — keeps session JSON lean
+        # (web docs won't have chunk IDs, but they'll be re-fetched by topics if needed)
         session.anchored_chunk_ids = self._extract_ids(deduplicated)
 
         return deduplicated
@@ -52,15 +61,20 @@ class AnchorRetrieval:
         """
         Fetches full chunk content by ID for stages 2, 3, and 4.
         Avoids re-running retrieval entirely for follow-up turns.
+        Also re-fetches web content for the session's active topics.
         """
-        if not session.anchored_chunk_ids:
-            return []
-
         docs = []
-        for chunk_id in session.anchored_chunk_ids:
-            doc = self.retrieval_service._fetch_by_id(chunk_id)
-            if doc:
-                docs.append(doc)
+
+        if session.anchored_chunk_ids:
+            for chunk_id in session.anchored_chunk_ids:
+                doc = self.retrieval_service._fetch_by_id(chunk_id)
+                if doc:
+                    docs.append(doc)
+
+        # Re-fetch web content for active Socratic topics
+        if self.web_scraper and session.selected_topics:
+            web_docs = self.web_scraper.search_topics(session.selected_topics)
+            docs = docs + web_docs
 
         return docs
 

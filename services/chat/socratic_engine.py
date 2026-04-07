@@ -454,6 +454,17 @@ class SocraticEngine:
 
         formatted = []
         for doc in docs:
+            source_type = doc.metadata.get("source_type", "")
+
+            # Web documents use a citable reference format
+            if source_type == "web":
+                site = doc.metadata.get("source_site", "Web")
+                title = doc.metadata.get("title", "")
+                url = doc.metadata.get("source_file", "")
+                citation = f"Web Reference [{site}: {title}]\nURL: {url}"
+                formatted.append(f"{citation}\n{doc.page_content}")
+                continue
+
             source = doc.metadata.get("source_file", "Unknown")
             title = doc.metadata.get("title", "")
             slide = doc.metadata.get("slide_number", "")
