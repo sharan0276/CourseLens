@@ -448,21 +448,23 @@ class SocraticEngine:
         """
         Formats anchored docs into a context string for the prompt.
         Mirrors _format_docs in ChatPipeline for consistency.
+        Separates course material and web references into distinct sections.
         """
         if not docs:
             return "No course material available."
 
-        formatted = []
+        course_docs = []
+        web_docs = []
+
         for doc in docs:
             source_type = doc.metadata.get("source_type", "")
 
-            # Web documents use a citable reference format
             if source_type == "web":
                 site = doc.metadata.get("source_site", "Web")
                 title = doc.metadata.get("title", "")
                 url = doc.metadata.get("source_file", "")
-                citation = f"Web Reference [{site}: {title}]\nURL: {url}"
-                formatted.append(f"{citation}\n{doc.page_content}")
+                citation = f"[{site}: {title}]\nURL: {url}"
+                web_docs.append(f"{citation}\n{doc.page_content}")
                 continue
 
             source = doc.metadata.get("source_file", "Unknown")
@@ -480,6 +482,12 @@ class SocraticEngine:
                 image_filenames = image_filenames.replace(".emf", ".png")
                 citation += f", Attached Images: {image_filenames}"
 
-            formatted.append(f"{citation}\n{doc.page_content}")
+            course_docs.append(f"{citation}\n{doc.page_content}")
 
-        return "\n\n".join(formatted)
+        sections = []
+        if course_docs:
+            sections.append("=== COURSE MATERIAL ===\n" + "\n\n".join(course_docs))
+        if web_docs:
+            sections.append("=== WEB REFERENCES (You MUST cite these using [SiteName: Title] format) ===\n" + "\n\n".join(web_docs))
+
+        return "\n\n".join(sections)
