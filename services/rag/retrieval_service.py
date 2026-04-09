@@ -265,13 +265,30 @@ class RetrievalService:
             where={"lecture_number": lecture_number},
             include=["documents", "metadatas"]
         )
-        
+        return self._process_summary_results(result)
+
+    def fetch_lecture_range_for_summary(self, start_lecture: int, end_lecture: int) -> List[Document]:
+        """
+        Fetches all chunks matching the lecture range [start_lecture, end_lecture].
+        """
+        # ChromaDB syntax for range queries — using $and with $gte and $lte filters
+        result = self.collection.get(
+            where={"$and": [
+                {"lecture_number": {"$gte": start_lecture}},
+                {"lecture_number": {"$lte": end_lecture}}
+            ]},
+            include=["documents", "metadatas"]
+        )
+        return self._process_summary_results(result)
+
+    def _process_summary_results(self, result: dict) -> List[Document]:
+        """Internal helper to convert Chroma results to sorted Documents."""
         docs = []
         if result and result.get("documents"):
             for doc_content, meta in zip(result["documents"], result["metadatas"]):
                 if meta.get("chunk_type") != "parent":
                     docs.append(Document(page_content=doc_content, metadata=meta))
                     
-        # Sort the documents by slide number so the LLM reads it in order
-        docs.sort(key=lambda x: x.metadata.get("slide_number") or 0)
+        # Sort by lecture number first, then slide number, to maintain pedagogical flow
+        docs.sort(key=lambda x: (x.metadata.get("lecture_number") or 0, x.metadata.get("slide_number") or 0))
         return docs

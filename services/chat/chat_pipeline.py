@@ -167,6 +167,18 @@ class ChatPipeline:
              "of the entire conversation up to this point. Focus on key facts, questions asked, and answers given."
              "\n\nPrevious Summary:\n{previous_summary}\n\nNew Conversation:\n{new_lines}"),
         ])
+
+        # Added: Condense history + current input into a standalone question
+        self._condense_prompt = ChatPromptTemplate.from_messages([
+            ("system",
+             "Given a conversation history and a follow-up user input, rephrase the follow-up into a "
+             "standalone question that can be understood without the rest of the history.\n"
+             "If the input is already a standalone question, return it as-is.\n"
+             "Do NOT answer the question — only rephrase it."),
+            MessagesPlaceholder("history"),
+            ("human", "{input}"),
+        ])
+
     def _conversational_answer(self, session: ChatSession, standalone_q: str, user_input: str) -> str:
         lc_history = self._session_to_lc_history(session)
         answer_chain = self._conversational_prompt | self.llm | StrOutputParser()
@@ -256,16 +268,29 @@ class ChatPipeline:
             session.history_summary = new_summary
             session.summary_index = end_idx
 
-    def _direct_answer(self, session: ChatSession, standalone_q: str, user_input: str, topics: List[str] = None) -> str:
+    def _condense_question(self, history: list, user_input: str) -> str:
+        """
+        Rephrases follow-up input into a standalone question using history.
+        Skipped if no history exists yet.
+        """
+        if not history:
+            return user_input
+        
+        chain = self._condense_prompt | self.llm | StrOutputParser()
+        return chain.invoke({"history": history, "input": user_input})
+
+    def _direct_answer(self, session: ChatSession, standalone_q: str, user_input: str, topics: List[str] = None, lecture_number: int = None) -> str:
         """
         Runs the existing direct RAG chain, enriched with web content.
         Added: extracted from inline chat() logic so QueryRouter can call it
         via the direct_handler lambda without knowing about session internals.
         Updated: fetches supplementary web content for identified topics and
         appends it to the context after the course material.
+        Fix: includes the lecture_number filter in retrieval.
         """
         lc_history = self._session_to_lc_history(session)
-        docs = self.retrieval_service.retrieve(standalone_q, lecture_number=None)
+        # Fix retrieval leak: pass the lecture_number filter into the search
+        docs = self.retrieval_service.retrieve(standalone_q, lecture_number=lecture_number)
 
         # Enrich with web content if topics were identified
         if topics:
@@ -299,7 +324,10 @@ class ChatPipeline:
             raise ValueError(f"Session '{session_id}' not found.")
 
         lc_history = self._session_to_lc_history(session)
-        standalone_q = user_input
+        standalone_q = self._condense_question(lc_history, user_input)
+        
+        if standalone_q != user_input:
+            print(f"\n[Condenser] Condensed query: {standalone_q}")
 
         # updated: single QueryRouter call replaces inline retrieve → format → answer chain
         # direct_handler lambda passes Direct path back to _direct_answer
@@ -309,7 +337,7 @@ class ChatPipeline:
             user_input=user_input,
             standalone_q=standalone_q,
             lecture_number=lecture_number,
-            direct_handler=lambda sq, ui, topics: self._direct_answer(session, sq, ui, topics),
+            direct_handler=lambda sq, ui, topics: self._direct_answer(session, sq, ui, topics, lecture_number),
             conversational_handler=lambda sq, ui: self._conversational_answer(session, sq, ui)
         )
 
@@ -319,6 +347,9 @@ class ChatPipeline:
         self.history_store.save_session(session)
 
         # Apply citation formatting before returning to UI/CLI
+        # For Socratic Stage 2 and 3, skip the numbered bibliography / footer
+        if session.ta_stage in [2, 3]:
+            return reply
         return add_sources_footer(reply)
 
     def chat_stream(self, session_id: str, user_input: str, lecture_number: int = None) -> Generator[str, None, None]:
@@ -338,6 +369,9 @@ class ChatPipeline:
         lc_history = self._session_to_lc_history(session)
         standalone_q = user_input
 
+        if standalone_q != user_input:
+            print(f"\n[Condenser] Condensed query: {standalone_q}")
+
         # added: pre-check routes Socratic and Out of Scope through QueryRouter
         # yielding the full reply at once rather than streaming token by token
         if session.in_socratic_loop() or self._should_use_socratic(standalone_q, lecture_number):
@@ -346,7 +380,7 @@ class ChatPipeline:
                 user_input=user_input,
                 standalone_q=standalone_q,
                 lecture_number=lecture_number,
-                direct_handler=lambda sq, ui, topics: self._direct_answer(session, sq, ui, topics),
+                direct_handler=lambda sq, ui, topics: self._direct_answer(session, sq, ui, topics, lecture_number),
                 conversational_handler=lambda sq, ui: self._conversational_answer(session, sq, ui)
             )
             session.add_message(role="user", content=user_input)
@@ -355,7 +389,11 @@ class ChatPipeline:
             self.history_store.save_session(session)
             
             # Apply citation formatting to Socratic/Out-of-Scope responses
-            yield add_sources_footer(reply)
+            # For Socratic Stage 2 and 3, skip the numbered bibliography / footer
+            if session.ta_stage in [2, 3]:
+                yield reply
+            else:
+                yield add_sources_footer(reply)
             return
 
         # Direct path — streams token by token, enriched with web content

@@ -19,6 +19,7 @@ class ClassificationResult:
     query_type: QueryType
     selected_topics: List[str]
     target_lecture: Optional[int] = None
+    is_until: bool = False
 
 
 class QueryClassifier:
@@ -41,24 +42,22 @@ class QueryClassifier:
              "Given a student query and the available course topics, do two things:\n\n"
              "   DIRECT      — factual question with a clear answer in the material\n"
              "                 e.g. 'What is a pointer?', 'What does const do?'\n"
-             "                 ALSO use DIRECT if the student explicitly asks to validate if their code is correct, or if there are any remaining bugs.\n"
-             "   SOCRATIC    — requires guided understanding, not just a fact\n"
-             "                 includes conceptual confusion, debugging help, and background adjacent questions\n"
-             "                 when in doubt, use SOCRATIC\n"
-             "   SUMMARIZE_LECTURE — requests to summarize an entire lecture or a specific week's material\n"
-             "                 e.g. 'Summarize lecture 3', 'What did we learn in week 2?'\n"
-             "   OUT_OF_SCOPE — query has no meaningful connection to C++ programming fundamentals AND does not match any of the provided course topics.\n"
-             "                 This includes: general knowledge trivia (politics, history, sports),\n"
-             "                 questions about specific people or names unrelated to computing (e.g. 'who is Anirudh?', 'who is Einstein?'),\n"
-             "                 calculations unrelated to programming logic, and queries about the AI assistant's own identity.\n"
-             "                 IMPORTANT: If the query is completely unrelated to C++, it MUST be OUT_OF_SCOPE.\n\n"
-             "2. Select 2-3 most relevant topics from the provided course topic list that relate to this query.\n"
-             "   Only pick from the list — never invent topics.\n"
-             "   For OUT_OF_SCOPE and CONVERSATIONAL queries, return no topics.\n\n"
+             "                 ALSO use DIRECT if the student explicitly asks to validate if their code is correct.\n"
+             "   SOCRATIC    — requires guided understanding OR a technical concept summary\n"
+             "                 Includes conceptual confusion, debugging help, and requests to summarize a specific technical topic (e.g. 'Summarize pointers').\n"
+             "                 When in doubt, use SOCRATIC.\n"
+             "   SUMMARIZE_LECTURE — requests for an overview of an entire LECTURE, WEEK, or SYLLABUS UNIT\n"
+             "                 ONLY use this for temporal or structural requests: e.g. 'Summarize lecture 3', 'What did we learn in week 2?', 'Outline today's class'.\n"
+             "                 DO NOT use this for technical concept summaries (e.g. 'Summarize how memory works' is SOCRATIC).\n"
+             "   OUT_OF_SCOPE — query has no connection to C++ programming fundamentals.\n"
+             "                 Includes: general trivia, specific people unrelated to computing, calculations unrelated to program logic.\n\n"
+             "2. Select 2-3 most relevant topics from the provided course topic list.\n"
+             "   Only pick from the list — never invent topics.\n\n"
              "Reply in exactly this format, nothing else:\n"
              "LABEL: <DIRECT|SOCRATIC|SUMMARIZE_LECTURE|OUT_OF_SCOPE>\n"
              "TOPICS: <topic1|topic2|topic3>\n"
-             "TARGET_LECTURE: <lecture_number if specified, otherwise None>\n\n"
+             "TARGET_LECTURE: <lecture_number if a specific lecture/week is mentioned, else None>\n"
+             "IS_UNTIL: <True if the student asks for a summary 'so far', 'up to now', or 'until' a point, else False>\n\n"
              "Available course topics:\n{topics}"),
             ("human", "{query}")
         ])
@@ -76,8 +75,13 @@ class QueryClassifier:
         "i am confused about", "walk me through", "can you walk me through",
         "i don't understand", "i do not understand",
         "why does ", "why is ", "why do ", "why are ",
-        "why did ", "why was ",
+        "why did ", "why was ", "explain ",
         "help me debug", "help me fix", "fix my", "debug my", "find the bug",
+    )
+    # Prefixes that signal summarized structural requests — force SUMMARIZE_LECTURE
+    _SUMMARIZE_PREFIXES = (
+        "summarize", "recap", "outline", "what did we learn",
+        "what was covered", "give me a summary", "give a summary",
     )
 
 
@@ -97,25 +101,52 @@ class QueryClassifier:
             lecture_number = 14  # assume entire course is available
 
         loader = SyllabusLoader()
-        all_topics = loader.get_all_topics_up_to(lecture_number)
+        # FIX: Allow the AI to see ALL topics in the syllabus so it can correctly 
+        # identify future concepts (like 'Compound Assignment') as valid 
+        # course material rather than 'OUT_OF_SCOPE'.
+        selection_pool = loader.get_all_topics()
 
-        # provide the LLM with all topics covered up to this point
-        # so it doesn't wrongly flag older concepts as out-of-scope
-        selection_pool = all_topics
-
-        # ── Deterministic pre-check: factual question starters → always DIRECT ──
         q_lower = query.strip().lower()
-        if any(q_lower.startswith(prefix) for prefix in self._DIRECT_PREFIXES):
-            # Still call LLM just to get verified topics; override label to DIRECT
+        
+        # ── PRIORITY 1: Summarization Force Path ─────────────────────────────
+        if any(q_lower.startswith(prefix) for prefix in self._SUMMARIZE_PREFIXES):
+            # Still call LLM just to get structural details (target_lecture, is_until)
             topics_str = "\n".join(f"- {t}" for t in selection_pool)
             chain = self._prompt | self.llm | self.parser
             raw = chain.invoke({"query": query, "topics": topics_str}).strip()
             result = self._parse(raw, selection_pool)
-            result = ClassificationResult(
-                query_type=QueryType.DIRECT,
-                selected_topics=result.selected_topics,
-            )
+            
+            # OVERRIDE: Keep discovered lecture ID / until flag, but force SUMMARIZE label
+            result.query_type = QueryType.SUMMARIZE_LECTURE
+            print(f"\n[Classifier] Pre-check forced SUMMARIZE_LECTURE (structural prefix detected)")
+            return result
+
+        # ── PRIORITY 2: Direct Factual Force Path ──────────────────────────────
+        if any(q_lower.startswith(prefix) for prefix in self._DIRECT_PREFIXES):
+            # Still call LLM to get topics & lecture ID
+            topics_str = "\n".join(f"- {t}" for t in selection_pool)
+            chain = self._prompt | self.llm | self.parser
+            raw = chain.invoke({"query": query, "topics": topics_str}).strip()
+            result = self._parse(raw, selection_pool)
+            
+            # OVERRIDE: Keep discovered context, but force DIRECT label
+            result.query_type = QueryType.DIRECT
             print(f"\n[Classifier] Pre-check forced DIRECT (factual prefix detected)")
+            if result.selected_topics:
+                print(f"[Classifier] Selected syllabus topics: {', '.join(result.selected_topics)}")
+            return result
+
+        # ── PRIORITY 3: Socratic Force Path ──────────────────────────────────
+        if any(q_lower.startswith(prefix) for prefix in self._SOCRATIC_PREFIXES):
+            # Still call LLM for context
+            topics_str = "\n".join(f"- {t}" for t in selection_pool)
+            chain = self._prompt | self.llm | self.parser
+            raw = chain.invoke({"query": query, "topics": topics_str}).strip()
+            result = self._parse(raw, selection_pool)
+            
+            # OVERRIDE: Keep context, force SOCRATIC label
+            result.query_type = QueryType.SOCRATIC
+            print(f"\n[Classifier] Pre-check forced SOCRATIC (pedagogical prefix detected)")
             if result.selected_topics:
                 print(f"[Classifier] Selected syllabus topics: {', '.join(result.selected_topics)}")
             return result
@@ -156,6 +187,7 @@ class QueryClassifier:
         label = QueryType.SOCRATIC
         topics = []
         target_lecture = None
+        is_until = False
 
         for line in raw.splitlines():
             line = line.strip()
@@ -179,6 +211,10 @@ class QueryClassifier:
                 val = line.replace("TARGET_LECTURE:", "").strip()
                 if val and val.lower() != "none" and val.isdigit():
                     target_lecture = int(val)
+            
+            elif line.startswith("IS_UNTIL:"):
+                val = line.replace("IS_UNTIL:", "").strip().lower()
+                is_until = val == "true"
 
         # if OUT_OF_SCOPE, clear topics regardless
         if label == QueryType.OUT_OF_SCOPE:
@@ -192,4 +228,9 @@ class QueryClassifier:
                 label = QueryType.OUT_OF_SCOPE
             topics = []
 
-        return ClassificationResult(query_type=label, selected_topics=topics, target_lecture=target_lecture)
+        return ClassificationResult(
+            query_type=label, 
+            selected_topics=topics, 
+            target_lecture=target_lecture,
+            is_until=is_until
+        )

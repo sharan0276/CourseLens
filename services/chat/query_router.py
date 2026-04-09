@@ -6,6 +6,7 @@ from services.chat.query_classifier import QueryClassifier, QueryType
 from services.chat.anchor_retrieval import AnchorRetrieval
 from services.chat.socratic_engine import SocraticEngine
 from services.chat.summarization_engine import SummarizationEngine
+from config.syllabus_loader import SyllabusLoader
 
 
 class QueryRouter:
@@ -99,13 +100,39 @@ class QueryRouter:
         result = self.classifier.classify(standalone_q, lecture_number)
         topics = result.selected_topics if result.selected_topics else []
 
+        # INTERCEPT: Future Lecture Check
+        # Check if any identified topics belong to a future lecture beyond the limit.
+        loader = SyllabusLoader()
+        future_lec = None
+        
+        # Check explicit target lecture first
+        if result.target_lecture and result.target_lecture > lecture_number:
+            future_lec = f"Lecture {result.target_lecture}"
+        
+        # Check selected topics if no explicit lecture was found
+        if not future_lec and result.selected_topics:
+            for topic in result.selected_topics:
+                lec_id = loader.find_topic_lecture(topic)
+                if lec_id and lec_id > lecture_number:
+                    future_lec = f"Lecture {lec_id}"
+                    break
+        
+        if future_lec:
+            print(f"\n[Router] Future topic detected ({future_lec}). Routing to Future handler.")
+            return self.socratic_engine.respond_out_of_scope(
+                user_input=user_input,
+                selected_topics=result.selected_topics,
+                lecture_number=lecture_number
+            )
+
         if result.query_type == QueryType.SUMMARIZE_LECTURE:
-            print("\n[Router] Routing to Summarization Engine")
+            print(f"\n[Router] Routing to Summarization Engine (Until: {result.is_until})")
             target = result.target_lecture if result.target_lecture is not None else lecture_number
             return self.summarization_engine.summarize(
                 session=session,
                 lecture_number=target,
-                user_input=user_input
+                user_input=user_input,
+                is_until=result.is_until
             )
 
         if result.query_type == QueryType.OUT_OF_SCOPE:

@@ -1,6 +1,6 @@
 import os
 import json
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 class SyllabusLoader:
     """
@@ -42,18 +42,21 @@ class SyllabusLoader:
         
         return []
 
-    def get_all_topics_up_to(self, lec_number: int) -> List[str]:
+    def get_all_topics(self) -> List[str]:
         """
-        Returns a flat list of all topic strings across all lectures up to and including lec_number.
+        Returns a flat list of all topic strings across the entire syllabus.
         """
         all_topics = []
-        
-        # Iterating through sorted keys to ensure correct order
         for key in sorted(self._topics_data.keys(), key=lambda x: int(x)):
-            if int(key) <= lec_number:
-                if "topics" in self._topics_data[key]:
-                    all_topics.extend(self._topics_data[key]["topics"])
-            else:
-                break
-                
+            if "topics" in self._topics_data[key]:
+                all_topics.extend(self._topics_data[key]["topics"])
         return all_topics
+
+    def find_topic_lecture(self, topic_name: str) -> Optional[int]:
+        """
+        Returns the lecture number for a specific topic name, if found.
+        """
+        for key, data in self._topics_data.items():
+            if topic_name in data.get("topics", []):
+                return int(key)
+        return None
