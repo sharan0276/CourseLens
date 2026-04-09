@@ -51,7 +51,7 @@ class QueryRouter:
             standalone_q   — condensed standalone question from ChatPipeline
             lecture_number — student's current lecture for progressive disclosure
             direct_handler — callable that runs the existing direct RAG chain
-                             signature: direct_handler(standalone_q, user_input) -> str
+                             signature: direct_handler(standalone_q, user_input, topics) -> str
         """
 
         # ── Escape signal check — fast-track to Stage 4 if student asks for help ──
@@ -74,7 +74,10 @@ class QueryRouter:
         # Run BEFORE classify() so condensing can't strip question starters.
         if any(ui_lower.startswith(p) for p in self.classifier._DIRECT_PREFIXES):
             print("\n[Router] Raw input prefix → forcing Direct Answer")
-            return direct_handler(standalone_q, user_input)
+            # Still classify to extract topics for web content enrichment
+            prefix_result = self.classifier.classify(standalone_q, lecture_number)
+            prefix_topics = prefix_result.selected_topics if prefix_result.selected_topics else []
+            return direct_handler(standalone_q, user_input, prefix_topics)
 
         if any(ui_lower.startswith(p) for p in self.classifier._SOCRATIC_PREFIXES):
             print("\n[Router] Raw input prefix → forcing Socratic Engine")
@@ -94,6 +97,7 @@ class QueryRouter:
 
         # ── Fresh query — classify and route ─────────────────────────────────
         result = self.classifier.classify(standalone_q, lecture_number)
+        topics = result.selected_topics if result.selected_topics else []
 
         if result.query_type == QueryType.SUMMARIZE_LECTURE:
             print("\n[Router] Routing to Summarization Engine")
@@ -128,4 +132,4 @@ class QueryRouter:
 
         # DIRECT — pass to existing RAG chain via the handler callable
         print("\n[Router] Routing to Direct Answer")
-        return direct_handler(standalone_q, user_input)
+        return direct_handler(standalone_q, user_input, topics)
