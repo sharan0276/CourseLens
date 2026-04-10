@@ -255,7 +255,7 @@ class ChatPipeline:
             session.history_summary = new_summary
             session.summary_index = end_idx
 
-    def _direct_answer(self, session: ChatSession, standalone_q: str, user_input: str, topics: List[str] = None) -> str:
+    def _direct_answer(self, session: ChatSession, standalone_q: str, user_input: str, topics: List[str] = None, use_web_scraping: bool = True) -> str:
         """
         Runs the existing direct RAG chain, enriched with web content.
         Added: extracted from inline chat() logic so QueryRouter can call it
@@ -267,7 +267,7 @@ class ChatPipeline:
         docs = self.retrieval_service.retrieve(standalone_q, lecture_number=None)
 
         # Enrich with web content if topics were identified
-        if topics:
+        if topics and use_web_scraping:
             web_docs = self.web_scraper.search_topics(topics)
             docs = docs + web_docs  # course material first, web content after
 
@@ -284,7 +284,7 @@ class ChatPipeline:
 
     # ── Public API ────────────────────────────────────────────────────────────
 
-    def chat(self, session_id: str, user_input: str, lecture_number: int = None) -> str:
+    def chat(self, session_id: str, user_input: str, lecture_number: int = None, use_web_scraping: bool = True) -> str:
         """
         Single-turn chat that is multi-turn aware.
         Loads history → condenses question → routes → saves.
@@ -308,7 +308,7 @@ class ChatPipeline:
             user_input=user_input,
             standalone_q=standalone_q,
             lecture_number=lecture_number,
-            direct_handler=lambda sq, ui, topics: self._direct_answer(session, sq, ui, topics),
+            direct_handler=lambda sq, ui, topics: self._direct_answer(session, sq, ui, topics, use_web_scraping=use_web_scraping),
             conversational_handler=lambda sq, ui: self._conversational_answer(session, sq, ui)
         )
 
