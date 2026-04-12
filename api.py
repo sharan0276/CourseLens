@@ -2,6 +2,7 @@ import os
 import sys
 from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 
@@ -18,7 +19,7 @@ SESSIONS_DIR = "CourseLens_data/chat_sessions"
 
 class AppState:
     history_store: ChatHistoryStore
-    pipelines: Dict[str, ChatPipeline] = {}
+    pipeline: ChatPipeline = None
     title_llm: Any = None
 
 state = AppState()
@@ -48,22 +49,12 @@ async def lifespan(app: FastAPI):
     state.title_llm = flash_llm
     state.history_store = ChatHistoryStore(storage_dir=SESSIONS_DIR)
     
-    print("Initializing Chat Pipelines...")
-    # Initialize both general and coding pipelines so they are ready
-    state.pipelines["general"] = ChatPipeline(
+    print("Initializing Unified Chat Pipeline...")
+    state.pipeline = ChatPipeline(
         embeddings=embeddings,
         history_store=state.history_store,
         llm=llm,
         flash_llm=flash_llm,
-        mode="general",
-        search_type="similarity"
-    )
-    state.pipelines["coding"] = ChatPipeline(
-        embeddings=embeddings,
-        history_store=state.history_store,
-        llm=llm,
-        flash_llm=flash_llm,
-        mode="coding",
         search_type="similarity"
     )
     
@@ -77,10 +68,12 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Mount the images directory so they can be accessed via URL
+app.mount("/images", StaticFiles(directory="CourseLens_data/images"), name="images")
+
 class ChatRequest(BaseModel):
     session_id: Optional[str] = None
     message: str
-    mode: str = "general" # 'general' or 'coding'
     lecture_number: Optional[int] = None  # max lecture to filter retrieval by
     use_web_scraping: bool = True
 
@@ -168,23 +161,18 @@ def chat(request: ChatRequest):
     if not request.message.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
         
-    mode = request.mode if request.mode in ["general", "coding"] else "general"
-    
     # 1. Load or Create Session
     if request.session_id:
         session = state.history_store.load_session(request.session_id)
         if not session:
-            session = state.history_store.create_session(mode=mode)
+            session = state.history_store.create_session(mode="unified")
     else:
-        session = state.history_store.create_session(mode=mode)
+        session = state.history_store.create_session(mode="unified")
         
-    # The session might have a different mode than the request, 
-    # we'll use the session's actual mode to determine which pipeline to call.
-    active_mode = session.mode
-    pipeline = state.pipelines.get(active_mode)
+    pipeline = state.pipeline
     
     if not pipeline:
-        raise HTTPException(status_code=500, detail=f"Pipeline for mode '{active_mode}' not configured")
+        raise HTTPException(status_code=500, detail="Chat pipeline not initialized")
         
     # 2. Process chat
     try:
@@ -214,7 +202,7 @@ def chat(request: ChatRequest):
     return ChatResponse(
         session_id=session.session_id,
         response=reply,
-        mode=active_mode,
+        mode=session.mode,
         lecture_number=request.lecture_number
     )
 

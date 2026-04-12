@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Generator, List
 
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
@@ -11,7 +12,7 @@ from domain.chat_session import ChatSession
 from services.rag.retrieval_service import RetrievalService
 from services.rag.chroma_retriever import VectorStoreManager
 from services.rag.web_content_scraper import WebContentScraper
-from services.chat.query_classifier import QueryClassifier
+from services.chat.query_classifier import QueryClassifier, QueryType
 from services.chat.anchor_retrieval import AnchorRetrieval
 from services.chat.socratic_engine import SocraticEngine
 from services.chat.summarization_engine import SummarizationEngine
@@ -37,7 +38,6 @@ class ChatPipeline:
         history_store: ChatHistoryStore,
         llm,
         flash_llm,  # added: lightweight model for classification and reply assessment
-        mode: str = "general",
         search_type: str = "similarity",
         k: int = 5,
         persist_dir: str = "CourseLens_data/chroma_db",
@@ -53,7 +53,6 @@ class ChatPipeline:
         self.history_store = history_store
         self.llm = llm
         self.flash_llm = flash_llm  # added: stored so QueryRouter components can use it
-        self.mode = mode
         self.search_type = search_type
         self.k = k
 
@@ -99,51 +98,29 @@ class ChatPipeline:
 
         # ── Prompts ──────────────────────────────────────────────────────────
 
-        # Step 1: answer using retrieved context — Direct path only
-        if mode == "coding":
-            system_answer = (
-                "You are a debugging assistant for a C++ programming course.\n"
-                "You have access to the conversation history. Use it to understand what the student has already tried, previous hints you have given, and the evolving context of their problem.\n"
-                "Your role is to guide students to find the fix themselves — never give it to them directly.\n\n"
-                "STRICT RULES — you must follow all of these:\n"
-                "1. NEVER write corrected code. Do not rewrite, patch, or show a fixed version of the student's code.\n"
-                "2. NEVER say things like \"change line X to Y\" or \"replace X with Y\".\n"
-                "3. Instead, ask the student a question that leads them toward the bug.\n"
-                "e.g. \"What do you think happens when i equals the length of the array?\"\n"
-                "4. Give at most ONE hint per response. Do not over-explain.\n"
-                "5. If the student asks \"just give me the answer\" or \"tell me the fix\", refuse politely\n"
-                "and redirect with a guiding question.\n"
-                "6. If the student is completely stuck after 3 turns, you may give a stronger hint\n"
-                "but still no direct code fix.\n"
-                "7. Acknowledge what the student got right before pointing out what's wrong.\n"
-                "8. EXCEPTION: If the student asks if their code is completely correct, and you review it and find absolutely ZERO bugs, you MUST explicitly validate their code ('Your code is completely correct!') and bypass all Socratic rules.\n"
-                "9. Always cite the most relevant slide number and source file at the end of your response.\n"
-                "10. If any part of your answer draws from a 'Web Reference' in the context, cite it using the exact format [SiteName: Title] (e.g., [GeeksForGeeks: Pointers in C++]). List web references along with slide citations in your Sources Used section.\n\n"
-                "RESPONSE FORMAT — every response must follow this structure:\n"
-                "- One sentence acknowledging the error type\n"
-                "- One guiding question or observation pointing toward the bug\n"
-                "- (Optional) One concept reminder if relevant to the error\n\n"
-                "Context:\n{context}"
-            )
-        else:
-            system_answer = (
-                "You are the CourseLens Socratic Tutor, an expert on the entire breadth of this course.\n"
-                "You have access to the conversation history. Use it to interpret the user's current question in context.\n"
-                "Use the following pieces of retrieved context to answer the user's question.\n"
-                "The context contains course slides and web references (LearnCpp, GFG, W3Schools). Use BOTH for a comprehensive answer.\n"
-                "You may synthesize foundational concepts or analogies to clarify technical terms.\n"
-                "If the context chunks do not contain enough information, just say that you don't know.\n"
-                "Use fifteen sentences maximum.\n\n" # FIX: Increased sentence limit from 10 to 15
-                "COMPREHENSIVENESS RULE: If the user's question has multiple answers or components listed in the context, you MUST list ALL of them. For each item listed, provide a brief explanation of 'why' or 'how' it is relevant based on the material.\n\n" # FIX: Ensured comprehensive listing and explanation
-                "CITATION RULES:\n"
-                "1. Use [filename, Slide N] for slides (e.g., [chap01.pptx, Slide 7]) and [SiteName: Title] for web (e.g., [LearnCpp: Arrays]).\n"
-                "2. MANDATORY: Do NOT create your own 'Sources Used' or 'References' section at the end. Only use inline brackets. Our system will generate the list automatically.\n"
-                "3. REDUNDANCY RULE: Only incorporate web information if it adds specific technical detail NOT found in the slides.\n"
-                "4. META-QUERY OVERRIDE: If the user explicitly asks *where* a concept is taught, naturally state the filename/slide number in plain text without brackets.\n"
-                "5. STRICT IGNORANCE: If the student uses a symbol, operator, or concept (e.g., `==`) that is NOT defined in your provided context chunks, you MUST NOT explain it using your prior knowledge. State that the concept is beyond the current material, and ONLY correct them using concepts that ARE in the context (like explaining `=` for assignment).\n\n"
-                "CRITICAL: If a retrieved document contains 'Attached Images', include it: `![Description](CourseLens_data/images/<filename>)`.\n"
-                "\nContext:\n{context}"
-            )
+        # Unified CourseLens Socratic Tutor Persona
+        system_answer = (
+            "You are the CourseLens Socratic Tutor, an expert on the entire breadth of this course.\n"
+            "You have access to the conversation history. Use it to interpret the user's current question in context.\n"
+            "Use the following pieces of retrieved context to answer the user's question.\n"
+            "The context contains course slides and web references (LearnCpp, GFG, W3Schools). Use BOTH for a comprehensive answer.\n"
+            "You may synthesize foundational concepts or analogies to clarify technical terms.\n"
+            "If the context chunks do not contain enough information, just say that you don't know.\n"
+            "Use fifteen sentences maximum.\n\n"
+            "COMPREHENSIVENESS RULE: If the user's question has multiple answers or components listed in the context, you MUST list ALL of them. For each item listed, provide a brief explanation of 'why' or 'how' it is relevant based on the material.\n\n"
+            "PEDAGOGICAL TONE: While providing direct answers for factual queries, maintain an encouraging, academic tone.\n"
+            "GUIDING QUESTION RULE: You may conclude with a single guiding question ONLY if the student's query is technical and unresolved. If the student is expressing satisfaction, saying 'thanks', or confirming understanding (e.g. 'Yes', 'I get it'), do NOT ask a follow-up technical question. Just acknowledge their progress and offer further help if needed.\n\n"
+            "CITATION RULES:\n"
+            "1. Use [filename, Slide N] for slides (e.g., [chap01.pptx, Slide 7]) and [SiteName: Title | URL] for web references (e.g., [LearnCpp: Arrays | https://www.learncpp.com/cpp-tutorial/arrays-ii/]).\n"
+            "2. MANDATORY: Do NOT create your own 'Sources Used' or 'References' section at the end. Only use inline brackets. Our system will generate the list automatically.\n"
+            "3. REDUNDANCY RULE: Only incorporate web information if it adds specific technical detail NOT found in the slides.\n"
+            "4. META-QUERY OVERRIDE: If the user explicitly asks *where* a concept is taught, naturally state the filename/slide number in plain text without brackets.\n"
+            "5. STRICT IGNORANCE: If the student uses a symbol, operator, or concept (e.g., `==`) that is NOT defined in your provided context chunks, you MUST NOT explain it using your prior knowledge. State that the concept is beyond the current material, and ONLY correct them using concepts that ARE in the context (like explaining `=` for assignment).\n\n"
+            "CRITICAL: VISUAL COMPLIANCE\n"
+            "If a retrieved course document contains 'Attached Images', you MUST include them at the very start of your explanation for that slide using standard markdown syntax: `![Slide Content Image](CourseLens_data/images/<filename>)`.\n"
+            "Do NOT skip images for length. If multiple images are present, include them all sequentially.\n"
+            "\nContext:\n{context}"
+        )
             
         self._conversational_prompt = ChatPromptTemplate.from_messages([
             ("system",
@@ -174,8 +151,12 @@ class ChatPipeline:
             ("system",
              "Given a conversation history and a follow-up user input, rephrase the follow-up into a "
              "standalone question that can be understood without the rest of the history.\n"
-             "If the input is already a standalone question, return it as-is.\n"
-             "Do NOT answer the question — only rephrase it."),
+             "STANDALONE QUESTION RULES:\n"
+             "1. If the input is already a standalone question, return it as-is.\n"
+             "2. If the input is a simple affirmation (e.g., 'Yes', 'Yes it does', 'Correct'), a denial ('No'), or a common pleasantry ('Thanks', 'Cool', 'Okay'), do NOT turn it into a question. Return it as a simple status statement (e.g., 'The user confirms the explanation was helpful').\n"
+             "3. MIXED INTENT: If the input contains both an affirmation/pleasantry AND a technical follow-up (e.g., 'Yes, but why does X happen?'), extract ONLY the follow-up and rephrase it as a standalone technical question. Ignore the conversational part.\n"
+             "4. Do NOT invent concepts like 'Min functions' or 'Templates' if they are not the immediate subject of the very last exchange.\n"
+             "5. Do NOT answer the question — only rephrase it."),
             MessagesPlaceholder("history"),
             ("human", "{input}"),
         ])
@@ -225,7 +206,7 @@ class ChatPipeline:
         if course_docs:
             sections.append("=== COURSE MATERIAL ===\n" + "\n\n".join(course_docs))
         if web_docs:
-            sections.append("=== WEB REFERENCES (You MUST cite these using [SiteName: Title] format) ===\n" + "\n\n".join(web_docs))
+            sections.append("=== WEB REFERENCES (You MUST cite these using [SiteName: Title | URL] format) ===\n" + "\n\n".join(web_docs))
 
         return "\n\n".join(sections)
 
@@ -328,11 +309,18 @@ class ChatPipeline:
             "input": standalone_q,
             "context": context,
         })
-        if self.mode == "coding":
-            reply = self._validate_response(reply, standalone_q)
         return reply
 
     # ── Public API ────────────────────────────────────────────────────────────
+
+    def _strip_pedagogical_metadata(self, text: str) -> str:
+        """
+        Strips pedagogical headers (e.g., [💡 Stage 1]) from the UI response.
+        Leaves the original text intact for the JSON history.
+        """
+        # Pattern: Matches any bracketed tag at the VERY start of the string, 
+        # followed by two newlines.
+        return re.sub(r"^\[.*?\]\n\n", "", text)
 
     def chat(self, session_id: str, user_input: str, lecture_number: int = None, use_web_scraping: bool = True) -> str:
         """
@@ -358,7 +346,7 @@ class ChatPipeline:
         # updated: single QueryRouter call replaces inline retrieve → format → answer chain
         # direct_handler lambda passes Direct path back to _direct_answer
         # without QueryRouter needing to know about session or history internals
-        reply = self.query_router.route(
+        result_meta = self.query_router.route(
             session=session,
             user_input=user_input,
             standalone_q=standalone_q,
@@ -366,17 +354,32 @@ class ChatPipeline:
             direct_handler=lambda sq, ui, topics: self._direct_answer(session, sq, ui, topics, lecture_number=lecture_number, use_web_scraping=use_web_scraping),
             conversational_handler=lambda sq, ui: self._conversational_answer(session, sq, ui)
         )
+        reply = result_meta['reply']
+        q_type = result_meta['query_type']
+        topics = result_meta.get('selected_topics', [])
 
-        session.add_message(role="user", content=user_input)
-        session.add_message(role="assistant", content=reply)
-        self._update_session_summary(session)
-        self.history_store.save_session(session)
+        # TOKEN OPTIMIZATION: Only save to history if it's technical or a relevant courselens query.
+        # Skip history if it's purely conversational or out-of-scope with no technical topics.
+        should_save = True
+        if q_type in [QueryType.CONVERSATIONAL, QueryType.OUT_OF_SCOPE] and not topics:
+            print(f"[Pipeline] Non-technical turn detected ({q_type.value}) — skipping history save to optimize tokens")
+            should_save = False
+
+        if should_save:
+            session.add_message(role="user", content=user_input)
+            session.add_message(role="assistant", content=reply)
+            self._update_session_summary(session)
+            self.history_store.save_session(session)
+        else:
+            # Still save the summary if we have one, but don't add the "thanks" turn
+            self.history_store.save_session(session)
 
         # Apply citation formatting before returning to UI/CLI
         # For Socratic Stage 2 and 3, skip the numbered bibliography / footer
+        clean_reply = self._strip_pedagogical_metadata(reply)
         if session.ta_stage in [2, 3]:
-            return reply
-        return add_sources_footer(reply)
+            return clean_reply
+        return add_sources_footer(clean_reply)
 
     def chat_stream(self, session_id: str, user_input: str, lecture_number: int = None, use_web_scraping: bool = True) -> Generator[str, None, None]:
         """
@@ -403,7 +406,7 @@ class ChatPipeline:
         # added: pre-check routes Socratic and Out of Scope through QueryRouter
         # yielding the full reply at once rather than streaming token by token
         if session.in_socratic_loop() or self._should_use_socratic(standalone_q, lecture_number):
-            reply = self.query_router.route(
+            result_meta = self.query_router.route(
                 session=session,
                 user_input=user_input,
                 standalone_q=standalone_q,
@@ -411,17 +414,31 @@ class ChatPipeline:
                 direct_handler=lambda sq, ui, topics: self._direct_answer(session, sq, ui, topics, lecture_number=lecture_number, use_web_scraping=use_web_scraping),
                 conversational_handler=lambda sq, ui: self._conversational_answer(session, sq, ui)
             )
-            session.add_message(role="user", content=user_input)
-            session.add_message(role="assistant", content=reply)
-            self._update_session_summary(session)
-            self.history_store.save_session(session)
+            reply = result_meta['reply']
+            q_type = result_meta['query_type']
+            topics = result_meta.get('selected_topics', [])
+
+            # TOKEN OPTIMIZATION: Skip history for pure small talk or out-of-scope trash
+            should_save = True
+            if q_type in [QueryType.CONVERSATIONAL, QueryType.OUT_OF_SCOPE] and not topics:
+                print(f"[Pipeline] Non-technical turn detected (streaming path, {q_type.value}) — skipping history save")
+                should_save = False
+
+            if should_save:
+                session.add_message(role="user", content=user_input)
+                session.add_message(role="assistant", content=reply)
+                self._update_session_summary(session)
+                self.history_store.save_session(session)
+            else:
+                self.history_store.save_session(session)
             
             # Apply citation formatting to Socratic/Out-of-Scope responses
             # For Socratic Stage 2 and 3, skip the numbered bibliography / footer
+            clean_reply = self._strip_pedagogical_metadata(reply)
             if session.ta_stage in [2, 3]:
-                yield reply
+                yield clean_reply
             else:
-                yield add_sources_footer(reply)
+                yield add_sources_footer(clean_reply)
             return
 
         # Direct path — streams token by token, enriched with web content
@@ -470,9 +487,6 @@ class ChatPipeline:
             bibliography = formatted_full.split("Sources Used:")[1]
             yield f"\n\nSources Used:{bibliography}"
 
-        if self.mode == "coding":
-            full_reply = self._validate_response(full_reply, standalone_q)
-
         session.add_message(role="user", content=user_input)
         session.add_message(role="assistant", content=full_reply)
         self._update_session_summary(session)
@@ -488,52 +502,3 @@ class ChatPipeline:
         """
         result = self.query_router.classifier.classify(standalone_q, lecture_number)
         return result.query_type.value in ["SOCRATIC", "OUT_OF_SCOPE", "SUMMARIZE_LECTURE"]
-
-    # ── Guardrail (coding mode) ────────────────────────────────────────────────
-
-    def _contains_direct_fix(self, reply: str, student_input: str) -> bool:
-        """Heuristic checks to detect if the model gave away the answer."""
-        reply_lower = reply.lower()
-
-        if "```" in reply:
-            return True
-
-        giveaway_phrases = [
-            "change line", "replace", "should be", "correct code",
-            "fix is", "solution is", "here's the fix", "the answer is",
-            "you need to write", "use this instead"
-        ]
-        if any(phrase in reply_lower for phrase in giveaway_phrases):
-            return True
-
-        student_lines = set(
-            l.strip() for l in student_input.splitlines()
-            if len(l.strip()) > 10
-        )
-        reply_lines = set(
-            l.strip() for l in reply.splitlines()
-            if len(l.strip()) > 10
-        )
-        if len(student_lines & reply_lines) >= 2:
-            return True
-
-        return False
-
-    def _generate_fallback(self, student_input: str) -> str:
-        """Generates a Socratic fallback hint when guardrail fires."""
-        fallback_prompt = ChatPromptTemplate.from_messages([
-            ("system",
-             "You are a strict Socratic tutor. Your only job is to ask ONE guiding question "
-             "that helps a student find their bug. You must NEVER include code, fixes, or direct answers."),
-            ("human",
-             "A student submitted this input and got a bad response:\n\n{input}\n\n"
-             "Write ONE short guiding question (1-2 sentences) specific to their code and error.")
-        ])
-        fallback_chain = fallback_prompt | self.llm | StrOutputParser()
-        return fallback_chain.invoke({"input": student_input})
-
-    def _validate_response(self, reply: str, student_input: str) -> str:
-        """If a direct fix is detected, generate a Socratic fallback."""
-        if self._contains_direct_fix(reply, student_input):
-            return self._generate_fallback(student_input)
-        return reply

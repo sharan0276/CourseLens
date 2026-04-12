@@ -33,7 +33,7 @@ def add_sources_footer(text: str) -> str:
         return [f"{filename}, {slide}" for slide in slides] if slides else [raw]
 
     # ── Step 2: Collect all unique citations in order of appearance ─────────
-    unique_citations = []  # list of (display_text, citation_type)
+    unique_citations = []  # list of (display_text, citation_type, url)
 
     for m in re.finditer(r'\[(.*?)\]', text):
         content = m.group(1)
@@ -45,19 +45,26 @@ def add_sources_footer(text: str) -> str:
         for part in parts:
             if re.search(r'\.(pptx|pdf|doc|docx),', part):
                 for ind in _split_slide_citation(part):
-                    if (ind, "slide") not in unique_citations:
-                        unique_citations.append((ind, "slide"))
+                    if not any(c[0] == ind for c in unique_citations):
+                        unique_citations.append((ind, "slide", None))
             elif re.match(r'^(GeeksForGeeks|W3Schools|LearnCpp):\s*', part):
-                match = re.match(r'^(GeeksForGeeks|W3Schools|LearnCpp):\s*(.*)', part)
-                display = f"{match.group(1)}: {match.group(2).strip()}"
-                if (display, "web") not in unique_citations:
-                    unique_citations.append((display, "web"))
+                # Handle piped format: "Site: Title | URL"
+                url = None
+                display = part
+                if '|' in part:
+                    match = re.match(r'^(.*?)\s*\|\s*(http.*)', part)
+                    if match:
+                        display = match.group(1).strip()
+                        url = match.group(2).strip()
+                
+                if not any(c[0] == display for c in unique_citations):
+                    unique_citations.append((display, "web", url))
 
     if not unique_citations:
         return text
 
     # Build number map
-    num_map = {display: f"[{i+1}]" for i, (display, _) in enumerate(unique_citations)}
+    num_map = {display: f"[{i+1}]" for i, (display, _, _) in enumerate(unique_citations)}
 
     # ── Step 3: Replace inline citations seamlessly ──────────────────────────
     def _replace_bracket(m):
@@ -75,8 +82,8 @@ def add_sources_footer(text: str) -> str:
                 final_str += ''.join(num_map.get(s, '') for s in subs)
                 valid_replacement = True
             elif re.match(r'^(GeeksForGeeks|W3Schools|LearnCpp):\s*', part):
-                match = re.match(r'^(GeeksForGeeks|W3Schools|LearnCpp):\s*(.*)', part)
-                display = f"{match.group(1)}: {match.group(2).strip()}"
+                # Normalize piped content to find the correct number in num_map
+                display = part.split('|')[0].strip() if '|' in part else part.strip()
                 final_str += num_map.get(display, '')
                 valid_replacement = True
             else:
@@ -87,8 +94,12 @@ def add_sources_footer(text: str) -> str:
     processed_text = re.sub(r'\[(.*?)\]', _replace_bracket, text)
 
     # ── Step 5: Append unified bibliography ──────────────────────────────────
-    footer = "\n\nSources Used:"
-    for i, (display, _) in enumerate(unique_citations, 1):
-        footer += f"\n[{i}] {display}"
+    footer = "\n\n---\n**Sources Used:**"
+    for i, (display, type, url) in enumerate(unique_citations, 1):
+        if url:
+            # If we have a URL, make it a clickable markdown link
+            footer += f"\n- [{i}] [{display}]({url})"
+        else:
+            footer += f"\n- [{i}] {display}"
 
     return processed_text + footer

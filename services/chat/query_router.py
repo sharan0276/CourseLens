@@ -42,16 +42,14 @@ class QueryRouter:
         lecture_number: int,
         direct_handler,
         conversational_handler,
-    ) -> str:
+    ) -> dict:
         """
-        Routes the query to the correct path and returns the assistant reply.
-
         Args:
-            session        — current ChatSession with all state
-            user_input     — raw student message as typed
-            standalone_q   — condensed standalone question from ChatPipeline
-            lecture_number — student's current lecture for progressive disclosure
-            direct_handler — callable that runs the existing direct RAG chain
+            session - current ChatSession with all state
+            user_input - raw student message as typed
+            standalone_q - condensed standalone question from ChatPipeline
+            lecture_number - student's current lecture for progressive disclosure
+            direct_handler - callable that runs the existing direct RAG chain
                              signature: direct_handler(standalone_q, user_input, topics) -> str
         """
 
@@ -65,19 +63,22 @@ class QueryRouter:
         if session.in_socratic_loop() and any(ui_lower.startswith(sig) for sig in _ESCAPE_SIGNALS):
             print("\n[Router] Escape signal detected — fast-tracking to Stage 4 debrief")
             session.ta_stage = 4
-            return self.socratic_engine.respond(session, user_input)
+            reply = self.socratic_engine.respond(session, user_input)
+            return {"reply": reply, "query_type": QueryType.SOCRATIC, "selected_topics": session.selected_topics}
 
         # ── Mid-Loop Direct Passthrough ───────────────────────────────────────
         if session.in_socratic_loop():
-            return self.socratic_engine.respond(session, user_input)
+            reply = self.socratic_engine.respond(session, user_input)
+            return {"reply": reply, "query_type": QueryType.SOCRATIC, "selected_topics": session.selected_topics}
 
         # ── Chat Summary Interception (Zero-Cost Fast Path) ───────────────
         if "summarize chat" in ui_lower or "summarize conversation" in ui_lower or "summarize this chat" in ui_lower:
             print("\n[Router] Chat Summarization detected → returning condensed history directly")
             if session.history_summary:
-                return f"Here is a summary of our conversation so far:\n\n{session.history_summary}"
+                reply = f"Here is a summary of our conversation so far:\n\n{session.history_summary}"
             else:
-                return "We haven't discussed much yet! What would you like to know?"
+                reply = "We haven't discussed much yet! What would you like to know?"
+            return {"reply": reply, "query_type": QueryType.CONVERSATIONAL, "selected_topics": []}
 
         # ── Fresh query — classify and route ─────────────────────────────────
         result = self.classifier.classify(standalone_q, lecture_number)
@@ -119,27 +120,30 @@ class QueryRouter:
         
         if future_lec:
             print(f"\n[Router] Future topic detected ({future_lec}). Routing to Future handler.")
-            return self.socratic_engine.respond_out_of_scope(
+            reply = self.socratic_engine.respond_out_of_scope(
                 user_input=user_input,
                 selected_topics=topics,
                 lecture_number=lecture_number
             )
+            return {"reply": reply, "query_type": result.query_type, "selected_topics": topics}
 
         # ── Deterministic prefix checks on raw user_input ────────────────────
         # Run AFTER future lecture intercept so forced direct doesn't leak out of bounds topics.
         if any(ui_lower.startswith(p) for p in self.classifier._DIRECT_PREFIXES):
             print("\n[Router] Raw input prefix → forcing Direct Answer")
-            return direct_handler(standalone_q, user_input, topics)
+            reply = direct_handler(standalone_q, user_input, topics)
+            return {"reply": reply, "query_type": QueryType.DIRECT, "selected_topics": topics}
 
         if any(ui_lower.startswith(p) for p in self.classifier._SUMMARIZE_PREFIXES):
             print("\n[Router] Raw input prefix → forcing Summarization Engine")
             target = result.target_lecture if result.target_lecture is not None else lecture_number
-            return self.summarization_engine.summarize(
+            reply = self.summarization_engine.summarize(
                 session=session,
                 lecture_number=target,
                 user_input=user_input,
                 is_until=result.is_until
             )
+            return {"reply": reply, "query_type": QueryType.SUMMARIZE_LECTURE, "selected_topics": topics}
 
         if any(ui_lower.startswith(p) for p in self.classifier._SOCRATIC_PREFIXES):
             print("\n[Router] Raw input prefix → forcing Socratic Engine")
@@ -158,20 +162,22 @@ class QueryRouter:
         if result.query_type == QueryType.SUMMARIZE_LECTURE:
             print(f"\n[Router] Routing to Summarization Engine (Until: {result.is_until})")
             target = result.target_lecture if result.target_lecture is not None else lecture_number
-            return self.summarization_engine.summarize(
+            reply = self.summarization_engine.summarize(
                 session=session,
                 lecture_number=target,
                 user_input=user_input,
                 is_until=result.is_until
             )
+            return {"reply": reply, "query_type": result.query_type, "selected_topics": topics}
 
         if result.query_type == QueryType.OUT_OF_SCOPE:
             print("\n[Router] Routing to Out Of Scope handler")
-            return self.socratic_engine.respond_out_of_scope(
+            reply = self.socratic_engine.respond_out_of_scope(
                 user_input=user_input,
                 selected_topics=result.selected_topics,
                 lecture_number=lecture_number
             )
+            return {"reply": reply, "query_type": result.query_type, "selected_topics": result.selected_topics}
 
         if result.query_type == QueryType.SOCRATIC:
             print("\n[Router] Routing to Socratic Engine")
@@ -185,8 +191,15 @@ class QueryRouter:
                 chunk_ids=session.anchored_chunk_ids,
                 topics=result.selected_topics
             )
-            return self.socratic_engine.respond(session=session, user_input=user_input)
+            reply = self.socratic_engine.respond(session=session, user_input=user_input)
+            return {"reply": reply, "query_type": result.query_type, "selected_topics": result.selected_topics}
+
+        if result.query_type == QueryType.CONVERSATIONAL:
+            print("\n[Router] Routing to Conversational handler")
+            reply = conversational_handler(standalone_q, user_input)
+            return {"reply": reply, "query_type": result.query_type, "selected_topics": []}
 
         # DIRECT — pass to existing RAG chain via the handler callable
         print("\n[Router] Routing to Direct Answer")
-        return direct_handler(standalone_q, user_input, topics)
+        reply = direct_handler(standalone_q, user_input, topics)
+        return {"reply": reply, "query_type": QueryType.DIRECT, "selected_topics": topics}

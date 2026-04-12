@@ -46,6 +46,8 @@ class QueryClassifier:
              "   SOCRATIC    — requires guided understanding OR a technical concept summary\n"
              "                 Includes conceptual confusion, debugging help, and requests to summarize a specific technical topic (e.g. 'Summarize pointers').\n"
              "                 When in doubt, use SOCRATIC.\n"
+             "   CONVERSATIONAL — affirmations, denials, or polite social cues that do NOT require a new technical fact.\n"
+             "                 Includes: 'Yes', 'Yes it does', 'No', 'Thanks', 'Cool', 'Okay', 'That helps'.\n"
              "   SUMMARIZE_LECTURE — requests for an overview of an entire LECTURE, WEEK, or SYLLABUS UNIT\n"
              "                 ONLY use this for temporal or structural requests: e.g. 'Summarize lecture 3', 'What did we learn in week 2?', 'Outline today's class'.\n"
              "                 DO NOT use this for technical concept summaries (e.g. 'Summarize how memory works' is SOCRATIC).\n"
@@ -54,7 +56,7 @@ class QueryClassifier:
              "2. Select 2-3 most relevant topics from the provided course topic list.\n"
              "   Only pick from the list — never invent topics.\n\n"
              "Reply in exactly this format, nothing else:\n"
-             "LABEL: <DIRECT|SOCRATIC|SUMMARIZE_LECTURE|OUT_OF_SCOPE>\n"
+             "LABEL: <DIRECT|SOCRATIC|SUMMARIZE_LECTURE|OUT_OF_SCOPE|CONVERSATIONAL>\n"
              "TOPICS: <topic1|topic2|topic3>\n"
              "TARGET_LECTURE: <lecture_number if a specific lecture/week is mentioned, else None>\n"
              "IS_UNTIL: <True if the student asks for a summary 'so far', 'up to now', or 'until' a point, else False>\n\n"
@@ -77,6 +79,8 @@ class QueryClassifier:
         "why does ", "why is ", "why do ", "why are ",
         "why did ", "why was ", "explain ",
         "help me debug", "help me fix", "fix my", "debug my", "find the bug",
+        "i don't get it", "i do not get it", "i'm confused", "i am confused",
+        "explain again", "show me again", "repeat that",
     )
     # Prefixes that signal summarized structural requests — force SUMMARIZE_LECTURE
     _SUMMARIZE_PREFIXES = (
@@ -90,6 +94,7 @@ class QueryClassifier:
         "hi", "hello", "hey", "thanks", "thank you", "bye", "goodbye",
         "ok", "okay", "yes", "no", "sure", "great", "cool",
         "what did i", "can you repeat", "what was my", "what have we",
+        "the user confirms", "the student confirms", "the user acknowledges",
     )
 
     def classify(self, query: str, lecture_number: int) -> ClassificationResult:
@@ -101,7 +106,7 @@ class QueryClassifier:
             lecture_number = 14  # assume entire course is available
 
         loader = SyllabusLoader()
-        # FIX: Allow the AI to see ALL topics in the syllabus so it can correctly 
+        # Allowing the AI to see ALL topics in the syllabus so it can correctly 
         # identify future concepts (like 'Compound Assignment') as valid 
         # course material rather than 'OUT_OF_SCOPE'.
         selection_pool = loader.get_all_topics()
@@ -162,10 +167,18 @@ class QueryClassifier:
         #   (a) it starts with a known greeting/meta-phrase, OR
         #   (b) the LLM found course-related topics (genuine course continuation)
         # Only downgrade to OUT_OF_SCOPE if NO course topics AND NOT a greeting.
+        #   (b) the LLM found course-related topics (genuine course continuation)
+        # Only downgrade to OUT_OF_SCOPE if NO course topics AND NOT a greeting.
+        # UPGRADE: Also force DIRECT if topics were found but it was labeled CONVERSATIONAL
         if result.query_type == QueryType.CONVERSATIONAL:
             is_greeting = any(q_lower.startswith(g) for g in self._TRUE_CONVERSATIONAL)
             has_course_topics = bool(result.selected_topics)
-            if not is_greeting and not has_course_topics:
+            
+            if has_course_topics:
+                # If topics found, it's not JUST a pleasantry — it's a technical follow-up
+                print("\n[Classifier] CONVERSATIONAL upgraded to DIRECT (technical topics detected)")
+                result.query_type = QueryType.DIRECT
+            elif not is_greeting:
                 print("\n[Classifier] CONVERSATIONAL downgraded to OUT_OF_SCOPE (no topics, not a greeting)")
                 result = ClassificationResult(
                     query_type=QueryType.OUT_OF_SCOPE,
