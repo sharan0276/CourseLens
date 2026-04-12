@@ -3,73 +3,92 @@ import re
 
 def add_sources_footer(text: str) -> str:
     """
-    Extracts [filename, Slide N] citations (including multi-slide like [file, Slide 2, Slide 3]),
-    splits them into individual entries, replaces inline with [1][2] style numbers,
-    and appends a clean 'Sources Used' bibliography with one entry per slide.
-    
-    Robustness features:
-    - Case-insensitive 'slide' matching.
-    - Optional file extensions (.pptx, .pdf, etc.).
-    - Flexible whitespace handling.
+    Extracts [filename, Slide N] and [SiteName: Title] citations,
+    replaces inline with [1][2] style numbers,
+    and appends a single clean 'Sources Used' bibliography.
+
+    Also strips any LLM-generated 'Sources Used' or bulleted reference sections
+    to prevent duplication and clutter.
     """
-    
-    # Match citation groups like [chap03.pptx, Compound Assignment, Slide: 40]
-    # or [chap03.pptx, Assignment Statement]
-    # It looks for a filename/chapter start, followed by at least one comma-separated detail.
-    pattern = r'\[((?:chap\d+|[a-zA-Z0-9_\-\.]+\.(?:pptx|pdf|docx|txt|html|cpp))[ \t]*,[ \t]*[^\[\]]+)\]'
+    import re
 
-    if not re.search(pattern, text):
-        return text
+    # ── Step 0: Strip any existing LLM-generated "Sources Used" sections ──────
+    # Matches "Sources Used:" or "References:" followed by list items until end or double newline
+    text = re.sub(
+        r'\n*(?:Sources Used|References):\s*\n(?:\s*[\*\-•]?\s*(?:\[\d+\]\s*)?[^\n]+\n?)+',
+        '',
+        text
+    ).rstrip()
 
-    def _split_citation(raw: str):
+    # ── Step 1: Define specific citation part extractors ──────────────
+
+    def _split_slide_citation(raw: str):
         """
-        Splits a raw citation string while preserving topic info.
-        Input: 'chap03.pptx, Compound Assignment, Slide: 40' -> ['chap03.pptx, Compound Assignment, Slide: 40']
-        Input: 'f, Topic, Slide 1, Slide 2' -> ['f, Topic, Slide 1', 'f, Topic, Slide 2']
+        Split 'chap01.pptx, Slide 2, Slide 3' -> ['chap01.pptx, Slide 2', 'chap01.pptx, Slide 3']
         """
-        parts = [p.strip() for p in re.split(r',\s*', raw.strip())]
-        if len(parts) < 2:
-            return [raw]
-            
-        filename = parts[0]
-        
-        # Identify which parts are 'Slide' parts
-        # Now matches 'Slide 40', 'Slide: 40', 'slide 40', etc.
-        slide_indices = [i for i, p in enumerate(parts) if re.search(r'[sS]lide\s*:?\s*\d+', p)]
-        
-        if not slide_indices:
-            # If no slide info, treat the whole thing as one specific citation (e.g., [file, topic])
-            return [raw]
-            
-        # The 'prefix' is everything before the first slide mention (e.g., filename + topic)
-        prefix = ", ".join(parts[:slide_indices[0]])
-        
-        # Return one entry for each slide, keeping the prefix
-        return [f"{prefix}, {parts[i]}" for i in slide_indices]
+        parts = re.split(r',\s*', raw.strip())
+        if not parts: return [raw]
+        filename = parts[0].strip()
+        slides = [p.strip() for p in parts[1:] if re.match(r'[sS]lide\s*\d+', p.strip(), re.IGNORECASE)]
+        return [f"{filename}, {slide}" for slide in slides] if slides else [raw]
 
-    # First pass — collect all individual citations in order of first appearance
-    unique_citations = []
-    for match in re.finditer(pattern, text):
-        raw = match.group(1)
-        for ind in _split_citation(raw):
-            if ind not in unique_citations:
-                unique_citations.append(ind)
+    # ── Step 2: Collect all unique citations in order of appearance ─────────
+    unique_citations = []  # list of (display_text, citation_type)
+
+    for m in re.finditer(r'\[(.*?)\]', text):
+        content = m.group(1)
+        # Fast filter: does it contain our known signature patterns?
+        if not (re.search(r'\.(pptx|pdf|doc|docx),', content) or 'GeeksForGeeks:' in content or 'W3Schools:' in content or 'LearnCpp:' in content):
+            continue
+            
+        parts = [p.strip() for p in content.split(';')]
+        for part in parts:
+            if re.search(r'\.(pptx|pdf|doc|docx),', part):
+                for ind in _split_slide_citation(part):
+                    if (ind, "slide") not in unique_citations:
+                        unique_citations.append((ind, "slide"))
+            elif re.match(r'^(GeeksForGeeks|W3Schools|LearnCpp):\s*', part):
+                match = re.match(r'^(GeeksForGeeks|W3Schools|LearnCpp):\s*(.*)', part)
+                display = f"{match.group(1)}: {match.group(2).strip()}"
+                if (display, "web") not in unique_citations:
+                    unique_citations.append((display, "web"))
 
     if not unique_citations:
         return text
 
-    # Map each individual citation to its number
-    num_map = {src: f"[{i+1}]" for i, src in enumerate(unique_citations)}
+    # Build number map
+    num_map = {display: f"[{i+1}]" for i, (display, _) in enumerate(unique_citations)}
 
-    # Second pass — replace each inline citation group with concatenated numbers e.g. [1][2]
-    def _replace(m):
-        return ''.join(num_map.get(ind, '') for ind in _split_citation(m.group(1)))
+    # ── Step 3: Replace inline citations seamlessly ──────────────────────────
+    def _replace_bracket(m):
+        content = m.group(1)
+        if not (re.search(r'\.(pptx|pdf|doc|docx),', content) or 'GeeksForGeeks:' in content or 'W3Schools:' in content or 'LearnCpp:' in content):
+            return m.group(0)
+            
+        parts = [p.strip() for p in content.split(';')]
+        final_str = ""
+        valid_replacement = False
+        
+        for part in parts:
+            if re.search(r'\.(pptx|pdf|doc|docx),', part):
+                subs = _split_slide_citation(part)
+                final_str += ''.join(num_map.get(s, '') for s in subs)
+                valid_replacement = True
+            elif re.match(r'^(GeeksForGeeks|W3Schools|LearnCpp):\s*', part):
+                match = re.match(r'^(GeeksForGeeks|W3Schools|LearnCpp):\s*(.*)', part)
+                display = f"{match.group(1)}: {match.group(2).strip()}"
+                final_str += num_map.get(display, '')
+                valid_replacement = True
+            else:
+                final_str += f"[{part}]"
+                
+        return final_str if valid_replacement else m.group(0)
 
-    processed_text = re.sub(pattern, _replace, text)
+    processed_text = re.sub(r'\[(.*?)\]', _replace_bracket, text)
 
-    # Append clean bibliography
+    # ── Step 5: Append unified bibliography ──────────────────────────────────
     footer = "\n\nSources Used:"
-    for i, src in enumerate(unique_citations, 1):
-        footer += f"\n[{i}] {src}"
+    for i, (display, _) in enumerate(unique_citations, 1):
+        footer += f"\n[{i}] {display}"
 
     return processed_text + footer

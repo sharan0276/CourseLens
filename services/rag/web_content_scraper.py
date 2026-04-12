@@ -35,6 +35,7 @@ _USER_AGENT = (
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 )
 _HEADERS = {"User-Agent": _USER_AGENT}
+_NOISE_TITLES = {"index", "latest changes", "search", "category", "tag", "archive", "log in", "sign up", "site map"}
 
 
 # ── Site Scrapers ────────────────────────────────────────────────────────────
@@ -56,7 +57,16 @@ def _scrape_geeksforgeeks(topic: str) -> List[Document]:
         # GFG search results are typically in article cards with links
         article_links = []
         for a_tag in soup.find_all("a", href=True):
+            # FIX: Ensure it's a search result link by checking for nested headings or gs-title
+            is_result_link = bool(a_tag.find(["h2", "h3"]) or a_tag.find(class_="gs-title") or "gs-title" in a_tag.get("class", []))
+            if not is_result_link:
+                continue
+
             href = a_tag["href"]
+            # Sometimes Custom Search wraps the URL
+            if "/url?q=" in href:
+                href = href.split("/url?q=")[1].split("&")[0]
+
             if (
                 "geeksforgeeks.org" in href
                 and "/search/" not in href
@@ -133,8 +143,9 @@ def _scrape_w3schools(topic: str) -> List[Document]:
     # Normalize topic for URL construction
     slug = _topic_to_slug(topic)
     candidate_urls = [
-        f"https://www.w3schools.com/cpp/cpp_{slug}.asp",
-        f"https://www.w3schools.com/cpp/{slug}.asp",
+        f"https://www.w3schools.com/cpp/cpp_{slug}.asp",    # e.g., cpp_pointers.asp
+        f"https://www.w3schools.com/cpp/cpp_ref_{slug}.asp", # FIX: Added reference path (e.g., cpp_ref_keywords.asp)
+        f"https://www.w3schools.com/cpp/{slug}.asp",        # e.g., references.asp
     ]
 
     for url in candidate_urls:
@@ -209,7 +220,18 @@ def _scrape_learncpp(topic: str) -> List[Document]:
 
             article_links = []
             for a_tag in soup.find_all("a", href=True):
+                # FIX: LearnCpp uses Google Custom Search directly in its results page
+                # We must prioritize links with the .gs-title class
+                if "gs-title" not in a_tag.get("class", []):
+                    # Also try finding it inside if it's nested
+                    if not a_tag.find(class_="gs-title"):
+                        continue
+                
                 href = a_tag["href"]
+                # Sometimes Google Search wraps the URL
+                if "/url?q=" in href:
+                    href = href.split("/url?q=")[1].split("&")[0]
+
                 if (
                     "learncpp.com" in href
                     and "?s=" not in href
@@ -472,9 +494,19 @@ class WebContentScraper:
                 try:
                     print(f"[WebScraper] Searching {site_label} for '{topic}'...")
                     site_docs = scraper_fn(topic)
-                    topic_docs.extend(site_docs)
-                    if site_docs:
-                        print(f"[WebScraper] Found {len(site_docs)} article(s) from {site_label}")
+                    
+                    # Filter noise (Site indexes, search pages, etc.)
+                    filtered_site_docs = []
+                    for doc in site_docs:
+                        title = doc.metadata.get("title", "").lower()
+                        if not any(noise in title for noise in _NOISE_TITLES):
+                            filtered_site_docs.append(doc)
+                        else:
+                            print(f"[WebScraper] Filtering noise document: {doc.metadata.get('title')}")
+                    
+                    topic_docs.extend(filtered_site_docs)
+                    if filtered_site_docs:
+                        print(f"[WebScraper] Found {len(filtered_site_docs)} relevant article(s) from {site_label}")
                 except Exception as e:
                     print(f"[WebScraper] {site_label} scraper failed for '{topic}': {e}")
 

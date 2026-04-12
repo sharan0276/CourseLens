@@ -75,7 +75,7 @@ class SocraticEngine:
              "3. Do NOT explicitly list the course topics (like 'Program Organization') to the student. Make it a natural, human-like, open-ended question.\n"
              "4. Keep it extremely brief and conversational — one or two sentences maximum.\n"
              "5. Check the conversation history. If the history contains discussions about OTHER topics or previous questions, IGNORE them for your opening. ONLY if the history shows you are already mid-discussion about THIS SPECIFIC question ({active_problem_query}), you may use words like 'As we discussed' or 'We've talked about'. If this is the FIRST response to this specific doubt, you MUST start naturally and freshly without referencing the past.\n"
-             "6. STRICT GROUNDING RULE: DO NOT synthesize, explain, or acknowledge the functionality of any syntax, operators, or logical constructs NOT explicitly present in the provided `{context}`. If the student's code contains an 'unknown' element (to the course), treat it as an error and redirect them to the 'known' materials in your question.\n"
+             "6. STRICT GROUNDING RULE: DO NOT synthesize, explain, or acknowledge the functionality of any syntax, operators, or logical constructs NOT explicitly present in the provided `{context}`. If the student's code contains an 'unknown' element (to the course), treat it as an error and redirect them to the 'known' materials in your question. EXCEPTION: If the student correctly brings up an advanced computing concept or analogy (e.g. Inheritance) not in the material, you MUST enthusiastically validate their connection first, and then seamlessly map their advanced understanding back to the current simplified course topic.\n"
              "7. You may synthesize relatable analogies or examples (e.g. 'building blocks') to clarify the foundational concept, provided they do not contradict context. Do NOT introduce advanced C++ features or libraries not mentioned in context. Your goal is pedagogical clarity.\n"
              "8. CITATION RULE: You MUST mention the specific slide and file NATURALLY in your response (e.g., 'Take a look at chap02.pptx, Slide 26' or 'Refer to Slide 40 of chap03.pptx'). MANDATORY: Never use the bracketed format [filename, Slide N] at this stage.\n\n"
              "Context from course material:\n{context}"),
@@ -98,7 +98,7 @@ class SocraticEngine:
              "2. Guide them exactly ONE step forward, building firmly on what they already understand.\n"
              "3. Teach sequentially: always address foundational concepts before dependent steps.\n"
              "4. Check the conversation history. ONLY if you find that you have already discussed a related concept *within this specific Socratic loop* for the current question ({active_problem_query}), you MUST start your response with 'As we already discussed...' to acknowledge it. If the history is about a completely different previous question, do NOT use this phrase.\n"
-             "5. STRICT GROUNDING RULE: DO NOT synthesize, explain, or acknowledge the functionality of any syntax, operators, or logical constructs NOT explicitly present in the provided `{context}`. If the student's code contains an 'unknown' element (to the course), treat it as an error and redirect them to the 'known' materials. (e.g. if '==' is not in materials, do not explain it as 'comparison'; say it is unknown and point to the correct assignment operator in the slides).\n"
+             "5. STRICT GROUNDING RULE: DO NOT synthesize, explain, or acknowledge the functionality of any syntax, operators, or logical constructs NOT explicitly present in the provided `{context}`. If the student's code contains an 'unknown' element (to the course), treat it as an error and redirect them to the 'known' materials. (e.g. if '==' is not in materials, do not explain it as 'comparison'; say it is unknown and point to the correct assignment operator in the slides). EXCEPTION: If the student correctly brings up an advanced computing concept or analogy (e.g. Inheritance) not in the material, you MUST enthusiastically validate their connection first, and then seamlessly map their advanced understanding back to the current simplified course topic.\n"
              "6. You may synthesize relatable analogies or examples (e.g. 'building blocks') to clarify technical terms, even if those specific examples are not in the slides. Do NOT introduce advanced C++ features or libraries not mentioned in the text. Your goal is pedagogical clarity.\n"
              "7. CITATION RULE: You MUST mention the specific slide and file NATURALLY in your response (e.g., 'Take a look at chap02.pptx, Slide 26' or 'Refer to Slide 40 of chap03.pptx'). MANDATORY: Never use the bracketed format [filename, Slide N] at this stage.\n"
              "8. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
@@ -118,10 +118,10 @@ class SocraticEngine:
              "and provide exactly ONE hint to guide their next logical step.\n\n"
              "STRICT RULES:\n"
              "1. Do NOT give the full answer\n"
-             "2. Correct the specific misconception, then give ONE hint toward the right path.\n"
+             "2. Correct the specific misconception, then explicitly ask ONE guiding question to lead them to the right path. You MUST end your response with a question mark.\n"
              "3. Check the conversation history. ONLY if you find that you have already discussed a related concept *within this specific Socratic loop* for the current question ({active_problem_query}), you MUST start your response with 'As we already discussed...' to acknowledge it. If the history is about a completely different previous question, do NOT use this phrase.\n"
              "4. Do not overwhelm — one correction + one hint only.\n"
-             "5. STRICT GROUNDING RULE: DO NOT synthesize, explain, or acknowledge the functionality of any syntax, operators, or logical constructs NOT explicitly present in the provided `{context}`. If the student's code contains an 'unknown' element (to the course), treat it as an error and redirect them to the 'known' materials. (e.g. if '==' is not in materials, do not explain it as 'comparison'; say it is unknown and point to the correct assignment operator in the slides).\n"
+             "5. STRICT GROUNDING RULE: DO NOT synthesize, explain, or acknowledge the functionality of any syntax, operators, or logical constructs NOT explicitly present in the provided `{context}`. If the student's code contains an 'unknown' element (to the course), treat it as an error and redirect them to the 'known' materials. (e.g. if '==' is not in materials, do not explain it as 'comparison'; say it is unknown and point to the correct assignment operator in the slides). EXCEPTION: If the student correctly brings up an advanced computing concept or analogy (e.g. Inheritance) not in the material, you MUST enthusiastically validate their connection first, and then seamlessly map their advanced understanding back to the current simplified course topic.\n"
              "6. You may synthesize relatable analogies or examples (e.g. 'building blocks') to clarify technical terms, even if those specific examples are not in the slides. Do NOT introduce advanced C++ features or libraries not mentioned in the text. Your goal is pedagogical clarity.\n"
              "7. CITATION RULE: You MUST mention the specific slide and file NATURALLY in your response (e.g., 'Take a look at chap02.pptx, Slide 26' or 'Refer to Slide 40 of chap03.pptx'). MANDATORY: Never use the bracketed format [filename, Slide N] at this stage.\n"
              "8. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
@@ -141,10 +141,10 @@ class SocraticEngine:
              "then bridge back to the student's original question.\n\n"
              "STRICT RULES:\n"
              "1. Keep the explanation brief — one short paragraph\n"
-             "2. End by connecting back to the original question\n"
+             "2. End by explicitly asking ONE guiding question to prompt the student's next step. You MUST end your response with a question mark.\n"
              "3. Check the conversation history. ONLY if you find that you have already discussed a related concept *within this specific Socratic loop* for the current question ({active_problem_query}), you MUST start your response with 'As we already discussed...' to acknowledge it. If the history is about a completely different previous question, do NOT use this phrase.\n"
              "4. Do NOT give the full answer to the original question yet\n"
-             "5. STRICT GROUNDING RULE: You must prioritize the provided `{context}`. However, you MAY synthesize foundational computing concepts (like binary arithmetic, bitwise logic, or memory addresses) to explain the 'HOW' or 'WHY' if the student is stuck. Do NOT introduce advanced C++ features or outside libraries not in context. Your goal is pedagogical clarity.\n"
+             "5. STRICT GROUNDING RULE: You must prioritize the provided `{context}`. However, you MAY synthesize foundational computing concepts (like binary arithmetic, bitwise logic, or memory addresses) to explain the 'HOW' or 'WHY' if the student is stuck. Do NOT introduce advanced C++ features or outside libraries not in context. Your goal is pedagogical clarity. EXCEPTION: If the student correctly brings up an advanced computing concept or analogy (e.g. Inheritance) not in the material, you MUST enthusiastically validate their connection first, and then seamlessly map their advanced understanding back to the current simplified course topic.\n"
              "6. You may synthesize relatable analogies or examples (e.g. 'building blocks') to clarify technical terms, even if those specific examples are not in the slides.\n"
              "7. CITATION RULE: You MUST mention the specific slide and file NATURALLY in your response (e.g., 'Check chap03.pptx, Slide 40' or 'Refer to chap02.pptx, Slide 26'). MANDATORY: Never use the bracketed format [filename, Slide N] at this stage.\n"
              "8. If the student has MULTIPLE misconceptions or code errors, silently identify all of them. YOU MUST STRICTLY PRIORITIZE conceptual logic over formatting typos. Guide them to fix ONE issue at a time. If they just resolved an issue but others remain, explicitly tell them there is another issue, and seamlessly guide them to locate the next one.\n"
@@ -167,7 +167,7 @@ class SocraticEngine:
              "STRICT RULES:\n"
              "1. Still do NOT give the full answer directly\n"
              "2. Be specific and concrete — vague nudges are not helpful at this stage\n"
-             "3. STRICT GROUNDING RULE: You must prioritize the provided `{context}`. However, you MAY synthesize foundational computing concepts (like binary arithmetic, bitwise logic, or memory addresses) to explain the 'HOW' or 'WHY' if the student is stuck. Do NOT introduce advanced C++ features or outside libraries not in context.\n"
+             "3. STRICT GROUNDING RULE: You must prioritize the provided `{context}`. However, you MAY synthesize foundational computing concepts (like binary arithmetic, bitwise logic, or memory addresses) to explain the 'HOW' or 'WHY' if the student is stuck. Do NOT introduce advanced C++ features or outside libraries not in context. EXCEPTION: If the student correctly brings up an advanced computing concept or analogy (e.g. Inheritance) not in the material, you MUST enthusiastically validate their connection first, and then seamlessly map their advanced understanding back to the current simplified course topic.\n"
              "4. CITATION RULE: You MUST mention the specific slide and file NATURALLY in your response (e.g., 'Take a look at chap02.pptx, Slide 26' or 'Check Slide 40 of chap03.pptx'). MANDATORY: Never use the bracketed format [filename, Slide N] at this stage.\n"
              "5. Use bullet points for technical lists or multi-step explanations to improve readability.\n"
              "6. ESCAPE HATCH: Once the student has successfully fixed ALL bugs AND completely resolved their conceptual misunderstandings, you MUST congratulate them and end your response with the exact magic word after your final sentence: '[COMPLETE]'. MANDATORY: Do NOT include any follow-up questions if you use this word.\n\n"
@@ -191,11 +191,12 @@ class SocraticEngine:
              "4. ENCOURAGEMENT: Explicitly congratulate the student on the progress they've made with these specific points. Encourage them to use the same logic to figure out the next error on their own in a new session.\n\n"
              "STRICT RULES:\n"
              "1. MANDATORY — ABSOLUTELY DO NOT ask any questions whatsoever. Not rhetorical, not clarifying, not follow-up. Zero questions. Since you are performing a PARTIAL REVEAL (Section 3), you must only fix the bugs/concepts discussed. For all other unresolved issues, simply state that the student should try to solve them in a new session.\n"
-             "2. STRICT GROUNDING RULE: You must prioritize the provided `{context}`. However, you MAY synthesize foundational computing concepts (like binary arithmetic or bitwise logic) to provide a clear and complete technical explanation in section 2 (Reasoning). Do NOT introduce advanced C++ features or outside libraries not in context.\n"
+             "2. STRICT GROUNDING RULE: You must prioritize the provided `{context}`. However, you MAY synthesize foundational computing concepts (like binary arithmetic or bitwise logic) to provide a clear and complete technical explanation in section 2 (Reasoning). Do NOT introduce advanced C++ features or outside libraries not in context. EXCEPTION: If the student correctly brings up an advanced computing concept or analogy (e.g. Inheritance) not in the material, you MUST enthusiastically validate their connection first, and then seamlessly map their advanced understanding back to the current simplified course topic.\n"
              "3. Be warm and encouraging, not dismissive.\n"
              "4. Keep each section concise. Total response should not exceed 15 sentences.\n"
              "5. Use the exact format [filename, Slide N] after factual claims for citations. Do NOT use [1] or [2] yourself.\n"
-             "6. If a retrieved document contains 'Attached Images', include it using: `![Description](CourseLens_data/images/<filename>)`.\n\n"
+             "6. If a retrieved document contains 'Attached Images', include it using: `![Description](CourseLens_data/images/<filename>)`.\n"
+             "7. COMPREHENSIVENESS RULE: For all concepts or sub-tasks discussed, ensure the explanations are comprehensive. If there are multiple parts to an answer, list all of them and explain the 'why' behind each.\n\n" # FIX: Ensured comprehensive listing and explanation in debrief
              "Context from course material:\n{context}"),
 
             MessagesPlaceholder("history"),
@@ -244,7 +245,7 @@ class SocraticEngine:
              "1. Congratulate the student on their success.\n"
              "2. VALIDATE EFFORT: If the student successfully navigated the Socratic hints (check history), explicitly praise them for 'taking a chance' on the hints and using them to reach the breakthrough. Tell them this 'courage to apply the theory' is what masters C++.\n"
              "3. Briefly list the specific logic or syntax errors they corrected during this conversation. If their original code had no bugs to begin with, just congratulate them on a perfect implementation.\n"
-             "4. STRICT GROUNDING RULE: You must prioritize the provided `{context}`. However, you MAY synthesize foundational computing concepts (like binary arithmetic or memory addresses) to complete the mental model for the student. Do NOT introduce outside C++ theory.\n"
+             "4. STRICT GROUNDING RULE: You must prioritize the provided `{context}`. However, you MAY synthesize foundational computing concepts (like binary arithmetic or memory addresses) to complete the mental model for the student. Do NOT introduce outside C++ theory. EXCEPTION: If the student correctly brings up an advanced computing concept or analogy (e.g. Inheritance) not in the material, you MUST enthusiastically validate their connection first, and then seamlessly map their advanced understanding back to the current simplified course topic.\n"
              "5. Keep the summary encouraging and concise (bullet points are great).\n"
              "6. Do NOT ask any further Socratic questions.\n\n"
              "FORMATTING & CITATION RULES:\n"
@@ -357,11 +358,25 @@ class SocraticEngine:
                 
                 # Check for Surrender first for progression to 4
                 if assessment == ReplyAssessment.NO_ATTEMPT:
-                    print("[Socratic Engine] Student surrendered at Final Push. Providing Stage 3 hint and advancing.")
-                    reply = self._run(self._stage3_prompt, base_args)
-                    reply = f"[🎯 Stage 3 - Final Push]\n\n{reply}"
-                    session.advance_stage()
-                    return reply
+                    # To prevent premature ejection to Stage 4, check if they've actually seen the Stage 3 hint yet.
+                    last_bot_msg = ""
+                    for msg in reversed(session.messages):
+                        if msg.role == "assistant":
+                            last_bot_msg = msg.content
+                            break
+                            
+                    if "[🎯 Stage 3 - Final Push]" in last_bot_msg:
+                        # They surrendered AFTER reading the Stage 3 hint. Time for debrief!
+                        print("[Socratic Engine] Student surrendered at Final Push. Advancing to Stage 4 Debrief.")
+                        session.advance_stage()
+                        # We must recurse or immediately execute Stage 4 to show the debrief
+                        return self.respond(session, user_input)
+                    else:
+                        # They surrendered to the Stage 2 hint. Give them the Stage 3 hint, but stay in Stage 3!
+                        print("[Socratic Engine] Providing Stage 3 hint and waiting for answer.")
+                        reply = self._run(self._stage3_prompt, base_args)
+                        reply = f"[🎯 Stage 3 - Final Push]\n\n{reply}"
+                        return reply
 
                 # Handle Potential Success / Multi-Bug Persistence
                 if assessment in [ReplyAssessment.CORRECT, ReplyAssessment.BUG_RESOLVED]:

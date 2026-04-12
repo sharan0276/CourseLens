@@ -127,20 +127,21 @@ class ChatPipeline:
             )
         else:
             system_answer = (
-                "You are the CourseLens Socratic Tutor, an expert on the entire breadth of this course (from General Computing, Binary, and Architecture basics to C++ Programming).\n"
-                "You have access to the conversation history. It contains a summary of past interactions and the most recent messages. Actively use this history to interpret the user's current question in context, remembering previous topics discussed.\n"
+                "You are the CourseLens Socratic Tutor, an expert on the entire breadth of this course.\n"
+                "You have access to the conversation history. Use it to interpret the user's current question in context.\n"
                 "Use the following pieces of retrieved context to answer the user's question.\n"
-                "The context contains two types of sources: course slides and web references from educational sites like GeeksForGeeks, W3Schools, and LearnCpp. Use BOTH types to build a comprehensive answer.\n"
-                "You may synthesize foundational concepts or relatable analogies (e.g. 'building blocks', 'car assembly') to clarify technical terms, even if those specific examples are not in the slides. Do NOT introduce advanced C++ features or libraries not mentioned in the text. Your goal is pedagogical clarity.\n"
-                "If the provided context chunks do not contain enough information to reasonably infer the answer, just say that you don't know.\n"
-                "Use ten sentences maximum and keep the answer concise.\n\n"
-                "FORMATTING & CITATION RULES:\n"
-                "1. Use bullet points for technical lists or multi-step explanations to improve readability.\n"
-                "2. For course slides: Use the exact format [filename, Slide N] directly in the text after factual claims (e.g., 'C++ uses cout for output [chap01.pptx, Slide 7]'). Do NOT use [1] or [2] yourself; the system will automatically convert your bracketed citations into sequential numbers for the user.\n"
-                "3. For web references: If any context chunk starts with 'Web Reference', you MUST incorporate information from it into your answer AND cite it using the exact format [SiteName: Title] (e.g., [GeeksForGeeks: Pointers in C++]). This is MANDATORY — do not ignore web references.\n"
-                "4. You MUST produce exactly ONE 'Sources Used:' section at the very end of your response. This single section must list ALL sources — both course slides and web references — together. Never produce multiple 'Sources Used:' sections.\n\n"
-                "CRITICAL: If a retrieved document contains 'Attached Images', and the image is relevant to your answer, you MUST include it using markdown: `![Description](CourseLens_data/images/<filename>)`. Ensure diagrams like the Control Unit are shown when explaining them."
-                "IMPORTANT: If a retrieved document contains 'Attached Images: <filename>', and the image is relevant to your answer, you MUST include it in your response using markdown syntax: `![Image Description](CourseLens_data/images/<filename>)`\n"
+                "The context contains course slides and web references (LearnCpp, GFG, W3Schools). Use BOTH for a comprehensive answer.\n"
+                "You may synthesize foundational concepts or analogies to clarify technical terms.\n"
+                "If the context chunks do not contain enough information, just say that you don't know.\n"
+                "Use fifteen sentences maximum.\n\n" # FIX: Increased sentence limit from 10 to 15
+                "COMPREHENSIVENESS RULE: If the user's question has multiple answers or components listed in the context, you MUST list ALL of them. For each item listed, provide a brief explanation of 'why' or 'how' it is relevant based on the material.\n\n" # FIX: Ensured comprehensive listing and explanation
+                "CITATION RULES:\n"
+                "1. Use [filename, Slide N] for slides (e.g., [chap01.pptx, Slide 7]) and [SiteName: Title] for web (e.g., [LearnCpp: Arrays]).\n"
+                "2. MANDATORY: Do NOT create your own 'Sources Used' or 'References' section at the end. Only use inline brackets. Our system will generate the list automatically.\n"
+                "3. REDUNDANCY RULE: Only incorporate web information if it adds specific technical detail NOT found in the slides.\n"
+                "4. META-QUERY OVERRIDE: If the user explicitly asks *where* a concept is taught, naturally state the filename/slide number in plain text without brackets.\n"
+                "5. STRICT IGNORANCE: If the student uses a symbol, operator, or concept (e.g., `==`) that is NOT defined in your provided context chunks, you MUST NOT explain it using your prior knowledge. State that the concept is beyond the current material, and ONLY correct them using concepts that ARE in the context (like explaining `=` for assignment).\n\n"
+                "CRITICAL: If a retrieved document contains 'Attached Images', include it: `![Description](CourseLens_data/images/<filename>)`.\n"
                 "\nContext:\n{context}"
             )
             
@@ -154,7 +155,7 @@ class ChatPipeline:
         self._answer_prompt = ChatPromptTemplate.from_messages([
             ("system", system_answer),
             MessagesPlaceholder("history"),
-            ("human", "{input}"),
+            ("human", "Please completely address the following student query or provided context: {input}"),
         ])
 
         # Step 3: Summarize history
@@ -271,22 +272,24 @@ class ChatPipeline:
     def _condense_question(self, history: list, user_input: str) -> str:
         """
         Rephrases follow-up input into a standalone question using history.
-        Skipped if no history exists yet.
         """
         if not history:
             return user_input
         
+        # User visibility: Print the history being shared with the condenser
+        print("\n── Condenser History ────────────────────────────────")
+        for msg in history:
+            role = "U" if isinstance(msg, HumanMessage) else "A"
+            content = msg.content.replace('\n', ' ')
+            print(f"[{role}] {content}")
+        print("─────────────────────────────────────────────────────")
+
         chain = self._condense_prompt | self.llm | StrOutputParser()
         return chain.invoke({"history": history, "input": user_input})
 
     def _direct_answer(self, session: ChatSession, standalone_q: str, user_input: str, topics: List[str] = None, lecture_number: int = None) -> str:
         """
         Runs the existing direct RAG chain, enriched with web content.
-        Added: extracted from inline chat() logic so QueryRouter can call it
-        via the direct_handler lambda without knowing about session internals.
-        Updated: fetches supplementary web content for identified topics and
-        appends it to the context after the course material.
-        Fix: includes the lecture_number filter in retrieval.
         """
         lc_history = self._session_to_lc_history(session)
         # Fix retrieval leak: pass the lecture_number filter into the search
@@ -298,14 +301,35 @@ class ChatPipeline:
             docs = docs + web_docs  # course material first, web content after
 
         context = self._format_docs(docs)
+        
+        # User visibility: Show which documents are being sent for answering
+        print("\n── Context Documents ────────────────────────────────")
+        for i, d in enumerate(docs, 1):
+            # Check all common source metadata keys used across different retrievers
+            m = d.metadata
+            source_raw = (
+                m.get('source_site') or     # Web
+                m.get('source_file') or     # Slides
+                m.get('source') or          # Standard
+                m.get('file_path') or       # Potential alternatives
+                m.get('filename') or 
+                'Unknown'
+            )
+            source = os.path.basename(source_raw) if ('/' in source_raw or '\\' in source_raw) else source_raw
+            title = m.get('title', 'No Title')
+            print(f"[{i}] {source} - {title}")
+        print("─────────────────────────────────────────────────────")
+
         answer_chain = self._answer_prompt | self.llm | StrOutputParser()
+        
+        # FOCUS SHIFT: Use standalone_q for the final answer instead of vague user_input
         reply = answer_chain.invoke({
             "history": lc_history,
-            "input": user_input,
+            "input": standalone_q,
             "context": context,
         })
         if self.mode == "coding":
-            reply = self._validate_response(reply, user_input)
+            reply = self._validate_response(reply, standalone_q)
         return reply
 
     # ── Public API ────────────────────────────────────────────────────────────
@@ -323,11 +347,13 @@ class ChatPipeline:
         if session is None:
             raise ValueError(f"Session '{session_id}' not found.")
 
-        lc_history = self._session_to_lc_history(session)
-        standalone_q = self._condense_question(lc_history, user_input)
-        
-        if standalone_q != user_input:
-            print(f"\n[Condenser] Condensed query: {standalone_q}")
+        if session.in_socratic_loop():
+            standalone_q = user_input
+        else:
+            lc_history = self._session_to_lc_history(session)
+            standalone_q = self._condense_question(lc_history, user_input)
+            if standalone_q != user_input:
+                print(f"\n[Condenser] Condensed query: {standalone_q}")
 
         # updated: single QueryRouter call replaces inline retrieve → format → answer chain
         # direct_handler lambda passes Direct path back to _direct_answer
@@ -366,11 +392,13 @@ class ChatPipeline:
         if session is None:
             raise ValueError(f"Session '{session_id}' not found.")
 
-        lc_history = self._session_to_lc_history(session)
-        standalone_q = user_input
-
-        if standalone_q != user_input:
-            print(f"\n[Condenser] Condensed query: {standalone_q}")
+        if session.in_socratic_loop():
+            standalone_q = user_input
+        else:
+            lc_history = self._session_to_lc_history(session)
+            standalone_q = self._condense_question(lc_history, user_input)
+            if standalone_q != user_input:
+                print(f"\n[Condenser] Condensed query: {standalone_q}")
 
         # added: pre-check routes Socratic and Out of Scope through QueryRouter
         # yielding the full reply at once rather than streaming token by token
@@ -401,18 +429,36 @@ class ChatPipeline:
         docs = self.retrieval_service.retrieve(standalone_q, lecture_number=lecture_number)
 
         # Enrich streaming direct path with web content
-        # Classify to get topics for web scraping
         stream_result = self.query_router.classifier.classify(standalone_q, lecture_number)
         if stream_result.selected_topics:
             web_docs = self.web_scraper.search_topics(stream_result.selected_topics)
             docs = docs + web_docs
         context = self._format_docs(docs)
+
+        # User visibility: Show which documents are being sent for answering (Streaming)
+        print("\n── Context Documents (Streaming) ────────────────────")
+        for i, d in enumerate(docs, 1):
+            m = d.metadata
+            source_raw = (
+                m.get('source_site') or 
+                m.get('source_file') or 
+                m.get('source') or 
+                m.get('file_path') or 
+                m.get('filename') or 
+                'Unknown'
+            )
+            source = os.path.basename(source_raw) if ('/' in source_raw or '\\' in source_raw) else source_raw
+            title = m.get('title', 'No Title')
+            print(f"[{i}] {source} - {title}")
+        print("─────────────────────────────────────────────────────")
+
         answer_chain = self._answer_prompt | self.llm | StrOutputParser()
 
         full_reply = ""
+        # FOCUS SHIFT: Use standalone_q for the final streaming response
         for chunk in answer_chain.stream({
             "history": lc_history,
-            "input": user_input,
+            "input": standalone_q,
             "context": context,
         }):
             full_reply += chunk
@@ -425,7 +471,7 @@ class ChatPipeline:
             yield f"\n\nSources Used:{bibliography}"
 
         if self.mode == "coding":
-            full_reply = self._validate_response(full_reply, user_input)
+            full_reply = self._validate_response(full_reply, standalone_q)
 
         session.add_message(role="user", content=user_input)
         session.add_message(role="assistant", content=full_reply)
