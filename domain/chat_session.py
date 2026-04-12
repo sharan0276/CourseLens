@@ -18,6 +18,10 @@ class ChatSession(BaseModel):
         default_factory=datetime.utcnow,
         description="UTC timestamp when the session was created."
     )
+    title: Optional[str] = Field(
+        default=None,
+        description="Optional human-readable title for the session."
+    )
     mode: str = Field(
         default="general",
         description="Pipeline mode: 'general' for direct Q&A, 'coding' for code debugging, 'socratic' for concept understanding."

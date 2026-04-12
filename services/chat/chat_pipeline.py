@@ -287,7 +287,7 @@ class ChatPipeline:
         chain = self._condense_prompt | self.llm | StrOutputParser()
         return chain.invoke({"history": history, "input": user_input})
 
-    def _direct_answer(self, session: ChatSession, standalone_q: str, user_input: str, topics: List[str] = None, lecture_number: int = None) -> str:
+    def _direct_answer(self, session: ChatSession, standalone_q: str, user_input: str, topics: List[str] = None, lecture_number: int = None, use_web_scraping: bool = True) -> str:
         """
         Runs the existing direct RAG chain, enriched with web content.
         """
@@ -296,7 +296,7 @@ class ChatPipeline:
         docs = self.retrieval_service.retrieve(standalone_q, lecture_number=lecture_number)
 
         # Enrich with web content if topics were identified
-        if topics:
+        if topics and use_web_scraping:
             web_docs = self.web_scraper.search_topics(topics)
             docs = docs + web_docs  # course material first, web content after
 
@@ -334,7 +334,7 @@ class ChatPipeline:
 
     # ── Public API ────────────────────────────────────────────────────────────
 
-    def chat(self, session_id: str, user_input: str, lecture_number: int = None) -> str:
+    def chat(self, session_id: str, user_input: str, lecture_number: int = None, use_web_scraping: bool = True) -> str:
         """
         Single-turn chat that is multi-turn aware.
         Loads history → condenses question → routes → saves.
@@ -363,7 +363,7 @@ class ChatPipeline:
             user_input=user_input,
             standalone_q=standalone_q,
             lecture_number=lecture_number,
-            direct_handler=lambda sq, ui, topics: self._direct_answer(session, sq, ui, topics, lecture_number),
+            direct_handler=lambda sq, ui, topics: self._direct_answer(session, sq, ui, topics, lecture_number=lecture_number, use_web_scraping=use_web_scraping),
             conversational_handler=lambda sq, ui: self._conversational_answer(session, sq, ui)
         )
 
@@ -378,7 +378,7 @@ class ChatPipeline:
             return reply
         return add_sources_footer(reply)
 
-    def chat_stream(self, session_id: str, user_input: str, lecture_number: int = None) -> Generator[str, None, None]:
+    def chat_stream(self, session_id: str, user_input: str, lecture_number: int = None, use_web_scraping: bool = True) -> Generator[str, None, None]:
         """
         Streaming variant — yields chunks for Direct path.
 
@@ -408,7 +408,7 @@ class ChatPipeline:
                 user_input=user_input,
                 standalone_q=standalone_q,
                 lecture_number=lecture_number,
-                direct_handler=lambda sq, ui, topics: self._direct_answer(session, sq, ui, topics, lecture_number),
+                direct_handler=lambda sq, ui, topics: self._direct_answer(session, sq, ui, topics, lecture_number=lecture_number, use_web_scraping=use_web_scraping),
                 conversational_handler=lambda sq, ui: self._conversational_answer(session, sq, ui)
             )
             session.add_message(role="user", content=user_input)
