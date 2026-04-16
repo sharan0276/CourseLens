@@ -1,56 +1,62 @@
-# 📚 CourseLens: A Socratic AI Tutor for Deeper Learning
+# 📚 CourseLens: A Socratic AI Tutor for Active Learning
 
 ![CourseLens Banner](assets/output_screenshots/Socratic_Engine.png)
 
-CourseLens is a project my partner and I built to help students move beyond just "finding the answer." As TAs, we noticed that many students rely on passive reading or shortcuts that don't lead to actual understanding. We built this engine to act as a digital tutor that guides students through concepts using Socratic dialogue.
+CourseLens is a high-quality AI tutoring system designed to turn passive reading into active learning. Unlike standard chatbots, CourseLens is built to prioritize teaching accuracy, grounding every interaction in provided lecture materials while using advanced AI patterns to manage context and relevancy.
 
 ---
 
-## 💡 How it Works: The GRASP Approach
+## 💡 The Core Framework: GRASP
 
-Instead of just answering questions, CourseLens follows a design philosophy we call **GRASP**. We wanted the system to feel like a real TA who is helpful but won't do the work for you.
+CourseLens uses the **GRASP** framework to move students from just "reading" to actually "grasping" concepts.
 
-*   **Gradual**: It starts by checking what the student already knows before diving into complex explanations.
-*   **Reflective**: Every few turns, it summarizes the progress so the student can see how far they've come.
-*   **Affirming**: It recognizes small breakthroughs ("Nice work!" or "Spot on!") to keep momentum high.
-*   **Socratic**: It uses leading questions to help students find the answer themselves.
-*   **Patient**: It stays in the "hinting" mode as long as needed, even if a student is rushing for a quick fix.
-
----
-
-## 🛠️ The Architecture
-
-### Socratic Logic
-The system uses a simple state machine to manage the tutoring flow. It decides whether to **locate** a misconception, **lead** with a hint based on the lecture slides, or **debrief** once the student gets it. 
-
-![System Design](assets/architecture/overall_architecture.png)
-
-### Separate Socratic History
-One of the key technical choices we made was keeping the **Socratic Dialogue in a separate history**. 
-*   **Why?** Normal chat histories get bloated and cluttered with old context, which makes the AI slower and less accurate. 
-*   **The Fix**: By separating the tutoring dialogue, we keep the "reasoning window" small and focused, ensuring the hints are always relevant to the current slide.
+*   **Gradual**: Adapts how much information it gives based on student progress.
+*   **Reflective**: Provides automated "Journey Recaps" to summarize what has been learned.
+*   **Affirming**: Uses positive reinforcement for breakthroughs in understanding.
+*   **Socratic**: Uses a multi-stage system that guides students via hints rather than giving direct answers.
+*   **Patient**: Stays in the teaching mode even when students are looking for a quick fix.
 
 ---
 
-## 📊 Evaluation Results
+## 🛠️ Engineering Advantages
 
-We tested CourseLens to make sure it was actually helpful and grounded in the course materials.
+CourseLens is built to solve common AI challenges, ensuring the system remains fast, accurate, and faithful to the course curriculum.
 
-*   **96% Faithfulness**: The system almost never "hallucinates" or makes up facts outside the course slides.
-*   **81% Relevancy**: The answers stay strictly on-topic.
-*   **Stress Tested**: We ran scenarios with "impatient" actors, and the system successfully held the Socratic line 100% of the time without leaking answers.
+### 1. Avoiding "Context Bloat"
+Standard AI systems often get confused in long conversations when old, irrelevant messages clutter the memory. CourseLens solves this in two ways:
+*   **Temporary Socratic History**: A specialized context window for tutoring that clears once a concept is mastered.
+*   **Summarized Memory**: A `SummarizationEngine` that condenses the long conversation history into core facts, keeping code snippets exactly as they were without the extra "noise."
+
+### 2. High-Accuracy Grounding (Hybrid Search)
+To ensure the tutor always uses the most relevant lecture material, we use a **Hybrid Search** strategy:
+*   **Semantic Search**: Finds the general meaning of a question.
+*   **Keyword Search (BM25)**: Ensures exact matches for technical C++ terms like specific operators or functions.
+*   **Material Priority**: The system explicitly ranks **Professor-Provided Slides** higher than web-scraped content to ensure the core learning comes from the official curriculum first.
+
+### 3. Curriculum Controls & Filtering
+*   **Week-Based Filtering**: Metadata filters ensure the AI doesn't talk about future concepts that haven't been taught yet in the syllabus.
+*   **Topic-Based Filtration**: Automatically picks out topics from a student's question to search the knowledge base more precisely.
+
+### 4. Dual-Model Logic
+CourseLens uses a two-model pattern to keep things efficient:
+*   **Assessor (Small Model)**: Quickly classifies what the student is asking and checks if their answers are "Correct" or a "Misconception."
+*   **Generator (Main Model)**: Focuses on writing clear, helpful teaching responses based on the assessor's logic and the lecture materials.
 
 ---
 
-## 📸 Screenshots
+## 📸 Technical Showcase
 
-````carousel
-![ Tutoring Process](assets/output_screenshots/Socratic_Engine.png)
-<!-- slide -->
-![Web Research](assets/output_screenshots/Web_Scrapping.png)
-<!-- slide -->
+### The Socratic Engine in Action
+The system identifies the student's stage of learning and provides hints grounded in the slides.
+![Socratic Engine](assets/output_screenshots/Socratic_Engine.png)
+
+### Multi-Source Web Scraping
+When course materials are too brief, the system intelligently pulls in extra detail from trusted sites (GFG, LearnCpp).
+![Web Scrapping](assets/output_screenshots/Web_Scrapping.png)
+
+### Visual RAG & Image Retrieval
+The system automatically pulls in and shows relevant diagrams from the lecture slides.
 ![Image Retrieval](assets/output_screenshots/Image_Retrieval.png)
-````
 
 ---
 
@@ -71,7 +77,7 @@ We tested CourseLens to make sure it was actually helpful and grounded in the co
 
 ---
 
-*Developed by [Sharan Giri](https://www.linkedin.com/in/sharan-giri/) & [Jyothssena Gomatum Sreenivaasan](https://www.linkedin.com/in/gsjyothssena/). We’re both interested in building goal-oriented AI systems—feel free to reach out!*
+*Developed by [Sharan Giri](https://www.linkedin.com/in/sharan-giri/) & [Jyothssena Gomatum Sreenivaasan](https://www.linkedin.com/in/gsjyothssena/). We focus on building goal-oriented AI systems that do more than just process text.*
 
 ---
 *Developed for DS5500: Special Topics in Data Science.*
