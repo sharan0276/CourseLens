@@ -180,7 +180,7 @@ class ChatPipeline:
                 site = doc.metadata.get("source_site", "Web")
                 title = doc.metadata.get("title", "")
                 url = doc.metadata.get("source_file", "")
-                citation = f"[{site}: {title}]\nURL: {url}"
+                citation = f"[{site}: {title} | {url}]"
                 web_docs.append(f"{citation}\n{doc.page_content}")
                 continue
 

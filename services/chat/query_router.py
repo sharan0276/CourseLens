@@ -157,7 +157,8 @@ class QueryRouter:
                 chunk_ids=session.anchored_chunk_ids,
                 topics=topics
             )
-            return self.socratic_engine.respond(session=session, user_input=user_input)
+            reply = self.socratic_engine.respond(session=session, user_input=user_input)
+            return {"reply": reply, "query_type": QueryType.SOCRATIC, "selected_topics": topics}
 
         if result.query_type == QueryType.SUMMARIZE_LECTURE:
             print(f"\n[Router] Routing to Summarization Engine (Until: {result.is_until})")

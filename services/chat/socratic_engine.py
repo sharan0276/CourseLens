@@ -551,7 +551,7 @@ class SocraticEngine:
                 site = doc.metadata.get("source_site", "Web")
                 title = doc.metadata.get("title", "")
                 url = doc.metadata.get("source_file", "")
-                citation = f"[{site}: {title}]\nURL: {url}"
+                citation = f"[{site}: {title} | {url}]"
                 web_docs.append(f"{citation}\n{doc.page_content}")
                 continue
 
@@ -576,6 +576,6 @@ class SocraticEngine:
         if course_docs:
             sections.append("=== COURSE MATERIAL ===\n" + "\n\n".join(course_docs))
         if web_docs:
-            sections.append("=== WEB REFERENCES (You MUST cite these using [SiteName: Title] format) ===\n" + "\n\n".join(web_docs))
+            sections.append("=== WEB REFERENCES (You MUST cite these using [SiteName: Title | URL] format) ===\n" + "\n\n".join(web_docs))
 
         return "\n\n".join(sections)
