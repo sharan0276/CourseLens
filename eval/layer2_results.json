@@ -1,11 +1,43 @@
 {
   "summary": {
-    "faithfulness": 0.9458,
-    "answer_relevancy": 0.8291,
+    "faithfulness": 0.9467,
+    "answer_relevancy": 0.7964,
     "context_recall": 0.925,
-    "context_precision": 0.8118
+    "context_precision": 0.7983
   },
   "per_entry": [
+    {
+      "user_input": "Are literal string constants considered a fundamental C++ type?",
+      "retrieved_contexts": [
+        "Literal String Constants\nA literal string constant is a sequence of zero or more characters enclosed in double quotes\n \"We are even loonier than you think\"\n \"Rust never sleeps\\n\"\n \"Nilla is a Labrador Retriever\"\nNot a fundamental type",
+        "Fundamental C++ Objects\nC++ has a large number of fundamental or built-in object types\nThe fundamental object types fall into one of three categories\n Integer objects\n Floating-point objects\n Character objects",
+        "A Boolean Type\nC++ contains a type named bool\nType bool has two symbolic constants\n true\n false\nBoolean operators\n The and operator is &&\n The or operator is ||\n The not operator is !\nWarning\n & and | are also operators so be careful what you type\nExample logical expressions\nbool P = true;\u000bbool Q = false;\u000bbool R = true;\u000bbool S = (P && Q);\u000bbool T = ((!Q) || R);\u000bbool U = !(R && (!Q));",
+        "A Boolean Type\nC++ contains a type named bool\nType bool has two symbolic constants\n true\n false\nBoolean operators\n The and operator is &&\n The or operator is ||\n The not operator is !\nWarning\n & and | are also operators so be careful what you type",
+        "1.3 General Notes on C++\n1.3 General Notes on C++\n C++ is immensely popular, particularly for applications that require speed and/or access\n to some low-level features. It was created in 1979 by Bjarne Stroustrup, at \ufb01rst as a set\n of extensions to the C programming language. C++ extends C; our \ufb01rst few lectures will\n basically be on the C parts of the language.\n Though you can write graphical programs in C++, it is much hairier and less portable than\n text-based (console) programs. We will be sticking to console programs in this course.\n Everything in C++ is case sensitive: someName is not the same as SomeName."
+      ],
+      "response": "No, literal string constants are not considered a fundamental C++ type. The context explicitly states that literal string constants are \"Not a fundamental type.\" Fundamental C++ objects fall into categories like Integer, Floating-point, and Character objects.",
+      "reference": "No, literal string constants are not considered a fundamental C++ type. A literal string constant is a sequence of zero or more characters enclosed in double quotes, such as \"Rust never sleeps\\n\" or \"Nilla is a Labrador Retriever\".",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9999999999992619,
+      "context_recall": 1.0,
+      "context_precision": 0.99999999995
+    },
+    {
+      "user_input": "If I create a `SimpleWindow` object without specifying any arguments, what will its default title, width, height, and position be?",
+      "retrieved_contexts": [
+        "Class SimpleWindow\nSimple Window constructor\nSimpleWindow::SimpleWindow(\nconst string &t =\n\"Untitled\u201c\nfloat w = 8,\nfloat h = 8,\nconst Position &p = Position(0,0)\n)",
+        "Class SimpleWindow\nvoid SimpleWindow::RenderText(const Position\n&UpperLeft, const Position &LowerRight,\nconst string &Msg = \"Message\",\nconst color &TextColor = Black,\nconst color &BackGroundColor = White)\nSimple Window constructor\nSimpleWindow::SimpleWindow(\nconst string &t =\n\"Untitled\u201c\nfloat w = 8,\nfloat h = 8,\nconst Position &p = Position(0,0)\n)",
+        "WindowObject Constructor\nWindowObject::WindowObject(SimpleWindow &w,\nconst Position &p) : Window(w), Location(p) {\n// No body needed\n}",
+        "Class WindowObject\nclass WindowObject {\npublic:\nWindowObject(SimpleWindow &w,\nconst Position &p);\nPosition GetPosition() const;\nSimpleWindow& GetWindow() const;\nvoid SetPosition(const Position &p);\nprivate:\nSimpleWindow &Window;\nPosition Location;\n};",
+        "Initialization\nClass objects may have several attributes to initialize\nSyntax for initializing an object with multiple attributes\n Type Identifier(Exp1, Exp2, ..., Expn);\nSimpleWindow object has several optional attributes\nSimpleWindow W(\"Window Fun\", 8, 4);\n First attribute\n Window banner\n Second attribute\n Width of window in centimeters\n Third attribute\n Height of window in centimeters"
+      ],
+      "response": "If you create a `SimpleWindow` object without specifying any arguments, its default title will be \"Untitled\". The default width will be 8 and the default height will be 8. Its default position will be `Position(0,0)`.",
+      "reference": "If you create a `SimpleWindow` object without specifying any arguments, its constructor will utilize default values for all parameters. The window will have the title \"Untitled\", a width of 8, and a height of 8. Its position will be initialized to `Position(0,0)`.",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9017270300374344,
+      "context_recall": 1.0,
+      "context_precision": 0.99999999995
+    },
     {
       "user_input": "What is the main advantage of using `cin >> r;` and `cout << t;` instead of `r.Extract(cin);` and `t.Insert(cout);`?",
       "retrieved_contexts": [
@@ -15,12 +47,28 @@
         "Basic Extraction Facilitator\nvoid Rational::Extract(istream &sin) {\nint numer;\nint denom;\nchar slash;\nsin >> numer >> slash >> denom;\nassert(slash == '/');\nSetNumerator(numer);\nSetDenominator(denom);\nreturn;\n}\nExample\nt.Extract(cin);",
         "Auxiliary Insertion Operator\nostream& operator<<(\nostream &sout, const Rational &r) {\nr.Insert(sout);\nreturn sout;\n}\nWhy a reference return?\nNote we can do either\nt.Insert(cout); cout << endl;\t // unnatural\ncout << t << endl;\t\t // natural"
       ],
-      "response": "The main advantage of using `cin >> r;` and `cout << t;` is that it provides a \"natural look\" for input and output operations. This approach, facilitated by auxiliary extraction and insertion operators, is considered more natural compared to using member functions like `r.Extract(cin);` and `t.Insert(cout);`.",
+      "response": "The main advantage of using `cin >> r;` and `cout << t;` is that it provides a more natural and intuitive syntax for input and output operations. This \"natural look\" is achieved through auxiliary extraction and insertion operators, making the code easier to read and understand. In contrast, `r.Extract(cin);` and `t.Insert(cout);` are described as unnatural.",
       "reference": "The main advantage of using `cin >> r;` and `cout << t;` instead of member functions like `r.Extract(cin);` and `t.Insert(cout);` is their \"Natural look.\" This syntax provides a more intuitive way to handle input and output for custom types, similar to how `r + s` is considered more natural than `r.Add(s)`. It allows objects to be used directly with stream operators, making the code resemble standard C++ operations.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.9342344836964432,
+      "faithfulness": 0.75,
+      "answer_relevancy": 0.9636463815688544,
       "context_recall": 1.0,
       "context_precision": 0.8666666666377778
+    },
+    {
+      "user_input": "How can I count both non-blank and uppercase characters from standard input in C++?",
+      "retrieved_contexts": [
+        "Counting Characters\nint NumberOfNonBlanks = 0;\nint NumberOfUpperCase = 0;\nchar c;\nwhile (cin >> c) {\n++NumberOfNonBlanks;\nif ((c >= 'A') && (c <= 'Z')) {\u000b\t++NumberOfUpperCase;\n}\ncout << \"Nonblank characters: \" << NumberOfNonBlanks\n<< endl << \"Uppercase characters: \"\n<< NumberOfUpperCase << endl;",
+        "Counting All Characters\nchar c;\nint NumberOfCharacters = 0;\nint NumberOfLines = 0;\nwhile ( cin.get(c) ) {\u000b++NumberOfCharacters;\u000bif (c == '\\n') {\u000b\t++NumberOfLines\u000b}\n}\ncout << \"Characters: \" << NumberOfCharacters\n<< endl << \"Lines: \" << NumberOfLines\n<< endl;",
+        "Range.cpp\n// PromptAndRead(): prompt & extract next integer\nint PromptAndRead() {\ncout << \"Enter number (integer): \";\nint Response;\ncin >> Response;\nreturn Response;\n}\n// Sum(): compute sum of integers in a ... b\nint Sum(int a, int b) {\nint Total = 0;\nfor (int i = a; i <= b; ++i) {\nTotal += i;\nreturn Total;",
+        "Range.cpp\n#include <iostream>\nusing namespace std;\nint PromptAndRead();\nint Sum(int a, int b);\nint main() {\nint FirstNumber = PromptAndRead();\nint SecondNumber = PromptAndRead();\nint RangeSum = Sum(FirstNumber , SecondNumber);\ncout << \"The sum from \" << FirstNumber\n<< \" to \" << SecondNumber\n<< \" is \" << RangeSum << endl;\nreturn 0;\n}\n// PromptAndRead(): prompt & extract next integer\nint PromptAndRead() {\ncout << \"Enter number (integer): \";\nint Response;\ncin >> Response;\nreturn Response;\n}\n// Sum(): compute sum of integers in a ... b\nint Sum(int a, int b) {\nint Total = 0;\nfor (int i = a; i <= b; ++i) {\nTotal += i;\nreturn Total;",
+        "Increment and Decrement\nC++ has special operators for incrementing or decrementing an object by one\nExamples\nint k = 4;\u000b++k;                          // k is 5\nk++;                          // k is 6\u000bcout << k << endl;\u000bint i = k++;                  // i is 6, k is 7\u000bcout << i << \" \" << k << endl;\u000bint j = ++k;                  // j is 8, k is 8\u000bcout << j << \" \" << k << endl;"
+      ],
+      "response": "To count non-blank and uppercase characters, initialize `NumberOfNonBlanks` and `NumberOfUpperCase` to zero. Use a `while (cin >> c)` loop to read characters from standard input. Inside the loop, increment `NumberOfNonBlanks` for each character, and increment `NumberOfUpperCase` if the character `c` is between 'A' and 'Z'. Finally, print the accumulated counts.",
+      "reference": "To count non-blank and uppercase characters from standard input, first initialize integer counters for each type. Use a `while (cin >> c)` loop to read characters one by one; each successfully read character is considered non-blank, so increment that counter. Inside the loop, use an `if` statement to check if the character `c` is within the range 'A' to 'Z', incrementing the uppercase counter if true. Finally, display the total counts.",
+      "faithfulness": 0.8333333333333334,
+      "answer_relevancy": 0.881978650260636,
+      "context_recall": 1.0,
+      "context_precision": 0.9999999999
     },
     {
       "user_input": "How do I write C++ code to check if a number is negative, positive, or zero?",
@@ -34,57 +82,89 @@
       "response": "You can use an If-Else-If statement to check if a number is negative, positive, or zero. The following code demonstrates this:\n```cpp\nif ( nbr < 0 ){ cout << nbr << \" is negative\" << endl;\n}\nelse if ( nbr > 0 ) { cout << nbr << \" is positive\" << endl;\nelse { cout << nbr << \" is zero\" << endl;\n```",
       "reference": "You can use an If-Else-If statement to determine if a number is negative, positive, or zero. First, an `if ( nbr < 0 )` condition checks if the number (`nbr`) is negative. If that is false, an `else if ( nbr > 0 )` condition then checks if the number is positive. Finally, an `else` block handles the remaining case, indicating the number is zero.",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.834872091803685,
+      "answer_relevancy": 0.8372862961897392,
       "context_recall": 1.0,
       "context_precision": 0.9999999999
     },
     {
-      "user_input": "If I create a `SimpleWindow` object without specifying any arguments, what will its default title, width, height, and position be?",
+      "user_input": "What is the primary condition QuickSort uses to divide its list into sublists?",
       "retrieved_contexts": [
-        "Class SimpleWindow\nSimple Window constructor\nSimpleWindow::SimpleWindow(\nconst string &t =\n\"Untitled\u201c\nfloat w = 8,\nfloat h = 8,\nconst Position &p = Position(0,0)\n)",
-        "Class SimpleWindow\nvoid SimpleWindow::RenderText(const Position\n&UpperLeft, const Position &LowerRight,\nconst string &Msg = \"Message\",\nconst color &TextColor = Black,\nconst color &BackGroundColor = White)\nSimple Window constructor\nSimpleWindow::SimpleWindow(\nconst string &t =\n\"Untitled\u201c\nfloat w = 8,\nfloat h = 8,\nconst Position &p = Position(0,0)\n)",
-        "WindowObject Constructor\nWindowObject::WindowObject(SimpleWindow &w,\nconst Position &p) : Window(w), Location(p) {\n// No body needed\n}",
-        "Class WindowObject\nclass WindowObject {\npublic:\nWindowObject(SimpleWindow &w,\nconst Position &p);\nPosition GetPosition() const;\nSimpleWindow& GetWindow() const;\nvoid SetPosition(const Position &p);\nprivate:\nSimpleWindow &Window;\nPosition Location;\n};",
-        "Initialization\nClass objects may have several attributes to initialize\nSyntax for initializing an object with multiple attributes\n Type Identifier(Exp1, Exp2, ..., Expn);\nSimpleWindow object has several optional attributes\nSimpleWindow W(\"Window Fun\", 8, 4);\n First attribute\n Window banner\n Second attribute\n Width of window in centimeters\n Third attribute\n Height of window in centimeters"
+        "QuickSort\nQuickSort\n Divide the list into sublists such that every element in the left sublist <= to every element in the right sublist\n Repeat the QuickSort process on the sublists\nvoid QuickSort(vector<char> &A, int left, int right) {\nif (left < right) {\nPivot(A, left, right);\nint k = Partition(A, left, right);\nQuickSort(A, left, k-1);\nQuickSort(A, k+1, right);\n}",
+        "Common Sorting Techniques\nInsertion sort\n On ith iteration place the ith element with respect to the i-1 previous elements\n In text\nQuick sort\n Divide the list into sublists such that every element in the left sublist <= to every element in the right sublist. Repeat the Quick sort process on the sublists",
+        "Common Sorting Techniques\nSelection sort\n On ith iteration place the ith smallest element in the ith list location\nBubble sort\n Iteratively pass through the list and examining adjacent pairs of elements and if necessary swap them to put them in order. Repeat the process until no swaps are necessary\nInsertion sort\n On ith iteration place the ith element with respect to the i-1 previous elements\n In text\nQuick sort\n Divide the list into sublists such that every element in the left sublist <= to every element in the right sublist. Repeat the Quick sort process on the sublists",
+        "Common Sorting Techniques\nSelection sort\n On ith iteration place the ith smallest element in the ith list location\nBubble sort\n Iteratively pass through the list and examining adjacent pairs of elements and if necessary swap them to put them in order. Repeat the process until no swaps are necessary",
+        "Subscripting\nSuppose\n int A[10];    // array of 10 ints A[0], \u2026 A[9]\nTo access individual element must apply a subscript to list name A\n A subscript is a bracketed expression also known as the index\n First element of list has index 0\n A[0]\nSecond element of list has index 1, and so on\nA[1]\nLast element has an index one less than the size of the list\nA[9]\nIncorrect indexing is a common error\nA[10]     // does not exist"
       ],
-      "response": "If you create a `SimpleWindow` object without specifying any arguments, its title will default to \"Untitled\". The width and height will both default to 8. Its position will default to `Position(0,0)`.",
-      "reference": "If you create a `SimpleWindow` object without specifying any arguments, its constructor will utilize default values for all parameters. The window will have the title \"Untitled\", a width of 8, and a height of 8. Its position will be initialized to `Position(0,0)`.",
+      "response": "QuickSort divides the list into sublists such that every element in the left sublist is less than or equal to every element in the right sublist. This process is then repeated on the newly formed sublists.",
+      "reference": "QuickSort's primary condition for dividing its list into sublists is to ensure that every element in the left sublist is less than or equal to every element in the right sublist. This division is accomplished through a `Partition` step, which rearranges the elements around a pivot. The `Partition` function returns an index `k`, which defines the split point for the two new sublists that are then recursively sorted.",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.8863078613969231,
+      "answer_relevancy": 0.8784673730142937,
       "context_recall": 1.0,
-      "context_precision": 0.99999999995
+      "context_precision": 0.9999999999666667
     },
     {
-      "user_input": "Are literal string constants considered a fundamental C++ type?",
+      "user_input": "How does the program draw each colored rectangle in a different horizontal position?",
       "retrieved_contexts": [
-        "Literal String Constants\nA literal string constant is a sequence of zero or more characters enclosed in double quotes\n \"We are even loonier than you think\"\n \"Rust never sleeps\\n\"\n \"Nilla is a Labrador Retriever\"\nNot a fundamental type",
-        "Fundamental C++ Objects\nC++ has a large number of fundamental or built-in object types\nThe fundamental object types fall into one of three categories\n Integer objects\n Floating-point objects\n Character objects",
-        "A Boolean Type\nC++ contains a type named bool\nType bool has two symbolic constants\n true\n false\nBoolean operators\n The and operator is &&\n The or operator is ||\n The not operator is !\nWarning\n & and | are also operators so be careful what you type\nExample logical expressions\nbool P = true;\u000bbool Q = false;\u000bbool R = true;\u000bbool S = (P && Q);\u000bbool T = ((!Q) || R);\u000bbool U = !(R && (!Q));",
-        "A Boolean Type\nC++ contains a type named bool\nType bool has two symbolic constants\n true\n false\nBoolean operators\n The and operator is &&\n The or operator is ||\n The not operator is !\nWarning\n & and | are also operators so be careful what you type",
-        "Integer Constants\nInteger constants are positive or negative whole numbers\nInteger constant forms\n Decimal\n Octal (base 8)\n Digits 0, 1, 2, 3, 4, 5, 6, 7\n Hexadecimal (base 16)\n Digits 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a , b, c, d, e, f, A, B, C, D, E, F\nConsider\n 31 oct  and 25  dec"
+        "Slide 17\n#include \"rect.h\u201d\nSimpleWindow ColorWindow(\"Color Palette\", 8.0, 8.0);\nint ApiMain() {\nconst int SideSize = 1;\nfloat XPosition = 1.5;\nconst float YPosition = 4;\nColorWindow.Open();\nRectangleShape ColorPatch(ColorWindow,\nXPosition, YPosition, White, SideSize, SideSize);\nfor (int c = Red; c <= Magenta; c = color(c + 1)) {\nColorPatch.SetColor(color(c));\nColorPatch.SetPosition(XPosition, YPosition);\nColorPatch.Draw();\nXPosition += SideSize;\n}\nreturn 0;",
+        "Before Inheritance\nclass RectangleShape {\npublic:\nRectangleShape(SimpleWindow &W,\u000b\t float XCoord, float YCoord, const color &Color,\u000b\t float Width, float Height);\nvoid Draw();\ncolor GetColor() const;\nvoid GetSize(float &Width, float &Height) const;\nvoid GetPosition(float &x, float &y) const;\nfloat GetWidth() const;\nfloat GetHeight() const;\nSimpleWindow& GetWindow() const;\nvoid SetColor(const color &Color);\nvoid SetPosition(float x, float y);\nvoid SetSize(float Width, float Height);\nprivate:\nSimpleWindow &Window;\nfloat XCenter;\nfloat YCenter;\ncolor Color;\nfloat Width;\nfloat Height;\n};",
+        "Before Inheritance\nclass RectangleShape {\npublic:\nRectangleShape(SimpleWindow &W,\u000b\t float XCoord, float YCoord, const color &Color,\u000b\t float Width, float Height);\nvoid Draw();\ncolor GetColor() const;\nvoid GetSize(float &Width, float &Height) const;\nvoid GetPosition(float &x, float &y) const;\nfloat GetWidth() const;\nfloat GetHeight() const;\nSimpleWindow& GetWindow() const;\nvoid SetColor(const color &Color);\nvoid SetPosition(float x, float y);\nvoid SetSize(float Width, float Height);\nprivate:\nSimpleWindow &Window;\nfloat XCenter;\nfloat YCenter;\ncolor Color;\nfloat Width;\nfloat Height;\n};\nclass CircleShape {\npublic:\nCircleShape(SimpleWindow &W, float x, float y,\nconst color &Color, float Diameter);\nvoid Draw();\ncolor GetColor() const;\nfloat GetSize() const;\nvoid GetPosition(float &x, float &y) const;\nSimpleWindow& GetWindow() const;\nvoid SetColor(const color &Color);\nvoid SetPosition(float x, float y);\nvoid SetSize(float Diameter);\nprivate:\nSimpleWindow &Window;\nfloat XCenter;\nfloat YCenter;\ncolor Color;\nfloat Diameter;\n};",
+        "Simple RectangleShape\n// inspectors\ncolor GetColor() const;\nfloat GetWidth() const;\nfloat GetHeight() const;\nvoid GetSize(float &Width, float &Height)\nconst;\nvoid GetPosition(float &XCoord, float &YCoord)\nSimpleWindow& GetWindow() const;\n// mutators\nvoid SetColor(const color &c);\nvoid SetPosition(float XCoord, float YCoord);\nvoid SetSize(float Width, float Height);\nprivate:\n// data members\nSimpleWindow &Window;\nfloat thisXCenter;\nfloat thisYCenter;\ncolor thisColor;\nfloat thisWidth;\nfloat thisHeight;\n};\n#endif",
+        "RectangleShape Objects\nEzWindows also provides RectangleShape for manipulating rectangles\nRectangleShape objects can specify the following attributes\n SimpleWindow object that contains the rectangle (mandatory)\n Offset from left edge of the SimpleWindow\n Offset from top edge of the SimpleWindow\n Offsets are measured in centimeters from rectangle center\n Width in centimeters\n Height in centimeters\n Color\n color is an EzWindows type\nExamples\n SimpleWindow W1(\"My Window\", 20, 20);\n SimpleWindow W2(\"My Other Window\", 15, 10);\n RectangleShape R(W1, 4, 2, Blue, 3, 2);\n RectangleShape S(W2, 5, 2, Red, 1, 1);\n RectangleShape T(W1, 3, 1, Black, 4, 5);\n RectangleShape U(W1, 4, 9);\nSome RectangleShape member functions for processing messages\n Draw()\n Causes rectangle to be displayed in its associated window\n GetWidth()\n Returns width of object in centimeters\n GetHeight()\n Returns height of object in centimeters\n SetSize()\n Takes two attributes -- a width and height -- that are used to reset dimensions of the rectangle"
       ],
-      "response": "No, literal string constants are not considered a fundamental C++ type. The context explicitly states that they are \"Not a fundamental type.\" Fundamental C++ object types include Integer, Floating-point, and Character objects.",
-      "reference": "No, literal string constants are not considered a fundamental C++ type. A literal string constant is a sequence of zero or more characters enclosed in double quotes, such as \"Rust never sleeps\\n\" or \"Nilla is a Labrador Retriever\".",
-      "faithfulness": 1.0,
-      "answer_relevancy": 1.0000000000000002,
-      "context_recall": 1.0,
-      "context_precision": 0.99999999995
-    },
-    {
-      "user_input": "How can I count both non-blank and uppercase characters from standard input in C++?",
-      "retrieved_contexts": [
-        "Counting Characters\nint NumberOfNonBlanks = 0;\nint NumberOfUpperCase = 0;\nchar c;\nwhile (cin >> c) {\n++NumberOfNonBlanks;\nif ((c >= 'A') && (c <= 'Z')) {\u000b\t++NumberOfUpperCase;\n}\ncout << \"Nonblank characters: \" << NumberOfNonBlanks\n<< endl << \"Uppercase characters: \"\n<< NumberOfUpperCase << endl;",
-        "Counting All Characters\nchar c;\nint NumberOfCharacters = 0;\nint NumberOfLines = 0;\nwhile ( cin.get(c) ) {\u000b++NumberOfCharacters;\u000bif (c == '\\n') {\u000b\t++NumberOfLines\u000b}\n}\ncout << \"Characters: \" << NumberOfCharacters\n<< endl << \"Lines: \" << NumberOfLines\n<< endl;",
-        "Range.cpp\n// PromptAndRead(): prompt & extract next integer\nint PromptAndRead() {\ncout << \"Enter number (integer): \";\nint Response;\ncin >> Response;\nreturn Response;\n}\n// Sum(): compute sum of integers in a ... b\nint Sum(int a, int b) {\nint Total = 0;\nfor (int i = a; i <= b; ++i) {\nTotal += i;\nreturn Total;",
-        "Range.cpp\n#include <iostream>\nusing namespace std;\nint PromptAndRead();\nint Sum(int a, int b);\nint main() {\nint FirstNumber = PromptAndRead();\nint SecondNumber = PromptAndRead();\nint RangeSum = Sum(FirstNumber , SecondNumber);\ncout << \"The sum from \" << FirstNumber\n<< \" to \" << SecondNumber\n<< \" is \" << RangeSum << endl;\nreturn 0;\n}\n// PromptAndRead(): prompt & extract next integer\nint PromptAndRead() {\ncout << \"Enter number (integer): \";\nint Response;\ncin >> Response;\nreturn Response;\n}\n// Sum(): compute sum of integers in a ... b\nint Sum(int a, int b) {\nint Total = 0;\nfor (int i = a; i <= b; ++i) {\nTotal += i;\nreturn Total;",
-        "Increment and Decrement\nC++ has special operators for incrementing or decrementing an object by one\nExamples\nint k = 4;\u000b++k;                          // k is 5\nk++;                          // k is 6\u000bcout << k << endl;\u000bint i = k++;                  // i is 6, k is 7\u000bcout << i << \" \" << k << endl;\u000bint j = ++k;                  // j is 8, k is 8\u000bcout << j << \" \" << k << endl;"
-      ],
-      "response": "To count non-blank and uppercase characters, initialize `NumberOfNonBlanks` and `NumberOfUpperCase` to zero. Use a `while (cin >> c)` loop to read characters from standard input. Inside the loop, increment `NumberOfNonBlanks` for each character read. Additionally, check if the character `c` is between 'A' and 'Z' to increment `NumberOfUpperCase`.",
-      "reference": "To count non-blank and uppercase characters from standard input, first initialize integer counters for each type. Use a `while (cin >> c)` loop to read characters one by one; each successfully read character is considered non-blank, so increment that counter. Inside the loop, use an `if` statement to check if the character `c` is within the range 'A' to 'Z', incrementing the uppercase counter if true. Finally, display the total counts.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.9907754838688702,
+      "response": "The program draws each colored rectangle in a different horizontal position by incrementing the `XPosition` variable within the `for` loop. After setting the color and position with `ColorPatch.SetPosition(XPosition, YPosition)`, the `ColorPatch.Draw()` function displays the rectangle. Then, `XPosition += SideSize;` updates the horizontal coordinate for the next iteration.",
+      "reference": "The program uses a `float XPosition` variable, initialized to `1.5`, to control the horizontal placement. Inside the `for` loop, after drawing the current rectangle, `XPosition` is incremented by `SideSize` using `XPosition += SideSize;`. In each subsequent iteration, `ColorPatch.SetPosition(XPosition, YPosition)` uses this new, larger `XPosition` value, causing each rectangle to be drawn to the right of the previous one.",
+      "faithfulness": 0.8333333333333334,
+      "answer_relevancy": 0.999999999999304,
       "context_recall": 1.0,
       "context_precision": 0.9999999999
+    },
+    {
+      "user_input": "Can a derived class directly access private members inherited from its base class?",
+      "retrieved_contexts": [
+        "Inheritance and Member Access\nclass BaseClass {\npublic:    int MyPublicData;\nprotected: int MyProtectedData;\nprivate:   int MyPrivateData;\n};\nclass DerivedClass : public BaseClass {\npublic: void DerivedClassFunction();\n// ...\nvoid DerivedClass::DerivedClassFunction() {\nMyPublicData = 1;\t// access allowed\nMyProtectedData = 2;\t// access allowed\nMyPrivateData = 3;\t// illegal\n}",
+        "Defining a Derived Class",
+        "Inheritance and Member Access\nclass SomeClass {\npublic:\nvoid MemberFunction();\nint MyPublicData;\nprotected:\nint MyProtectedData;\nprivate:\nint MyPrivateData;\n};\nvoid SomeClass::MemberFunction() {\nMyPublicData = 1;\t// access allowed\nMyProtectedData = 2;\t// access allowed\nMyPrivateData = 3;\t// access allowed\n}\nvoid NonMemberFunction() {\nSomeClass C;\nC.MyPublicData = 1;      // access allowed\nC.MyProtectedData = 2;   // illegal\nC.MyPrivateData = 3;\t   // illegal\n}\nclass BaseClass {\npublic:    int MyPublicData;\nprotected: int MyProtectedData;\nprivate:   int MyPrivateData;\n};\nclass DerivedClass : public BaseClass {\npublic: void DerivedClassFunction();\n// ...\nvoid DerivedClass::DerivedClassFunction() {\nMyPublicData = 1;\t// access allowed\nMyProtectedData = 2;\t// access allowed\nMyPrivateData = 3;\t// illegal\n}",
+        "Inheritance\nMechanism for deriving new classes from existing classes",
+        "Implementing A Derived Class Constructor"
+      ],
+      "response": "No, a derived class cannot directly access private members inherited from its base class. The context shows that attempting to access `MyPrivateData` from within `DerivedClass::DerivedClassFunction()` is illegal. This is because private members are only accessible from within the class that defines them.",
+      "reference": "No, a derived class cannot directly access private members inherited from its base class, as this is explicitly shown as \"illegal\" in the example. However, a derived class can directly access both public and protected members inherited from its base class.",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9999999999992707,
+      "context_recall": 1.0,
+      "context_precision": 0.8333333332916666
+    },
+    {
+      "user_input": "Why would `1 + r` and `r + 1` not be treated the same if addition was a member operation?",
+      "retrieved_contexts": [
+        "Auxiliary Behaviors\nOperations (necessarily public)\n Arithmetic, relational, insertion, and extraction operations\n Provides the natural form we expect\n Class definition provides a functional form that auxiliary operators use\n Provides commutativity consistency\n For C++ reasons 1 + r and r + 1 would not be treated the same if addition was a member operation",
+        "Member Indirection\nConsider\n Rational r(4,3);\n Rational rPtr = &r;\nTo select a member of r using rPtr and member selection, operator precedence requires\n (*rPtr).Insert(cout);",
+        "Arithmetic Operators\nCommon\n Addition\t+\n Subtraction\t-\n Multiplication\t*\n Division\t/\n Mod\t%\nNote\n No exponentiation operator\n Single division operator\n Operators are overloaded to work with more than one type of object",
+        "Auxiliary Operator Importance\nRational r;\nRational s;\nr.Extract(cin);\ns.Extract(cin);\nRational t = r.Add(s);\nt.Insert(cout);\ncin >> r;\ncin >> s;\nRational t = r + s;\ncout << t;\nNatural look\nShould << be a member?\n Consider\n r << cout;",
+        "Incrementing\nint i = 1;\ni = i + 1;"
+      ],
+      "response": "If addition was implemented as a member operation, `1 + r` and `r + 1` would not be treated the same. This distinction arises due to specific C++ reasons.",
+      "reference": "For C++ reasons, `1 + r` and `r + 1` would not be treated the same if addition was implemented solely as a member operation. Member operations, by themselves, do not naturally provide the commutativity consistency or the natural form we expect for arithmetic. This is why auxiliary operators are used, as they provide this expected behavior.",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9508919402936655,
+      "context_recall": 1.0,
+      "context_precision": 0.7499999999625
+    },
+    {
+      "user_input": "How can I design my classes so that client code is generally immune to internal implementation changes?",
+      "retrieved_contexts": [
+        "Golden Rule\nUse information hiding and encapsulation to support integrity of data\n Put implementation details in a separate module\n Implementation details complicate the class declarations\n Data members are private so that use of the interface is required\n Makes clients generally immune to implementation changes",
+        "Implementing A Derived Class Constructor",
+        "Software Development Cycle",
+        "Software Engineering Principles\nAbstraction\n Extract the relevant properties while ignoring inessentials\nEncapsulation\n Hide and protect essential information through a controlled interface\nModularity\nHierarchy\nDividing an object into smaller modules so that it is easier to understand and manipulate\nRanking or ordering of objects based on some relationship between them",
+        "\u2022 Why make a copy constructor? Assigning all fields (default copy constructor) may not be what you want\n\u2022 Why make a copy constructor? Assigning all fields (default copy constructor) may not be what you want\n int main() { MITStudent student1;\n student1.studentID = 98;\n char n[] = \"foo\" ;\n student1.name = n;\n MITStudent student2 = student1;\n student2.name[0] = 'b' ;\n cout << student1.name;\n // foo\n }\n class MITStudent { public : int studentID;\n char *name;\n MITStudent() { studentID = 0;\n name = \"\" ;\n MITStudent(MITStudent &o) { studentID = o.studentID;\n name = strdup(o.name);\n };\n Changing student 2\u2019s name doesn\u2019t effect student 1\u2019s name"
+      ],
+      "response": "To make client code generally immune to internal implementation changes, use information hiding and encapsulation. This involves making data members private, which requires clients to use the class's interface. This approach ensures that changes to the internal implementation details do not affect the client code.",
+      "reference": "To make client code generally immune to internal implementation changes, use information hiding and encapsulation. This involves putting implementation details in a separate module to avoid complicating class declarations. By making data members private, clients are required to use the class's public interface, which directly makes them generally immune to internal implementation changes.",
+      "faithfulness": 0.5555555555555556,
+      "answer_relevancy": 0.9254699991193244,
+      "context_recall": 1.0,
+      "context_precision": 0.7499999999625
     },
     {
       "user_input": "How do you implement a generic function that returns the smaller of two arguments, regardless of their specific type?",
@@ -98,89 +178,9 @@
       "response": "You can implement a generic function using a template, such as `template <class T> T Min(const T &a, const T &b)`. This function takes two constant references of type `T` as arguments. It compares `a` and `b` and returns the one that is smaller, allowing it to be instantiated for various types.",
       "reference": "To implement a generic `Min` function, use `template <class T>` to declare `T` as a type parameter. The function `T Min(const T &a, const T &b)` takes two constant references of type `T` and returns a value of type `T`. Inside, an `if (a < b)` comparison determines whether `a` or `b` is smaller, returning the appropriate argument.",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.7066367694833915,
+      "answer_relevancy": 0.7076712690978259,
       "context_recall": 1.0,
-      "context_precision": 0.5833333333041666
-    },
-    {
-      "user_input": "Why would `1 + r` and `r + 1` not be treated the same if addition was a member operation?",
-      "retrieved_contexts": [
-        "Auxiliary Behaviors\nOperations (necessarily public)\n Arithmetic, relational, insertion, and extraction operations\n Provides the natural form we expect\n Class definition provides a functional form that auxiliary operators use\n Provides commutativity consistency\n For C++ reasons 1 + r and r + 1 would not be treated the same if addition was a member operation",
-        "Member Indirection\nConsider\n Rational r(4,3);\n Rational rPtr = &r;\nTo select a member of r using rPtr and member selection, operator precedence requires\n (*rPtr).Insert(cout);",
-        "Arithmetic Operators\nCommon\n Addition\t+\n Subtraction\t-\n Multiplication\t*\n Division\t/\n Mod\t%\nNote\n No exponentiation operator\n Single division operator\n Operators are overloaded to work with more than one type of object",
-        "Auxiliary Operator Importance\nRational r;\nRational s;\nr.Extract(cin);\ns.Extract(cin);\nRational t = r.Add(s);\nt.Insert(cout);\ncin >> r;\ncin >> s;\nRational t = r + s;\ncout << t;\nNatural look\nShould << be a member?\n Consider\n r << cout;",
-        "Incrementing\nint i = 1;\ni = i + 1;"
-      ],
-      "response": "The context states that `1 + r` and `r + 1` would not be treated the same if addition was a member operation. This is due to \"C++ reasons\" as mentioned in the provided information.",
-      "reference": "For C++ reasons, `1 + r` and `r + 1` would not be treated the same if addition was implemented solely as a member operation. Member operations, by themselves, do not naturally provide the commutativity consistency or the natural form we expect for arithmetic. This is why auxiliary operators are used, as they provide this expected behavior.",
-      "faithfulness": 0.6666666666666666,
-      "answer_relevancy": 1.0000000000000004,
-      "context_recall": 1.0,
-      "context_precision": 0.7499999999625
-    },
-    {
-      "user_input": "Can a derived class directly access private members inherited from its base class?",
-      "retrieved_contexts": [
-        "Inheritance and Member Access\nclass BaseClass {\npublic:    int MyPublicData;\nprotected: int MyProtectedData;\nprivate:   int MyPrivateData;\n};\nclass DerivedClass : public BaseClass {\npublic: void DerivedClassFunction();\n// ...\nvoid DerivedClass::DerivedClassFunction() {\nMyPublicData = 1;\t// access allowed\nMyProtectedData = 2;\t// access allowed\nMyPrivateData = 3;\t// illegal\n}",
-        "Defining a Derived Class",
-        "Inheritance and Member Access\nclass SomeClass {\npublic:\nvoid MemberFunction();\nint MyPublicData;\nprotected:\nint MyProtectedData;\nprivate:\nint MyPrivateData;\n};\nvoid SomeClass::MemberFunction() {\nMyPublicData = 1;\t// access allowed\nMyProtectedData = 2;\t// access allowed\nMyPrivateData = 3;\t// access allowed\n}\nvoid NonMemberFunction() {\nSomeClass C;\nC.MyPublicData = 1;      // access allowed\nC.MyProtectedData = 2;   // illegal\nC.MyPrivateData = 3;\t   // illegal\n}\nclass BaseClass {\npublic:    int MyPublicData;\nprotected: int MyProtectedData;\nprivate:   int MyPrivateData;\n};\nclass DerivedClass : public BaseClass {\npublic: void DerivedClassFunction();\n// ...\nvoid DerivedClass::DerivedClassFunction() {\nMyPublicData = 1;\t// access allowed\nMyProtectedData = 2;\t// access allowed\nMyPrivateData = 3;\t// illegal\n}",
-        "Inheritance\nMechanism for deriving new classes from existing classes",
-        "Implementing A Derived Class Constructor"
-      ],
-      "response": "No, a derived class cannot directly access private members inherited from its base class. The context shows that attempting to access `MyPrivateData` from within `DerivedClass::DerivedClassFunction()` is illegal. While public and protected members are accessible, private members remain inaccessible to derived classes.",
-      "reference": "No, a derived class cannot directly access private members inherited from its base class, as this is explicitly shown as \"illegal\" in the example. However, a derived class can directly access both public and protected members inherited from its base class.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 1.0000000000000002,
-      "context_recall": 1.0,
-      "context_precision": 0.8333333332916666
-    },
-    {
-      "user_input": "How does the program draw each colored rectangle in a different horizontal position?",
-      "retrieved_contexts": [
-        "Slide 17\n#include \"rect.h\u201d\nSimpleWindow ColorWindow(\"Color Palette\", 8.0, 8.0);\nint ApiMain() {\nconst int SideSize = 1;\nfloat XPosition = 1.5;\nconst float YPosition = 4;\nColorWindow.Open();\nRectangleShape ColorPatch(ColorWindow,\nXPosition, YPosition, White, SideSize, SideSize);\nfor (int c = Red; c <= Magenta; c = color(c + 1)) {\nColorPatch.SetColor(color(c));\nColorPatch.SetPosition(XPosition, YPosition);\nColorPatch.Draw();\nXPosition += SideSize;\n}\nreturn 0;",
-        "Before Inheritance\nclass RectangleShape {\npublic:\nRectangleShape(SimpleWindow &W,\u000b\t float XCoord, float YCoord, const color &Color,\u000b\t float Width, float Height);\nvoid Draw();\ncolor GetColor() const;\nvoid GetSize(float &Width, float &Height) const;\nvoid GetPosition(float &x, float &y) const;\nfloat GetWidth() const;\nfloat GetHeight() const;\nSimpleWindow& GetWindow() const;\nvoid SetColor(const color &Color);\nvoid SetPosition(float x, float y);\nvoid SetSize(float Width, float Height);\nprivate:\nSimpleWindow &Window;\nfloat XCenter;\nfloat YCenter;\ncolor Color;\nfloat Width;\nfloat Height;\n};",
-        "Before Inheritance\nclass RectangleShape {\npublic:\nRectangleShape(SimpleWindow &W,\u000b\t float XCoord, float YCoord, const color &Color,\u000b\t float Width, float Height);\nvoid Draw();\ncolor GetColor() const;\nvoid GetSize(float &Width, float &Height) const;\nvoid GetPosition(float &x, float &y) const;\nfloat GetWidth() const;\nfloat GetHeight() const;\nSimpleWindow& GetWindow() const;\nvoid SetColor(const color &Color);\nvoid SetPosition(float x, float y);\nvoid SetSize(float Width, float Height);\nprivate:\nSimpleWindow &Window;\nfloat XCenter;\nfloat YCenter;\ncolor Color;\nfloat Width;\nfloat Height;\n};\nclass CircleShape {\npublic:\nCircleShape(SimpleWindow &W, float x, float y,\nconst color &Color, float Diameter);\nvoid Draw();\ncolor GetColor() const;\nfloat GetSize() const;\nvoid GetPosition(float &x, float &y) const;\nSimpleWindow& GetWindow() const;\nvoid SetColor(const color &Color);\nvoid SetPosition(float x, float y);\nvoid SetSize(float Diameter);\nprivate:\nSimpleWindow &Window;\nfloat XCenter;\nfloat YCenter;\ncolor Color;\nfloat Diameter;\n};",
-        "Simple RectangleShape\n// inspectors\ncolor GetColor() const;\nfloat GetWidth() const;\nfloat GetHeight() const;\nvoid GetSize(float &Width, float &Height)\nconst;\nvoid GetPosition(float &XCoord, float &YCoord)\nSimpleWindow& GetWindow() const;\n// mutators\nvoid SetColor(const color &c);\nvoid SetPosition(float XCoord, float YCoord);\nvoid SetSize(float Width, float Height);\nprivate:\n// data members\nSimpleWindow &Window;\nfloat thisXCenter;\nfloat thisYCenter;\ncolor thisColor;\nfloat thisWidth;\nfloat thisHeight;\n};\n#endif",
-        "RectangleShape Objects\nEzWindows also provides RectangleShape for manipulating rectangles\nRectangleShape objects can specify the following attributes\n SimpleWindow object that contains the rectangle (mandatory)\n Offset from left edge of the SimpleWindow\n Offset from top edge of the SimpleWindow\n Offsets are measured in centimeters from rectangle center\n Width in centimeters\n Height in centimeters\n Color\n color is an EzWindows type\nExamples\n SimpleWindow W1(\"My Window\", 20, 20);\n SimpleWindow W2(\"My Other Window\", 15, 10);\n RectangleShape R(W1, 4, 2, Blue, 3, 2);\n RectangleShape S(W2, 5, 2, Red, 1, 1);\n RectangleShape T(W1, 3, 1, Black, 4, 5);\n RectangleShape U(W1, 4, 9);\nSome RectangleShape member functions for processing messages\n Draw()\n Causes rectangle to be displayed in its associated window\n GetWidth()\n Returns width of object in centimeters\n GetHeight()\n Returns height of object in centimeters\n SetSize()\n Takes two attributes -- a width and height -- that are used to reset dimensions of the rectangle"
-      ],
-      "response": "The program draws each colored rectangle in a different horizontal position by incrementing the `XPosition` variable within the `for` loop. After setting the color and position with `ColorPatch.SetPosition(XPosition, YPosition)`, the `ColorPatch.Draw()` function displays the rectangle. Then, `XPosition += SideSize;` updates the horizontal coordinate for the next iteration.",
-      "reference": "The program uses a `float XPosition` variable, initialized to `1.5`, to control the horizontal placement. Inside the `for` loop, after drawing the current rectangle, `XPosition` is incremented by `SideSize` using `XPosition += SideSize;`. In each subsequent iteration, `ColorPatch.SetPosition(XPosition, YPosition)` uses this new, larger `XPosition` value, causing each rectangle to be drawn to the right of the previous one.",
-      "faithfulness": 0.8888888888888888,
-      "answer_relevancy": 0.9999999999993614,
-      "context_recall": 1.0,
-      "context_precision": 0.9999999999
-    },
-    {
-      "user_input": "What is the primary condition QuickSort uses to divide its list into sublists?",
-      "retrieved_contexts": [
-        "QuickSort\nQuickSort\n Divide the list into sublists such that every element in the left sublist <= to every element in the right sublist\n Repeat the QuickSort process on the sublists\nvoid QuickSort(vector<char> &A, int left, int right) {\nif (left < right) {\nPivot(A, left, right);\nint k = Partition(A, left, right);\nQuickSort(A, left, k-1);\nQuickSort(A, k+1, right);\n}",
-        "Common Sorting Techniques\nInsertion sort\n On ith iteration place the ith element with respect to the i-1 previous elements\n In text\nQuick sort\n Divide the list into sublists such that every element in the left sublist <= to every element in the right sublist. Repeat the Quick sort process on the sublists",
-        "Common Sorting Techniques\nSelection sort\n On ith iteration place the ith smallest element in the ith list location\nBubble sort\n Iteratively pass through the list and examining adjacent pairs of elements and if necessary swap them to put them in order. Repeat the process until no swaps are necessary\nInsertion sort\n On ith iteration place the ith element with respect to the i-1 previous elements\n In text\nQuick sort\n Divide the list into sublists such that every element in the left sublist <= to every element in the right sublist. Repeat the Quick sort process on the sublists",
-        "Common Sorting Techniques\nSelection sort\n On ith iteration place the ith smallest element in the ith list location\nBubble sort\n Iteratively pass through the list and examining adjacent pairs of elements and if necessary swap them to put them in order. Repeat the process until no swaps are necessary",
-        "Subscripting\nSuppose\n int A[10];    // array of 10 ints A[0], \u2026 A[9]\nTo access individual element must apply a subscript to list name A\n A subscript is a bracketed expression also known as the index\n First element of list has index 0\n A[0]\nSecond element of list has index 1, and so on\nA[1]\nLast element has an index one less than the size of the list\nA[9]\nIncorrect indexing is a common error\nA[10]     // does not exist"
-      ],
-      "response": "QuickSort divides the list into sublists such that every element in the left sublist is less than or equal to every element in the right sublist. This process is then repeated on the resulting sublists.",
-      "reference": "QuickSort's primary condition for dividing its list into sublists is to ensure that every element in the left sublist is less than or equal to every element in the right sublist. This division is accomplished through a `Partition` step, which rearranges the elements around a pivot. The `Partition` function returns an index `k`, which defines the split point for the two new sublists that are then recursively sorted.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.8393691376128776,
-      "context_recall": 1.0,
-      "context_precision": 0.99999999995
-    },
-    {
-      "user_input": "Are all lvalues just simple variable names?",
-      "retrieved_contexts": [
-        "Categorizing Expressions\nRvalue expressions\n Represent objects that can only be evaluated\nConsider\n int a;\n vector<int> b(3);\n int c[3];\n a = 1;              // a: lvalue\n c[0] = 2*a + b[0];  // c[0], a, b[0]: lvalues\nObservation\n Not all lvalues are the names of objects",
-        "Names\nUsed to denote program values or components\nA valid name is a sequence of\n Letters (upper and lowercase)\n Digits\n A name cannot start with a digit\n Underscores\n A name should not normally start with an underscore\nNames are case sensitive\n MyObject is a different name than MYOBJECT\nThere are two kinds of names\n Keywords\n Identifiers",
-        "Default Parameters\nObservations\n Our functions up to this point required that we explicitly pass a value for each of the function parameters\n It would be convenient to define functions that accept a varying number of parameters\nDefault parameters\n Allows programmer to define a default behavior\n A value for a parameter can be implicitly passed\n Reduces need for similar functions that differ only in the number of parameters accepted\nIf the formal argument declaration is of the form\n ptypei pnamei = dvaluei\nthen\n If there is no ith argument in the function invocation, pnamei is initialized to dvaluei\n The parameter pnamei is an optional value parameter\n Optional reference parameters are also permitted\nDefault parameters must appear after any mandatory parameters\nBad example\n void Trouble(int x = 5, double z, double y) {\n ...\n }\nConsider\n bool GetNumber(int &n, istream &sin = cin) {\n return sin >> n ;\n }\nSome possible invocations\n int x, y, z;\n ifstream fin(\"Data.txt\");\n GetNumber(x, cin);\n GetNumber(y);\n GetNumber(z, fin);\nDesign your functions for ease and reuse!",
-        "Accessing List Elements\n// Compute an rvalue (access constant element)\nconst int& IntList::operator[](int i) const {\nassert((i >= 0) && (i < size()));\nreturn Values[i];\n}\n// Compute an lvalue\nint& IntList::operator[](int i) {",
-        "EzWindows Library Objects\nDefinitions are the same form as other objects\nExample\n SimpleWindow W;\n Most non-fundamental classes have been created so that an object is automatically initialized to a sensible value\nSimpleWindow objects have member functions to process messages to manipulate the objects\n Most important member function is Open() which causes the object to be displayed on the screen\n W.Open();"
-      ],
-      "response": "No, not all lvalues are simple variable names. While a simple variable name like `a` can be an lvalue, expressions like `c[0]` and `b[0]` are also lvalues. The context explicitly states, \"Not all lvalues are the names of objects.\"",
-      "reference": "No, not all lvalues are simple variable names. As observed, while `a` is an lvalue that is a simple variable name, expressions like `c[0]` and `b[0]` are also categorized as lvalues. These examples demonstrate that lvalues can represent objects even when not expressed solely by their direct name.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.9864185745144519,
-      "context_recall": 1.0,
-      "context_precision": 0.7499999999625
+      "context_precision": 0.4499999999775
     },
     {
       "user_input": "Why do we use pointers and dynamic objects for flexible list representations?",
@@ -193,26 +193,74 @@
       ],
       "response": "Pointers and dynamic objects are mechanisms for developing flexible list representations. Dynamic objects are necessary because their memory is acquired during program execution, allowing them to survive the function in which they are acquired. This enables the creation of variable-sized lists.",
       "reference": "Pointers and dynamic objects are used for flexible list representations. This is because, by definition, they function as the mechanisms for developing such representations.",
-      "faithfulness": 0.5,
-      "answer_relevancy": 0.9541414026381139,
+      "faithfulness": 0.6,
+      "answer_relevancy": 0.9462392580007437,
       "context_recall": 1.0,
       "context_precision": 0.699999999965
     },
     {
-      "user_input": "How can I design my classes so that client code is generally immune to internal implementation changes?",
+      "user_input": "What makes two functions with the same name count as overloaded?",
       "retrieved_contexts": [
-        "Golden Rule\nUse information hiding and encapsulation to support integrity of data\n Put implementation details in a separate module\n Implementation details complicate the class declarations\n Data members are private so that use of the interface is required\n Makes clients generally immune to implementation changes",
-        "Implementing A Derived Class Constructor",
-        "Software Development Cycle",
-        "Software Engineering Principles\nAbstraction\n Extract the relevant properties while ignoring inessentials\nEncapsulation\n Hide and protect essential information through a controlled interface\nModularity\nHierarchy\nDividing an object into smaller modules so that it is easier to understand and manipulate\nRanking or ordering of objects based on some relationship between them",
-        "Inheritance\nMechanism for deriving new classes from existing classes"
+        "Function Overloading\nA function name can be overloaded\n Two functions with the same name but with different interfaces\n Typically this means different formal parameter lists\n Difference in number of parameters\n Min(a, b, c)\n Min(a, b)\n Difference in types of parameters\n Min(10, 20)\n Min(4.4, 9.2)\nint Min(int a, int b) {\ncout << \"Using int min()\" << endl;\nif (a > b)\nreturn b;\nelse\nreturn a;\n}\ndouble Min(double a, double b) {\ncout << \"Using double min()\" << endl;\nint main() {\nint a = 10;\nint b = 20;\ndouble x = 4.4;\ndouble y = 9.2;\nint c = Min(a, b);\ncout << \"c is \" << c << endl;\nint z = Min(x, y);\ncout << \"z is \" << z << endl;\nreturn 0;\n}\nCompiler uses function overload resolution to call the most appropriate function\n First looks for a function definition where the formal and actual parameters exactly match\n If there is no exact match, the compiler will attempt to cast the actual parameters to ones used by an appropriate function\nThe rules for function definition overloading are very complicated\n Advice\n Be very careful when using this feature",
+        "Function Overloading\nFunction Overloading\n \u2022 Many functions with the same name, but different arguments \u2022 The function called is the one whose arguments match the invocation void printOnNewLine( int x) {\n cout << \"Integer: \" << x << endl;\n }\n void printOnNewLine( char *x) {\n cout << \"String: \" << x << endl;",
+        "Function Overloading\nA function name can be overloaded\n Two functions with the same name but with different interfaces\n Typically this means different formal parameter lists\n Difference in number of parameters\n Min(a, b, c)\n Min(a, b)\n Difference in types of parameters\n Min(10, 20)\n Min(4.4, 9.2)",
+        "Function Overloading\nFunction Overloading\n \u2022 Many functions with the same name, but different arguments \u2022 The function called is the one whose arguments match the invocation void printOnNewLine( int x) {\n cout << \"Integer: \" << x << endl;\n }\n void printOnNewLine( char *x) {\n cout << \"String: \" << x << endl;\nFunction Overloading\n \u2022 printOnNewLine(3) prints \u201cInteger: 3\u201d \u2022 printOnNewLine(\u201chello\u201d) prints \u201cString: hello\u201d void printOnNewLine( int x) {\n cout << \"Integer: \" << x << endl;\n }\n void printOnNewLine( char *x) {\n cout << \"String: \" << x << endl;\nFunction Overloading\n \u2022 printOnNewLine(3) prints \u201c1 Integer: 3\u201d \u2022 printOnNewLine(2, 3) prints \u201c2 Integers: 2 and 3\u201d void printOnNewLine( int x) {\n cout << \"1 Integer: \" << x << endl;\n }\n void printOnNewLine( int x, int y) {\n cout << \"2 Integers: \" << x << \" and \" << y << endl;",
+        "Function Overloading\nCompiler uses function overload resolution to call the most appropriate function\n First looks for a function definition where the formal and actual parameters exactly match\n If there is no exact match, the compiler will attempt to cast the actual parameters to ones used by an appropriate function\nThe rules for function definition overloading are very complicated\n Advice\n Be very careful when using this feature"
       ],
-      "response": "To make client code generally immune to internal implementation changes, use information hiding and encapsulation. This involves making data members private, which requires clients to use the class's interface. Additionally, put implementation details in a separate module, as these details complicate class declarations.",
-      "reference": "To make client code generally immune to internal implementation changes, use information hiding and encapsulation. This involves putting implementation details in a separate module to avoid complicating class declarations. By making data members private, clients are required to use the class's public interface, which directly makes them generally immune to internal implementation changes.",
+      "response": "Two functions with the same name are considered overloaded if they have different interfaces. This typically means they have different formal parameter lists. The difference can be in the number of parameters or in the types of parameters.",
+      "reference": "Two functions with the same name are considered overloaded when they possess different interfaces, typically meaning they have different formal parameter lists. This distinction can arise from a difference in the number of parameters, such as `Min(a, b, c)` versus `Min(a, b)`. Additionally, functions are overloaded if their parameters differ in type, for example, `Min(10, 20)` compared to `Min(4.4, 9.2)`.",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.929636500131617,
+      "answer_relevancy": 0.9256807214309942,
       "context_recall": 1.0,
-      "context_precision": 0.7499999999625
+      "context_precision": 0.999999999975
+    },
+    {
+      "user_input": "What are the advantages of structuring a C++ program into small, understandable units?",
+      "retrieved_contexts": [
+        "Program Organization\nC++ program\n Collection of  definitions, declarations and functions\n Collection can span multiple files\nAdvantages\n Structured into small understandable units\n Complexity is reduced\n Overall program size decreases",
+        "Program Organization\nProgram statement\n Definition\n Declaration\n Action\nExecutable unit\n Named set of program statements\n Different languages refer to executable units by different names\n Subroutine:  Fortran and Basic\n Procedure: Pascal\n Function : C++\nC++ program\n Collection of  definitions, declarations and functions\n Collection can span multiple files\nAdvantages\n Structured into small understandable units\n Complexity is reduced\n Overall program size decreases",
+        "1.1 Why Use a Language Like C++?\n1.1 Why Use a Language Like C++?\n At its core, a computer is just a processor with some memory, capable of running tiny\n instructions like \u201cstore 5 in memory location 23459.\u201d Why would we express a program as\n a text \ufb01le in a programming language, instead of writing processor instructions?\n The advantages:\n 1. Conciseness: programming languages allow us to express common sequences of com\u00ad\n mands more concisely. C++ provides some especially powerful shorthands.\n 2. Maintainability: modifying code is easier when it entails just a few text edits, instead\n of rearranging hundreds of processor instructions. C++ is object oriented (more on\n that in Lectures 7-8), which further improves maintainability.\n 3. Portability: di\ufb00erent processors make di\ufb00erent instructions available. Programs writ\u00ad\n ten as text can be translated into instructions for many di\ufb00erent processors; one of\n C++\u2019s strengths is that it can be used to write programs for nearly any processor.\n C++ is a high-level language: when you write a program in it, the shorthands are su\ufb03ciently\n expressive that you don\u2019t need to worry about the details of processor instructions. C++ does\n give access to some lower-level functionality than other languages (e.g. memory addresses).",
+        "1.3 General Notes on C++\n1.3 General Notes on C++\n C++ is immensely popular, particularly for applications that require speed and/or access\n to some low-level features. It was created in 1979 by Bjarne Stroustrup, at \ufb01rst as a set\n of extensions to the C programming language. C++ extends C; our \ufb01rst few lectures will\n basically be on the C parts of the language.\n Though you can write graphical programs in C++, it is much hairier and less portable than\n text-based (console) programs. We will be sticking to console programs in this course.\n Everything in C++ is case sensitive: someName is not the same as SomeName.",
+        "Usefulness\nMechanism in C++ to pass command-line parameters to a program\n This feature is less important now with the use of graphical interfaces\nNecessary for dynamic objects\n Objects whose memory is acquired during program execution as the result of a specific program request\n Dynamic objects can survive the execution of the function in which they are acquired\n Dynamic objects enable variable-sized lists"
+      ],
+      "response": "Structuring a C++ program into small, understandable units offers several advantages. It reduces complexity, making the program easier to manage. This organization also leads to a decrease in the overall program size.",
+      "reference": "Structuring a C++ program into small, understandable units offers significant advantages. This approach effectively reduces the overall program's complexity. Additionally, organizing the code in this manner leads to a decrease in the overall program size.",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9999999999993433,
+      "context_recall": 1.0,
+      "context_precision": 0.99999999995
+    },
+    {
+      "user_input": "Are all lvalues just simple variable names?",
+      "retrieved_contexts": [
+        "Categorizing Expressions\nRvalue expressions\n Represent objects that can only be evaluated\nConsider\n int a;\n vector<int> b(3);\n int c[3];\n a = 1;              // a: lvalue\n c[0] = 2*a + b[0];  // c[0], a, b[0]: lvalues\nObservation\n Not all lvalues are the names of objects",
+        "4 Variables\n4 Variables\n We might want to give a value a name so we can refer to it later. We do this using variables.\n A variable is a named location in memory.\n For example, say we wanted to use the value 4 + 2 multiple times. We might call it x and\n use it as follows:\n 1\n # include <iostream >\n 2\n using namespace std ;\n 3\n 4\n int main () {\n 5\n int x;\n 6\n x = 4 + 2;\n 7\n cout << x / 3 << \u2019 \u2019 << x * 2;\n 8\n 9\n return 0;\n 10\n }\n (Note how we can print a sequence of values by \u201cchaining\u201d the << symbol.)\n The name of a variable is an identi\ufb01er token. Identi\ufb01ers may contain numbers, letters, and\n underscores (_), and may not start with a number.\n Line 5 is the declaration of the variable x. We must tell the compiler what type x will be\n so that it knows how much memory to reserve for it and what kinds of operations may be\n performed on it.\n Line 6 is the initialization of x, where we specify an initial value for it. This introduces a\n new operator: =, the assignment operator. We can also change the value of x later on in the\n code using this operator.\n We could replace lines 5 and 6 with a single statement that does both declaration and\n initialization:\n int x = 4 + 2;\n This form of declaration/initialization is cleaner, so it is to be preferred.",
+        "Names\nUsed to denote program values or components\nA valid name is a sequence of\n Letters (upper and lowercase)\n Digits\n A name cannot start with a digit\n Underscores\n A name should not normally start with an underscore\nNames are case sensitive\n MyObject is a different name than MYOBJECT\nThere are two kinds of names\n Keywords\n Identifiers",
+        "Default Parameters\nObservations\n Our functions up to this point required that we explicitly pass a value for each of the function parameters\n It would be convenient to define functions that accept a varying number of parameters\nDefault parameters\n Allows programmer to define a default behavior\n A value for a parameter can be implicitly passed\n Reduces need for similar functions that differ only in the number of parameters accepted\nIf the formal argument declaration is of the form\n ptypei pnamei = dvaluei\nthen\n If there is no ith argument in the function invocation, pnamei is initialized to dvaluei\n The parameter pnamei is an optional value parameter\n Optional reference parameters are also permitted\nDefault parameters must appear after any mandatory parameters\nBad example\n void Trouble(int x = 5, double z, double y) {\n ...\n }\nConsider\n bool GetNumber(int &n, istream &sin = cin) {\n return sin >> n ;\n }\nSome possible invocations\n int x, y, z;\n ifstream fin(\"Data.txt\");\n GetNumber(x, cin);\n GetNumber(y);\n GetNumber(z, fin);\nDesign your functions for ease and reuse!",
+        "Accessing List Elements\n// Compute an rvalue (access constant element)\nconst int& IntList::operator[](int i) const {\nassert((i >= 0) && (i < size()));\nreturn Values[i];\n}\n// Compute an lvalue\nint& IntList::operator[](int i) {"
+      ],
+      "response": "No, not all lvalues are simple variable names. While a simple variable name like `a` can be an lvalue, expressions such as `c[0]` and `b[0]` are also lvalues. The context explicitly states that not all lvalues are the names of objects.",
+      "reference": "No, not all lvalues are simple variable names. As observed, while `a` is an lvalue that is a simple variable name, expressions like `c[0]` and `b[0]` are also categorized as lvalues. These examples demonstrate that lvalues can represent objects even when not expressed solely by their direct name.",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9864185136248652,
+      "context_recall": 1.0,
+      "context_precision": 0.699999999965
+    },
+    {
+      "user_input": "How does this C++ code produce a table of numbers alongside their corresponding powers of two?",
+      "retrieved_contexts": [
+        "Power of Two Table\nconst int TableSize = 20;\nint i = 0;\nlong Entry = 1;\ncout << \"i\" << \"\\t\\t\" << \"2 ** i\" << endl;\nwhile (i < TableSize) {\u000bcout << i << \"\\t\\t\" << Entry << endl;\u000bEntry = 2 * Entry;\u000b++i;\n}",
+        "Compound Assignment\nC++ has a large set of operators for applying an operation to an object and then storing the result back into the object\nExamples\nint i = 3;\u000bi += 4;                   // i is now 7\u000bcout << i << endl;\u000b\u000bfloat a = 3.2;\u000ba *= 2.0;                 // a is now 6.4\u000bcout << a << endl;",
+        "Final Notes\nFinal Notes\n \u2022 You don\u2019t actually need to implement raiseToPower and squareRoot yourself; cmath (part of the standard library) contains functions pow and sqrt #include <cmath> double fourthRoot( double num) { return sqrt(sqrt(num));\n }",
+        "MyProgram.cpp\n#include <iostream>\nusing namespace std;\n#include \"rational.h\"\nint main() {\nRational r;\nRational s;\ncout << \"Enter two rationals(a/b): \";\ncin >> r >> s;\nRational Sum = r + s;\ncout << r << \" + \" << s << \" = \" << Sum;\nreturn 0;\n}",
+        "Min Template\nCode segment\n double Value1 = 4.30;\n double Value2 = 19.54;\n cout << Min(Value1, Value2) << endl;\nCauses the following function to be generated from our template\n double Min(const double &a, const double &b) {\n if (a < b)\n return a;\n else\n return b;\n }"
+      ],
+      "response": "The C++ code produces a table of numbers and their corresponding powers of two using a `while` loop. It initializes `i` to 0 and `Entry` to 1. In each iteration, it prints the current value of `i` and `Entry`, then updates `Entry` by multiplying it by 2 and increments `i`, effectively calculating 2 raised to the power of `i`.",
+      "reference": "The code initializes a counter `i` to 0 and a `long` variable `Entry` to 1, representing 2^0. A `while` loop then iterates as long as `i` is less than `TableSize` (20). In each iteration, it prints the current values of `i` and `Entry`, then calculates the next power of two by doubling `Entry` and increments `i`. This process sequentially generates and displays pairs of `i` and `2 ** i` up to `i` equals 19.",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.7099324724301214,
+      "context_recall": 1.0,
+      "context_precision": 0.9999999999
     },
     {
       "user_input": "Why is it illegal to print the value of `i` after the `for` loop has finished?",
@@ -225,74 +273,10 @@
       ],
       "response": "It is illegal to print the value of `i` after the `for` loop has finished because `i` is declared within the `for` loop's initialization statement. Variables declared within a block, such as the `for` loop, are only accessible within that specific block. Once the loop concludes, `i` is no longer in scope.",
       "reference": "According to the provided source material, the statement `cout << \"i is\" << i << endl;` placed after the `for` loop is explicitly marked as 'illegal'. The source code snippet indicates that attempting to print the value of `i` at this point in the program is not permitted.",
-      "faithfulness": 0.8,
-      "answer_relevancy": 0.9452202855874704,
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9755810413684646,
       "context_recall": 1.0,
       "context_precision": 0.699999999965
-    },
-    {
-      "user_input": "What are the advantages of structuring a C++ program into small, understandable units?",
-      "retrieved_contexts": [
-        "Program Organization\nC++ program\n Collection of  definitions, declarations and functions\n Collection can span multiple files\nAdvantages\n Structured into small understandable units\n Complexity is reduced\n Overall program size decreases",
-        "Program Organization\nProgram statement\n Definition\n Declaration\n Action\nExecutable unit\n Named set of program statements\n Different languages refer to executable units by different names\n Subroutine:  Fortran and Basic\n Procedure: Pascal\n Function : C++\nC++ program\n Collection of  definitions, declarations and functions\n Collection can span multiple files\nAdvantages\n Structured into small understandable units\n Complexity is reduced\n Overall program size decreases",
-        "Usefulness\nMechanism in C++ to pass command-line parameters to a program\n This feature is less important now with the use of graphical interfaces\nNecessary for dynamic objects\n Objects whose memory is acquired during program execution as the result of a specific program request\n Dynamic objects can survive the execution of the function in which they are acquired\n Dynamic objects enable variable-sized lists",
-        "Compound Assignment\nC++ has a large set of operators for applying an operation to an object and then storing the result back into the object\nExamples\nint i = 3;\u000bi += 4;                   // i is now 7\u000bcout << i << endl;\u000b\u000bfloat a = 3.2;\u000ba *= 2.0;                 // a is now 6.4\u000bcout << a << endl;",
-        "Comments\nAllow prose or commentary to be included in program\nImportance\n Programs are read far more often than they are written\n Programs need to be understood so that they can be maintained\nC++ has two conventions for comments\n //  single line comment (preferred)\n /*  long comment */ (save for debugging)\nTypical uses\n Identify program and who wrote it\n Record when program was written\n Add descriptions of modifications"
-      ],
-      "response": "Structuring a C++ program into small, understandable units offers several advantages. It reduces overall program complexity, making the code easier to manage. This organization also helps decrease the overall program size.",
-      "reference": "Structuring a C++ program into small, understandable units offers significant advantages. This approach effectively reduces the overall program's complexity. Additionally, organizing the code in this manner leads to a decrease in the overall program size.",
-      "faithfulness": 0.75,
-      "answer_relevancy": 1.0,
-      "context_recall": 1.0,
-      "context_precision": 0.99999999995
-    },
-    {
-      "user_input": "What makes two functions with the same name count as overloaded?",
-      "retrieved_contexts": [
-        "Function Overloading\nA function name can be overloaded\n Two functions with the same name but with different interfaces\n Typically this means different formal parameter lists\n Difference in number of parameters\n Min(a, b, c)\n Min(a, b)\n Difference in types of parameters\n Min(10, 20)\n Min(4.4, 9.2)\nint Min(int a, int b) {\ncout << \"Using int min()\" << endl;\nif (a > b)\nreturn b;\nelse\nreturn a;\n}\ndouble Min(double a, double b) {\ncout << \"Using double min()\" << endl;\nint main() {\nint a = 10;\nint b = 20;\ndouble x = 4.4;\ndouble y = 9.2;\nint c = Min(a, b);\ncout << \"c is \" << c << endl;\nint z = Min(x, y);\ncout << \"z is \" << z << endl;\nreturn 0;\n}\nCompiler uses function overload resolution to call the most appropriate function\n First looks for a function definition where the formal and actual parameters exactly match\n If there is no exact match, the compiler will attempt to cast the actual parameters to ones used by an appropriate function\nThe rules for function definition overloading are very complicated\n Advice\n Be very careful when using this feature",
-        "Function Overloading\nA function name can be overloaded\n Two functions with the same name but with different interfaces\n Typically this means different formal parameter lists\n Difference in number of parameters\n Min(a, b, c)\n Min(a, b)\n Difference in types of parameters\n Min(10, 20)\n Min(4.4, 9.2)",
-        "Function Overloading\nCompiler uses function overload resolution to call the most appropriate function\n First looks for a function definition where the formal and actual parameters exactly match\n If there is no exact match, the compiler will attempt to cast the actual parameters to ones used by an appropriate function\nThe rules for function definition overloading are very complicated\n Advice\n Be very careful when using this feature",
-        "Function Overloading\nint main() {\nint a = 10;\nint b = 20;\ndouble x = 4.4;\ndouble y = 9.2;\nint c = Min(a, b);\ncout << \"c is \" << c << endl;\nint z = Min(x, y);\ncout << \"z is \" << z << endl;\nreturn 0;\n}",
-        "Function Overloading\nint Min(int a, int b) {\ncout << \"Using int min()\" << endl;\nif (a > b)\nreturn b;\nelse\nreturn a;\n}\ndouble Min(double a, double b) {\ncout << \"Using double min()\" << endl;"
-      ],
-      "response": "Two functions with the same name count as overloaded if they have different interfaces. This typically means they have different formal parameter lists. The difference can be in the number of parameters or the types of parameters.",
-      "reference": "Two functions with the same name are considered overloaded when they possess different interfaces, typically meaning they have different formal parameter lists. This distinction can arise from a difference in the number of parameters, such as `Min(a, b, c)` versus `Min(a, b)`. Additionally, functions are overloaded if their parameters differ in type, for example, `Min(10, 20)` compared to `Min(4.4, 9.2)`.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 1.0000000000000002,
-      "context_recall": 1.0,
-      "context_precision": 0.8874999999778125
-    },
-    {
-      "user_input": "How does the program determine which mathematical operation to perform based on the entered operator?",
-      "retrieved_contexts": [
-        "Compound Assignment\nC++ has a large set of operators for applying an operation to an object and then storing the result back into the object\nExamples\nint i = 3;\u000bi += 4;                   // i is now 7\u000bcout << i << endl;\u000b\u000bfloat a = 3.2;\u000ba *= 2.0;                 // a is now 6.4\u000bcout << a << endl;",
-        "Operators and Precedence\nConsider m*x + b which of the following is it equivalent to\n (m * x) + b\n m * (x + b)\nOperator precedence tells how to evaluate expressions\nStandard precedence order\n ()\tEvaluate first, if nested innermost\n\tdone first\n * / %\tEvaluate second. If there are several,\n\tthen evaluate from left-to-right\n + -\tEvaluate third. If there are several,\n\tthen evaluate from left-to-right",
-        "Slide 27\ncout << \"Enter simple expression: \";\nint Left;\nint Right;\nchar Operator;\ncin >> Left >> Operator >> Right;\ncout << Left << \" \" << Operator << \" \" << Right\n<< \" = \";\nswitch (Operator) {\ncase '+' : cout << Left + Right << endl; break;\ncase '-' : cout << Left - Right << endl; break;\ncase '*' : cout << Left * Right << endl; break;\ncase '/' : cout << Left / Right << endl; break;\ndefault: cout << \"Illegal operation\" << endl;\n}",
-        "Member Assignment Operator\nIntList& IntList::operator=(const IntList &A) {\nif (this != &A) {\ndelete [] Values;\nNumberValues = A.size();\nValues = new int [A.size()];\nassert(Values);\nfor (int i = 0; i < A.size(); ++i) {\nValues[i] = A[i];\n}\nreturn *this;",
-        "Character Operations\nArithmetic and relational operations are defined for characters types\n 'a' < 'b' is true\n '4' > '3' is true\n '6' <= '2' is false"
-      ],
-      "response": "The program reads the entered operator into a `char` variable. It then uses a `switch` statement to evaluate this `Operator`. Based on the character entered (e.g., '+', '-', '*', '/'), the corresponding arithmetic operation is performed on `Left` and `Right`.",
-      "reference": "The program first reads the entered operator into a `char` variable named `Operator`. It then uses a `switch` statement to evaluate the value stored in `Operator`. Each `case` within the `switch` statement matches a specific operator character (e.g., `'+'`, `'-'`), executing the corresponding mathematical operation. If `Operator` does not match any of the defined cases, the `default` block handles it as an illegal operation.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.9147564228630145,
-      "context_recall": 1.0,
-      "context_precision": 0.3333333333
-    },
-    {
-      "user_input": "How does this C++ code produce a table of numbers alongside their corresponding powers of two?",
-      "retrieved_contexts": [
-        "Power of Two Table\nconst int TableSize = 20;\nint i = 0;\nlong Entry = 1;\ncout << \"i\" << \"\\t\\t\" << \"2 ** i\" << endl;\nwhile (i < TableSize) {\u000bcout << i << \"\\t\\t\" << Entry << endl;\u000bEntry = 2 * Entry;\u000b++i;\n}",
-        "Compound Assignment\nC++ has a large set of operators for applying an operation to an object and then storing the result back into the object\nExamples\nint i = 3;\u000bi += 4;                   // i is now 7\u000bcout << i << endl;\u000b\u000bfloat a = 3.2;\u000ba *= 2.0;                 // a is now 6.4\u000bcout << a << endl;",
-        "MyProgram.cpp\n#include <iostream>\nusing namespace std;\n#include \"rational.h\"\nint main() {\nRational r;\nRational s;\ncout << \"Enter two rationals(a/b): \";\ncin >> r >> s;\nRational Sum = r + s;\ncout << r << \" + \" << s << \" = \" << Sum;\nreturn 0;\n}",
-        "Min Template\nCode segment\n double Value1 = 4.30;\n double Value2 = 19.54;\n cout << Min(Value1, Value2) << endl;\nCauses the following function to be generated from our template\n double Min(const double &a, const double &b) {\n if (a < b)\n return a;\n else\n return b;\n }",
-        "Min Template\nCode segment\n int Input1 = PromptAndRead();\n int Input2 = PromptAndRead();\n cout << Min(Input1, Input2) << endl;\nCauses the following function to be generated from our template\n int Min(const int &a, const int &b) {\n if (a < b)\n return a;\n else\n return b;\n }\nCode segment\n double Value1 = 4.30;\n double Value2 = 19.54;\n cout << Min(Value1, Value2) << endl;\nCauses the following function to be generated from our template\n double Min(const double &a, const double &b) {\n if (a < b)\n return a;\n else\n return b;\n }\nCode segment\n Rational r(6,21);\n Rational s(11,29);\n cout << Min(r, s) << endl;\nCauses the following function to be generated from our template\n Rational Min(const Rational &a, const Rational &b) {\n if (a < b)\n return a;\n else\n return b;\n }"
-      ],
-      "response": "The C++ code produces a table of numbers and their corresponding powers of two by initializing `i` to 0 and `Entry` to 1. It then enters a `while` loop that iterates `TableSize` times. In each iteration, it prints the current value of `i` and `Entry`, which holds 2 raised to the power of `i`. The `Entry` variable is then updated by multiplying it by 2, and `i` is incremented for the next row.",
-      "reference": "The code initializes a counter `i` to 0 and a `long` variable `Entry` to 1, representing 2^0. A `while` loop then iterates as long as `i` is less than `TableSize` (20). In each iteration, it prints the current values of `i` and `Entry`, then calculates the next power of two by doubling `Entry` and increments `i`. This process sequentially generates and displays pairs of `i` and `2 ** i` up to `i` equals 19.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.9651550809674312,
-      "context_recall": 1.0,
-      "context_precision": 0.9999999999
     },
     {
       "user_input": "How does incrementing a `reverse_iterator` change the element it points to in the original sequence?",
@@ -311,36 +295,20 @@
       "context_precision": 0.0
     },
     {
-      "user_input": "How many blue squares will be drawn by this code?",
+      "user_input": "How does the program determine which mathematical operation to perform based on the entered operator?",
       "retrieved_contexts": [
-        "Displaying a Diagonal\nSimpleWindow W(\"One diagonal\", 5.5, 2.25);\nW.Open();\nfor (int j = 1;  j <= 3; ++j) {\nfloat x = j * 0.75 + 0.25;\nfloat y = j * 0.75 - 0.25;\nfloat Side = 0.4;\nRectangleShape S(W, x, y, Blue, Side, Side);\nS.Draw();\n}",
-        "Displaying Three Diagonals\nSimpleWindow W(\"Three diagonals\", 6.5, 2.25);\nW.Open();\nfor (int i = 1; i <= 3; ++i) {\n for (int j = 1;  j <= 3; ++j) {\n float x = i - 1 + j * 0.75 + 0.25;\n float y = j * 0.75 - 0.25;\n float Side = 0.4;\n RectangleShape S(W, x, y, Blue, Side, Side);\n S.Draw();\n }",
-        "Another EzWindows Program\n#include <iostream>\nusing namespace std;\n#include \"rect.h\"\nint ApiMain()  {\nSimpleWindow W(\"Rectangular Fun\", 12, 12);\nW.Open();\nRectangleShape R(W, 5.0, 2.5, Blue, 1, 2);\nR.Draw();\ncout << \"Enter a character to exit\" << endl;\nchar Response;\ncin >> Response;\nreturn 0;\n}",
-        "TriangleShape::Draw()\nvoid TriangleShape::Draw() {\nconst float Pi = 3.1415;\nconst Position Center = GetPosition();\nconst float SLength = GetSideLength();\n// Compute c, distance from center of triangle\n// to the top vertex, and a, the distance from\n// the center to the base of the triangle\nfloat c = SLength / (2.0 * cos(30 * Pi / 180.0));\nfloat a = tan(30 * Pi / 180.0) * .5 * SLength;\n// Create an array containing the positions of\n// the vertices of the triangle\nvector Position TrianglePoints[3];\nTrianglePoints[0] = Center + Position(0, -c),\nTrianglePoints[1] = Center\u000b + Position(-.5  * SLength, a);\nTrianglePoints[2] = Center\u000b + Position(.5 * SLength, a);\n// Draw the triangle\nGetWindow().RenderPolygon(TrianglePoints, 3,\nGetColor(), HasBorder());\n}",
-        "Access Tests\nConsider\n SimpleWindow W(\"Testing\", 20, 10);\n RectangleShape R(W, 2, 2, Blue, 4, 3);\n const RectangleShape S(W, 15, 10, Red, 5, 6);\nCan we do the following?\n color c = R.GetColor();\n color d = S.GetColor();\n color d = R.thisColor;\n R.DetColor(Yellow);\n S.SetColor(Black);"
+        "3.2 Operators\n3.2 Operators\n We can perform arithmetic calculations with operators. Operators act on expressions to form\n a new expression. For example, we could replace \"Hello, world!\\n\" with (4 + 2) / 3,\n which would cause the program to print the number 2. In this case, the + operator acts on\n the expressions 4 and 2 (its operands).\n Operator types:\n \u2022 Mathematical: +, -, *, /, and parentheses have their usual mathematical meanings,\n including using - for negation. % (the modulus operator) takes the remainder of two\n numbers: 6 % 5 evaluates to 1.\n \u2022 Logical: used for \u201cand,\u201d \u201cor,\u201d and so on. More on those in the next lecture.\n \u2022 Bitwise: used to manipulate the binary representations of numbers. We will not focus\n on these.",
+        "Compound Assignment\nC++ has a large set of operators for applying an operation to an object and then storing the result back into the object\nExamples\nint i = 3;\u000bi += 4;                   // i is now 7\u000bcout << i << endl;\u000b\u000bfloat a = 3.2;\u000ba *= 2.0;                 // a is now 6.4\u000bcout << a << endl;",
+        "Operators and Precedence\nConsider m*x + b which of the following is it equivalent to\n (m * x) + b\n m * (x + b)\nOperator precedence tells how to evaluate expressions\nStandard precedence order\n ()\tEvaluate first, if nested innermost\n\tdone first\n * / %\tEvaluate second. If there are several,\n\tthen evaluate from left-to-right\n + -\tEvaluate third. If there are several,\n\tthen evaluate from left-to-right",
+        "Slide 27\ncout << \"Enter simple expression: \";\nint Left;\nint Right;\nchar Operator;\ncin >> Left >> Operator >> Right;\ncout << Left << \" \" << Operator << \" \" << Right\n<< \" = \";\nswitch (Operator) {\ncase '+' : cout << Left + Right << endl; break;\ncase '-' : cout << Left - Right << endl; break;\ncase '*' : cout << Left * Right << endl; break;\ncase '/' : cout << Left / Right << endl; break;\ndefault: cout << \"Illegal operation\" << endl;\n}",
+        "Member Assignment Operator\nIntList& IntList::operator=(const IntList &A) {\nif (this != &A) {\ndelete [] Values;\nNumberValues = A.size();\nValues = new int [A.size()];\nassert(Values);\nfor (int i = 0; i < A.size(); ++i) {\nValues[i] = A[i];\n}\nreturn *this;"
       ],
-      "response": "The \"Displaying a Diagonal\" code draws 3 blue squares. The \"Displaying Three Diagonals\" code draws 9 blue squares. The \"Another EzWindows Program\" draws a blue rectangle, not a square. The other code snippets do not draw blue squares. Therefore, a total of 12 blue squares will be drawn.",
-      "reference": "The code uses nested `for` loops, with the outer loop iterating 3 times (for `i` from 1 to 3) and the inner loop iterating 3 times (for `j` from 1 to 3) for each outer loop iteration. This results in `3 * 3 = 9` total iterations. Inside the innermost loop, a `RectangleShape` object `S` is constructed using `Blue` as its color and then drawn with `S.Draw()`, meaning 9 blue squares will be displayed.",
+      "response": "The program reads the operator character entered by the user. It then uses a `switch` statement to compare this character with predefined cases. Each case corresponds to a specific mathematical operator (`+`, `-`, `*`, `/`) and executes the associated arithmetic calculation.",
+      "reference": "The program first reads the entered operator into a `char` variable named `Operator`. It then uses a `switch` statement to evaluate the value stored in `Operator`. Each `case` within the `switch` statement matches a specific operator character (e.g., `'+'`, `'-'`), executing the corresponding mathematical operation. If `Operator` does not match any of the defined cases, the `default` block handles it as an illegal operation.",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.9648552392133057,
+      "answer_relevancy": 0.8376974443742379,
       "context_recall": 1.0,
-      "context_precision": 0.49999999995
-    },
-    {
-      "user_input": "How does a function like this take an input, perform a calculation, and then return a result?",
-      "retrieved_contexts": [
-        "Invocation Process\ndouble f(double x) {\ndouble result =\nx*x + 2*x + 5;\nreturn result;\n}",
-        "Invocation Process\ndouble f(double x) {\ndouble result =\nx*x + 2*x + 5;\nreturn result;\n}",
-        "Invocation Process\ndouble f(double x) {\ndouble result =\nx*x + 2*x + 5;\nreturn result;\n}",
-        "Invocation Process\ndouble f(double x) {\ndouble result =\nx*x + 2*x + 5;\nreturn result;\n}",
-        "Invocation Process\ndouble f(double x) {\ndouble result =\nx*x + 2*x + 5;\nreturn result;\n}"
-      ],
-      "response": "The function `f` takes an input `x` of type `double`. Inside the function, a calculation `x*x + 2*x + 5` is performed using this input. The result of this calculation is stored in a variable `result` and then returned by the function.",
-      "reference": "The function `f` takes an input value through its `double x` parameter, specified within the parentheses. Inside the function body, a calculation `x*x + 2*x + 5` is performed using this input `x`, and the outcome is stored in the `result` variable. Finally, the `return result;` statement sends the value stored in `result` back as the function's output, whose type is `double` as indicated before the function name.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.5837771931062566,
-      "context_recall": 1.0,
-      "context_precision": 0.99999999998
+      "context_precision": 0.249999999975
     },
     {
       "user_input": "What title, width, height, and initial position does the `PhotoWindow` have?",
@@ -354,41 +322,9 @@
       "response": "The `PhotoWindow` has the title \"The Authors\". Its width is 10.0 and its height is 7.0. The initial position of the window is `Position(5.0, 3.0)`.",
       "reference": "The `PhotoWindow` is initialized with the title \"The Authors\". It has a width of 10.0 and a height of 7.0. Its initial position is set to `Position(5.0, 3.0)`.",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.8199359388054099,
+      "answer_relevancy": 0.8046664408811885,
       "context_recall": 1.0,
       "context_precision": 0.99999999995
-    },
-    {
-      "user_input": "Who developed Boolean algebra and what are its three key logical operators",
-      "retrieved_contexts": [
-        "Boolean Algebra\nLogical expressions have the one of two values - true or false\n A rectangle has three sides\n The instructor has a pleasant smile\nThe branch of mathematics is called Boolean algebra\n Developed by the British mathematician George Boole in the 19th century\nThree key logical operators\n And\n Or\n Not",
-        "Boolean Algebra\nLogical expressions have the one of two values - true or false\n A rectangle has three sides\n The instructor has a pleasant smile\nThe branch of mathematics is called Boolean algebra\n Developed by the British mathematician George Boole in the 19th century\nThree key logical operators\n And\n Or\n Not\nTruth tables\n Lists all combinations of operand values and the result of the operation for each combination\nExample\nP\tQ\t     P or Q\nFalse\t False\t\tFalse\nFalse\t True\t\tTrue\nTrue\t False\t\tTrue\nTrue\t True\t\tTrue\nFalse\t True\nTrue\t False\nFalse\t False\t\tFalse\t\tTrue\nFalse\t True\t\tFalse\t\tTrue\nTrue\t False\t\tFalse\t\tTrue\nTrue\t True\t\tTrue\t\tFalse",
-        "Boolean Algebra\nFalse\t False\t\tFalse\t\tTrue\nFalse\t True\t\tFalse\t\tTrue\nTrue\t False\t\tFalse\t\tTrue\nTrue\t True\t\tTrue\t\tFalse",
-        "Boolean Algebra\nFalse\t True\nTrue\t False",
-        "Boolean Algebra\nP\tQ\t     P or Q\nFalse\t False\t\tFalse\nFalse\t True\t\tTrue\nTrue\t False\t\tTrue\nTrue\t True\t\tTrue"
-      ],
-      "response": "Boolean algebra was developed by the British mathematician George Boole in the 19th century. Its three key logical operators are And, Or, and Not.",
-      "reference": "Boolean algebra was developed by the British mathematician George Boole in the 19th century. Its three key logical operators are And, Or, and Not.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.9719130606496388,
-      "context_recall": 1.0,
-      "context_precision": 0.99999999995
-    },
-    {
-      "user_input": "What determines which specific function is invoked when a virtual function is called through a base class pointer?",
-      "retrieved_contexts": [
-        "Virtual Functions\nCan be invoked via either a dereferenced pointer or a reference object\n Actual function to be invoked is determined from the type of object that is stored at the memory location being accessed\nDefinition of the derived function overrides the definition of the base class version\nDetermination of which virtual function to use cannot always be made at compile time\n Decision is deferred by the compiler to run time\n Introduces overhead",
-        "Virtual Functions\nFor virtual functions\n It is the type of object to which the pointer refers that determines which function is invoked\nTriangleShape T(W, P, Red, 1);\nRectangleShape R(W,P, Yellow, 3, 2);\nCircleShape C(W, P, Yellow, 4);\nShape *A[3] = {&T, &R, &C};\nfor (int i = 0; i < 3; ++i) {\nA[i]->Draw();\n}\nFor virtual functions\n It is the type of object to which the pointer refers that determines which function is invoked\nTriangleShape T(W, P, Red, 1);\nRectangleShape R(W,P, Yellow, 3, 2);\nCircleShape C(W, P, Yellow, 4);\nShape *A[3] = {&T, &R, &C};\nfor (int i = 0; i < 3; ++i) {\nA[i]->Draw();\n}\nFor virtual functions\n It is the type of object to which the pointer refers that determines which function is invoked\nTriangleShape T(W, P, Red, 1);\nRectangleShape R(W,P, Yellow, 3, 2);\nCircleShape C(W, P, Yellow, 4);\nShape *A[3] = {&T, &R, &C};\nfor (int i = 0; i < 3; ++i) {\nA[i]->Draw();\n}\nCan be invoked via either a dereferenced pointer or a reference object\n Actual function to be invoked is determined from the type of object that is stored at the memory location being accessed\nDefinition of the derived function overrides the definition of the base class version\nDetermination of which virtual function to use cannot always be made at compile time\n Decision is deferred by the compiler to run time\n Introduces overhead",
-        "Virtual Functions\nFor virtual functions\n It is the type of object to which the pointer refers that determines which function is invoked\nTriangleShape T(W, P, Red, 1);\nRectangleShape R(W,P, Yellow, 3, 2);\nCircleShape C(W, P, Yellow, 4);\nShape *A[3] = {&T, &R, &C};\nfor (int i = 0; i < 3; ++i) {\nA[i]->Draw();\n}",
-        "Virtual Functions\nFor virtual functions\n It is the type of object to which the pointer refers that determines which function is invoked\nTriangleShape T(W, P, Red, 1);\nRectangleShape R(W,P, Yellow, 3, 2);\nCircleShape C(W, P, Yellow, 4);\nShape *A[3] = {&T, &R, &C};\nfor (int i = 0; i < 3; ++i) {\nA[i]->Draw();\n}",
-        "Virtual Functions\nFor virtual functions\n It is the type of object to which the pointer refers that determines which function is invoked\nTriangleShape T(W, P, Red, 1);\nRectangleShape R(W,P, Yellow, 3, 2);\nCircleShape C(W, P, Yellow, 4);\nShape *A[3] = {&T, &R, &C};\nfor (int i = 0; i < 3; ++i) {\nA[i]->Draw();\n}"
-      ],
-      "response": "When a virtual function is called through a base class pointer, the actual function invoked is determined by the type of object that is stored at the memory location being accessed. It is the type of object to which the pointer refers that determines which function is invoked. This decision is deferred by the compiler to run time.",
-      "reference": "For virtual functions called through a base class pointer, the specific function invoked is determined by the type of object to which the pointer refers. For instance, if an array of base class pointers refers to objects of various derived types, calling a virtual function through these pointers will invoke the version specific to each object's actual type.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.9840322436779586,
-      "context_recall": 1.0,
-      "context_precision": 0.99999999998
     },
     {
       "user_input": "What exactly does software engineering involve within computer science?",
@@ -402,57 +338,73 @@
       "response": "Software engineering is an area of computer science. It is concerned with building large software systems.",
       "reference": "Software engineering is an area of computer science primarily concerned with building large software systems. A significant challenge within this field is that tremendous advances in hardware have not been accompanied by comparable advances in software.",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.8848853371276073,
+      "answer_relevancy": 0.7431186448698046,
       "context_recall": 1.0,
       "context_precision": 0.9999999999
     },
     {
-      "user_input": "What allows this `operator[]` to modify elements within the `Array`?",
+      "user_input": "How does a function like this take an input, perform a calculation, and then return a result?",
       "retrieved_contexts": [
-        "Member Assignment Operator\nIntList& IntList::operator=(const IntList &A) {\nif (this != &A) {\ndelete [] Values;\nNumberValues = A.size();\nValues = new int [A.size()];\nassert(Values);\nfor (int i = 0; i < A.size(); ++i) {\nValues[i] = A[i];\n}\nreturn *this;",
-        "Array Element Manipulation\nConsider\n int i = 7, j = 2, k = 4;\n A[0] = 1;\n A[i] = 5;\n A[j] = A[i] + 3;\n A[j+1] = A[i] + A[0];\n A[A[j]] = 12;\n cin >> A[k]; // where next input value is 3\nConsider\n int i = 7, j = 2, k = 4;\n A[0] = 1;\n A[i] = 5;\n A[j] = A[i] + 3;\n A[j+1] = A[i] + A[0];\n A[A[j]] = 12;\n cin >> A[k]; // where next input value is 3\nConsider\n int i = 7, j = 2, k = 4;\n A[0] = 1;\n A[i] = 5;\n A[j] = A[i] + 3;\n A[j+1] = A[i] + A[0];\n A[A[j]] = 12;\n cin >> A[k]; // where next input value is 3\nConsider\n int i = 7, j = 2, k = 4;\n A[0] = 1;\n A[i] = 5;\n A[j] = A[i] + 3;\n A[j+1] = A[i] + A[0];\n A[A[j]] = 12;\n cin >> A[k]; // where next input value is 3\nConsider\n int i = 7, j = 2, k = 4;\n A[0] = 1;\n A[i] = 5;\n A[j] = A[i] + 3;\n A[j+1] = A[i] + A[0];\n A[A[j]] = 12;\n cin >> A[k]; // where next input value is 3\nConsider\n int i = 7, j = 2, k = 4;\n A[0] = 1;\n A[i] = 5;\n A[j] = A[i] + 3;\n A[j+1] = A[i] + A[0];\n A[A[j]] = 12;\n cin >> A[k]; // where next input value is 3\nConsider\n int i = 7, j = 2, k = 4;\n A[0] = 1;\n A[i] = 5;\n A[j] = A[i] + 3;\n A[j+1] = A[i] + A[0];\n A[A[j]] = 12;\n cin >> A[k]; // where next input value is 3",
-        "Specific Array Insertion Operator\nSuppose we want a different Array insertion operator for Array<char> objects\nostream& operator<<(ostream &sout,\nconst Array<char> &A){\nfor (int i = 0; i < A.size(); ++i) {\nsout << A[i];\n}\nreturn sout;",
-        "Modifying objects\nOperators and Expressions",
-        "Generic Array Insertion Operator\ntemplate <class T>\nostream& operator<<(ostream &sout,\nconst Array<T> &A){\nsout << \"[ \";\nfor (int i = 0; i < A.size(); ++i) {\nsout << A[i] << \" \";\n}\nsout << \"]\";\nreturn sout;\nCan be instantiated for whatever type of Array we need"
+        "Invocation Process\ndouble f(double x) {\ndouble result =\nx*x + 2*x + 5;\nreturn result;\n}\ndouble f(double x) {\ndouble result =\nx*x + 2*x + 5;\nreturn result;\n}\ndouble f(double x) {\ndouble result =\nx*x + 2*x + 5;\nreturn result;\n}\ndouble f(double x) {\ndouble result =\nx*x + 2*x + 5;\nreturn result;\n}\ndouble f(double x) {\ndouble result =\nx*x + 2*x + 5;\nreturn result;\n}",
+        "Using\nvoid Swap(int a, int b) {\nint Temp = a;\na = b;\nb = Temp;\nreturn;\n}\nvoid Swap(int &a, int &b) {\nint Temp = a;\na = b;\nb = Temp;\nreturn;\n}\nint Factorial(int n) {\n if (n == 0) {\n return 1;\n }\n else {\n return n * Factorial(n-1);\nC++ function mirrors the mathematical factorial  definition\n If the value of n is 0, the value 1 is returned.\n Otherwise, the product of n and Factorial(n-1) is returned.",
+        "A More Detailed Design\nSolution\n Function that takes array of values and array size as its two in parameters; returns smallest value seen as its value\n Initialize smallest value so far to first element\n For each of the other elements in the array in turn\n If it is smaller than the smallest value so far, update the value of the smallest value so far to be the current element\n Return smallest value seen as value of function",
+        "What is the Output?\nint m = 5;\nint n = 10;\nif (m < n)\n++m;\n++n;\ncout << \" m = \" << m << \" n = \" n << endl;",
+        "Class string\nAuxiliary functions and operators\n getline() extracts the next input line\n string Response;\n cout << \"Enter text: \";\n getline(cin, Response, '\\n');\n cout << \"Response is \\\"\" << Response\n << \"\\\"\u201d << endl;\n Example run\n Enter text: Want what you do\n Response is \"Want what you do\""
       ],
-      "response": "The provided context demonstrates that `operator[]` allows modification of elements within the `Array`. This is evident in the \"Array Element Manipulation\" section. There, `A[index]` is used on the left-hand side of assignment operations (e.g., `A[0] = 1;`, `A[i] = 5;`) and as an operand for `cin` (e.g., `cin >> A[k];`).",
-      "reference": "This `operator[]` allows modification because its return type is `T&`, a reference to an element of type `T`. By returning a reference, the `operator[]` provides direct access to the actual element `Values[i]` within the `Array`. This makes the result of `Array[i]` an lvalue, enabling callers to modify the referenced element directly.",
+      "response": "A function takes input parameters, such as `double x` for `f(double x)` or an array of values and its size. It then performs a calculation, like `x*x + 2*x + 5` or finding the smallest value in an array. Finally, it returns a result, such as the calculated `result` or the smallest value seen.",
+      "reference": "The function `f` takes an input value through its `double x` parameter, specified within the parentheses. Inside the function body, a calculation `x*x + 2*x + 5` is performed using this input `x`, and the outcome is stored in the `result` variable. Finally, the `return result;` statement sends the value stored in `result` back as the function's output, whose type is `double` as indicated before the function name.",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.9481604046178868,
-      "context_recall": 0.0,
-      "context_precision": 0.0
-    },
-    {
-      "user_input": "What is the complete output produced by this C++ code?",
-      "retrieved_contexts": [
-        "Execution Trace\nfor (int i = 0; i < 3; ++i) {\u000bcout << \"i is \" << i << endl;\n}\ncout << \"all done\" << endl;",
-        "Execution Trace\nfor (int i = 0; i < 3; ++i) {\u000bcout << \"i is \" << i << endl;\n}\ncout << \"all done\" << endl;",
-        "Execution Trace\nfor (int i = 0; i < 3; ++i) {\u000bcout << \"i is \" << i << endl;\n}\ncout << \"all done\" << endl;",
-        "Execution Trace\nfor (int i = 0; i < 3; ++i) {\u000bcout << \"i is \" << i << endl;\n}\ncout << \"all done\" << endl;\ni is 0",
-        "Execution Trace\nfor (int i = 0; i < 3; ++i) {\u000bcout << \"i is \" << i << endl;\n}\ncout << \"all done\" << endl;\ni is 0"
-      ],
-      "response": "Based on the provided context, the complete output shown is:\ni is 0\ni is 0",
-      "reference": "The complete output produced by the C++ code is:\n```\ni is 0\ni is 1\ni is 2\n```\nThis output results from the `for` loop iterating three times. In each iteration, the current value of `i` (0, 1, then 2) is printed, preceded by \"i is \" and followed by a newline character.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.719454839103984,
-      "context_recall": 1.0,
-      "context_precision": 0.6999999999766667
-    },
-    {
-      "user_input": "What types of services does an operating system offer for managing files and devices?",
-      "retrieved_contexts": [
-        "Operating System\nExamples\n Windows\u00ae, UNIX\u00ae, Mac OS X\u00ae\nControls and manages the computing resources\nImportant services that an operating system provides\n File system\n Directories, folders, files\n Commands that allow for manipulation of the file system\n Sort, delete, copy\n Ability to perform input and output on a variety of devices\n Management of the running systems",
-        "Software\nApplication software\n Programs designed to perform specific tasks that are transparent to the user\nSystem software\n Programs that support the execution and development of other programs\n Two major types\n Operating systems\n Translation systems",
-        "Input and Output Devices\nAccessories that allow computer to perform specific tasks\n Receive information for processing\n Return the results of processing\n Store information\nCommon input and output devices\n Speakers\t\tMouse \t\t\tScanner\n Printer\t\tJoystick\t\t\tCD-ROM\n Keyboard\t\tMicrophone\t\tDVD\nSome devices are capable of both input and output\n Floppy drive\tHard drive\t\tMagnetic tape\n\t\t\t\t\t\t    units",
-        "Computer Organization\nCPU - central processing unit\n Where decisions are made, computations are performed, and input/output requests are delegated\nMemory\n Stores information being processed by the CPU\nInput devices\n Allows people to supply information to computers\nOutput devices\n Allows people to receive information from computers",
-        "Computer Organization\nCPU - central processing unit\n Where decisions are made, computations are performed, and input/output requests are delegated\nMemory\n Stores information being processed by the CPU\nInput devices\n Allows people to supply information to computers\nOutput devices\n Allows people to receive information from computers"
-      ],
-      "response": "An operating system provides a file system for managing directories, folders, and files, including commands to sort, delete, and copy them. It also offers the ability to perform input and output operations on a variety of devices.",
-      "reference": "An operating system controls and manages computing resources, offering important services for managing both files and devices. For file management, it provides a file system to organize directories, folders, and files, alongside commands to manipulate them (e.g., sort, delete, copy). Additionally, it offers the ability to perform input and output on a variety of devices.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.8206544269434302,
+      "answer_relevancy": 0.6801523527927089,
       "context_recall": 1.0,
       "context_precision": 0.9999999999
+    },
+    {
+      "user_input": "Who developed Boolean algebra and what are its three key logical operators",
+      "retrieved_contexts": [
+        "Boolean Algebra\nLogical expressions have the one of two values - true or false\n A rectangle has three sides\n The instructor has a pleasant smile\nThe branch of mathematics is called Boolean algebra\n Developed by the British mathematician George Boole in the 19th century\nThree key logical operators\n And\n Or\n Not",
+        "Boolean Algebra\nLogical expressions have the one of two values - true or false\n A rectangle has three sides\n The instructor has a pleasant smile\nThe branch of mathematics is called Boolean algebra\n Developed by the British mathematician George Boole in the 19th century\nThree key logical operators\n And\n Or\n Not\nTruth tables\n Lists all combinations of operand values and the result of the operation for each combination\nExample\nP\tQ\t     P or Q\nFalse\t False\t\tFalse\nFalse\t True\t\tTrue\nTrue\t False\t\tTrue\nTrue\t True\t\tTrue\nFalse\t True\nTrue\t False\nFalse\t False\t\tFalse\t\tTrue\nFalse\t True\t\tFalse\t\tTrue\nTrue\t False\t\tFalse\t\tTrue\nTrue\t True\t\tTrue\t\tFalse",
+        "Boolean Algebra\nFalse\t False\t\tFalse\t\tTrue\nFalse\t True\t\tFalse\t\tTrue\nTrue\t False\t\tFalse\t\tTrue\nTrue\t True\t\tTrue\t\tFalse",
+        "Boolean Algebra\nFalse\t True\nTrue\t False",
+        "Boolean Algebra\nP\tQ\t     P or Q\nFalse\t False\t\tFalse\nFalse\t True\t\tTrue\nTrue\t False\t\tTrue\nTrue\t True\t\tTrue"
+      ],
+      "response": "Boolean algebra was developed by the British mathematician George Boole in the 19th century. Its three key logical operators are And, Or, and Not.",
+      "reference": "Boolean algebra was developed by the British mathematician George Boole in the 19th century. Its three key logical operators are And, Or, and Not.",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9807045066891691,
+      "context_recall": 1.0,
+      "context_precision": 0.99999999995
+    },
+    {
+      "user_input": "What determines which specific function is invoked when a virtual function is called through a base class pointer?",
+      "retrieved_contexts": [
+        "Virtual Functions\nCan be invoked via either a dereferenced pointer or a reference object\n Actual function to be invoked is determined from the type of object that is stored at the memory location being accessed\nDefinition of the derived function overrides the definition of the base class version\nDetermination of which virtual function to use cannot always be made at compile time\n Decision is deferred by the compiler to run time\n Introduces overhead",
+        "Virtual Functions\nFor virtual functions\n It is the type of object to which the pointer refers that determines which function is invoked\nTriangleShape T(W, P, Red, 1);\nRectangleShape R(W,P, Yellow, 3, 2);\nCircleShape C(W, P, Yellow, 4);\nShape *A[3] = {&T, &R, &C};\nfor (int i = 0; i < 3; ++i) {\nA[i]->Draw();\n}\nFor virtual functions\n It is the type of object to which the pointer refers that determines which function is invoked\nTriangleShape T(W, P, Red, 1);\nRectangleShape R(W,P, Yellow, 3, 2);\nCircleShape C(W, P, Yellow, 4);\nShape *A[3] = {&T, &R, &C};\nfor (int i = 0; i < 3; ++i) {\nA[i]->Draw();\n}\nFor virtual functions\n It is the type of object to which the pointer refers that determines which function is invoked\nTriangleShape T(W, P, Red, 1);\nRectangleShape R(W,P, Yellow, 3, 2);\nCircleShape C(W, P, Yellow, 4);\nShape *A[3] = {&T, &R, &C};\nfor (int i = 0; i < 3; ++i) {\nA[i]->Draw();\n}\nCan be invoked via either a dereferenced pointer or a reference object\n Actual function to be invoked is determined from the type of object that is stored at the memory location being accessed\nDefinition of the derived function overrides the definition of the base class version\nDetermination of which virtual function to use cannot always be made at compile time\n Decision is deferred by the compiler to run time\n Introduces overhead",
+        "Virtual Functions\nFor virtual functions\n It is the type of object to which the pointer refers that determines which function is invoked\nTriangleShape T(W, P, Red, 1);\nRectangleShape R(W,P, Yellow, 3, 2);\nCircleShape C(W, P, Yellow, 4);\nShape *A[3] = {&T, &R, &C};\nfor (int i = 0; i < 3; ++i) {\nA[i]->Draw();\n}",
+        "Virtual Functions\nFor virtual functions\n It is the type of object to which the pointer refers that determines which function is invoked\nTriangleShape T(W, P, Red, 1);\nRectangleShape R(W,P, Yellow, 3, 2);\nCircleShape C(W, P, Yellow, 4);\nShape *A[3] = {&T, &R, &C};\nfor (int i = 0; i < 3; ++i) {\nA[i]->Draw();\n}",
+        "Virtual Functions\nFor virtual functions\n It is the type of object to which the pointer refers that determines which function is invoked\nTriangleShape T(W, P, Red, 1);\nRectangleShape R(W,P, Yellow, 3, 2);\nCircleShape C(W, P, Yellow, 4);\nShape *A[3] = {&T, &R, &C};\nfor (int i = 0; i < 3; ++i) {\nA[i]->Draw();\n}"
+      ],
+      "response": "When a virtual function is called through a base class pointer, the actual function invoked is determined by the type of object stored at the memory location being accessed. Specifically, it is the type of object to which the pointer refers that determines which function is invoked. This decision is deferred by the compiler to run time, as it cannot always be made at compile time.",
+      "reference": "For virtual functions called through a base class pointer, the specific function invoked is determined by the type of object to which the pointer refers. For instance, if an array of base class pointers refers to objects of various derived types, calling a virtual function through these pointers will invoke the version specific to each object's actual type.",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9840322091313265,
+      "context_recall": 1.0,
+      "context_precision": 0.99999999998
+    },
+    {
+      "user_input": "How many blue squares will be drawn by this code?",
+      "retrieved_contexts": [
+        "Displaying a Diagonal\nSimpleWindow W(\"One diagonal\", 5.5, 2.25);\nW.Open();\nfor (int j = 1;  j <= 3; ++j) {\nfloat x = j * 0.75 + 0.25;\nfloat y = j * 0.75 - 0.25;\nfloat Side = 0.4;\nRectangleShape S(W, x, y, Blue, Side, Side);\nS.Draw();\n}",
+        "Displaying Three Diagonals\nSimpleWindow W(\"Three diagonals\", 6.5, 2.25);\nW.Open();\nfor (int i = 1; i <= 3; ++i) {\n for (int j = 1;  j <= 3; ++j) {\n float x = i - 1 + j * 0.75 + 0.25;\n float y = j * 0.75 - 0.25;\n float Side = 0.4;\n RectangleShape S(W, x, y, Blue, Side, Side);\n S.Draw();\n }",
+        "2.1 The code\n2.1 The code\n 1\n // A Hello World program\n 2\n #include <iostream >\n 3\n 4\n int main () {\n 5\n std:: cout << \"Hello , world !\\n\";\n 6\n 7\n return 0;\n 8\n }",
+        "Another EzWindows Program\n#include <iostream>\nusing namespace std;\n#include \"rect.h\"\nint ApiMain()  {\nSimpleWindow W(\"Rectangular Fun\", 12, 12);\nW.Open();\nRectangleShape R(W, 5.0, 2.5, Blue, 1, 2);\nR.Draw();\ncout << \"Enter a character to exit\" << endl;\nchar Response;\ncin >> Response;\nreturn 0;\n}",
+        "\u2022 At B , variables marked in blue are in scope\n\u2022 At B , variables marked in blue are in scope\n int numCalls = 0;\n int raiseToPower( int base, int exponent) { numCalls = numCalls + 1;\n int result = 1;\n for ( int i = 0; i < exponent; i = i + 1) { result = result * base;\n }\n // A\n return result;\n int max( int num1 , int num2 ) { numCalls = numCalls + 1;\n int result ;\n if (num1 > num2) { result = num1;\n else {\n result = num2;\n // B\n Global scope raiseToPower function scope max function scope int base int exponent int result int num1 int num2 int result int numCalls B"
+      ],
+      "response": "The \"Displaying a Diagonal\" code draws 3 blue squares. The \"Displaying Three Diagonals\" code draws 9 blue squares. The \"Another EzWindows Program\" draws a blue rectangle with dimensions 1x2, which is not a square. Therefore, a total of 12 blue squares will be drawn.",
+      "reference": "The code uses nested `for` loops, with the outer loop iterating 3 times (for `i` from 1 to 3) and the inner loop iterating 3 times (for `j` from 1 to 3) for each outer loop iteration. This results in `3 * 3 = 9` total iterations. Inside the innermost loop, a `RectangleShape` object `S` is constructed using `Blue` as its color and then drawn with `S.Draw()`, meaning 9 blue squares will be displayed.",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8291652084991008,
+      "context_recall": 1.0,
+      "context_precision": 0.49999999995
     },
     {
       "user_input": "What is the desired user experience when interacting with well-defined object representations?",
@@ -465,10 +417,26 @@
       ],
       "response": "The desired user experience is one where objects can be created and used intuitively. Users should not need to bother with unnecessary details, similar to how programming a microwave to make popcorn doesn't require a physics course.",
       "reference": "The desired user experience when interacting with well-defined object representations is one where objects can be created and used in an intuitive manner. Users should not have to bother with unnecessary details. For instance, programming a `Microwave` object to make popcorn should not require a physics course.",
-      "faithfulness": 0.8,
-      "answer_relevancy": 0.7811810203609862,
+      "faithfulness": 0.6,
+      "answer_relevancy": 0.7811810234234161,
       "context_recall": 1.0,
       "context_precision": 0.8333333332916666
+    },
+    {
+      "user_input": "What types of services does an operating system offer for managing files and devices?",
+      "retrieved_contexts": [
+        "Operating System\nExamples\n Windows\u00ae, UNIX\u00ae, Mac OS X\u00ae\nControls and manages the computing resources\nImportant services that an operating system provides\n File system\n Directories, folders, files\n Commands that allow for manipulation of the file system\n Sort, delete, copy\n Ability to perform input and output on a variety of devices\n Management of the running systems",
+        "Software\nApplication software\n Programs designed to perform specific tasks that are transparent to the user\nSystem software\n Programs that support the execution and development of other programs\n Two major types\n Operating systems\n Translation systems",
+        "Input and Output Devices\nAccessories that allow computer to perform specific tasks\n Receive information for processing\n Return the results of processing\n Store information\nCommon input and output devices\n Speakers\t\tMouse \t\t\tScanner\n Printer\t\tJoystick\t\t\tCD-ROM\n Keyboard\t\tMicrophone\t\tDVD\nSome devices are capable of both input and output\n Floppy drive\tHard drive\t\tMagnetic tape\n\t\t\t\t\t\t    units",
+        "Computer Organization\nCPU - central processing unit\n Where decisions are made, computations are performed, and input/output requests are delegated\nMemory\n Stores information being processed by the CPU\nInput devices\n Allows people to supply information to computers\nOutput devices\n Allows people to receive information from computers",
+        "Computer Organization\nCPU - central processing unit\n Where decisions are made, computations are performed, and input/output requests are delegated\nMemory\n Stores information being processed by the CPU\nInput devices\n Allows people to supply information to computers\nOutput devices\n Allows people to receive information from computers"
+      ],
+      "response": "An operating system provides a file system for managing directories, folders, and files, including commands to manipulate them like sort, delete, and copy. It also offers the ability to perform input and output operations on a variety of devices.",
+      "reference": "An operating system controls and manages computing resources, offering important services for managing both files and devices. For file management, it provides a file system to organize directories, folders, and files, alongside commands to manipulate them (e.g., sort, delete, copy). Additionally, it offers the ability to perform input and output on a variety of devices.",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8206544228211041,
+      "context_recall": 1.0,
+      "context_precision": 0.9999999999
     },
     {
       "user_input": "What are the specific steps for implementing a function to find the smallest element in an array?",
@@ -479,10 +447,10 @@
         "Necessary Information\nInformation to be maintained\n Array with values to be inspected for smallest value\n Number of values in array\n Index of current element being considered\n Smallest value so far",
         "Common Sorting Techniques\nSelection sort\n On ith iteration place the ith smallest element in the ith list location\nBubble sort\n Iteratively pass through the list and examining adjacent pairs of elements and if necessary swap them to put them in order. Repeat the process until no swaps are necessary"
       ],
-      "response": "To implement a function to find the smallest element in an array, first define a function that takes the array and its size as parameters. Inside the function, initialize a variable to hold the \"smallest value so far\" with the array's first element. Then, loop through the remaining elements of the array, comparing each to the \"smallest value so far\" and updating it if a smaller element is found. Finally, return the \"smallest value so far\" after the loop completes.",
+      "response": "To implement a function to find the smallest element in an array, first define a function that takes the array and its size as parameters and returns the smallest value. Initialize a variable for the smallest value found so far with the array's first element. Then, iterate through the remaining elements, updating the smallest value if a current element is smaller. Finally, return the smallest value seen.",
       "reference": "To implement a function that finds the smallest element, define it to take the array of values and its size as its two in parameters. Initialize the smallest value found so far with the array's first element. Iterate through the rest of the elements, and if any element is smaller than the current smallest value, update the smallest value accordingly. The function then returns this final smallest value seen.",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.9567322541644426,
+      "answer_relevancy": 0.956732239454634,
       "context_recall": 1.0,
       "context_precision": 0.999999999975
     },
@@ -495,44 +463,12 @@
         "Auxiliary Extraction Operator\n// extracting a Rational\nistream& operator>>(istream &sin, Rational &r) {\nr.Extract(sin);\nreturn sin;\n}\nWhy a reference return?\nWe can do either\nt.Extract(cin);         \t // unnatural\ncin >> t;\t\t\t\t // natural",
         "Rational Public Section\npublic:\n// default constructor\nRational();\n// specific constructor\nRational(int numer, int denom = 1);\n// arithmetic facilitators\nRational Add(const Rational &r) const;\nRational Multiply(const Rational &r) const;\n// stream facilitators\nvoid Insert(ostream &sout) const;\nvoid Extract(istream &sin);"
       ],
-      "response": "The advantage of making `Rational` objects work with operators like `+`, `*`, `<<`, and `>>` is to provide a more natural and intuitive syntax. This allows for expressions like `cin >> r` and `r + s`, which have a \"natural look\" compared to using member functions such as `r.Extract(cin)` or `r.Add(s)`.",
+      "response": "The advantage of making `Rational` objects work with operators like `+` and `*`, and I/O streams like `cin` and `cout`, is to provide a more natural and intuitive syntax. This allows for expressions such as `cin >> r` and `cout << t`, which are more readable than using member functions like `r.Extract(cin)` or `t.Insert(cout)`. It makes working with `Rational` objects feel similar to working with built-in types.",
       "reference": "The advantage of making `Rational` objects work with operators like `+` and `*`, and I/O streams like `cin` and `cout`, is that it provides a natural look to their usage. This syntax is analogous to how fundamental-type arithmetic objects behave. Consequently, manipulating `Rational` objects becomes intuitive and familiar, similar to working with built-in types such as integers or floating-point numbers.",
-      "faithfulness": 0.625,
-      "answer_relevancy": 0.9240156928918103,
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9590834641779894,
       "context_recall": 1.0,
       "context_precision": 0.4166666666458333
-    },
-    {
-      "user_input": "What is the difference in behavior between using `[]` and `.at()` when accessing a `std::vector` out of bounds?",
-      "retrieved_contexts": [
-        "Example\nvector<int> A(4, 0);        // A: 0 0 0 0\nfor (int i = 0; i <= A.size(); ++i) {\nA[i] = 3;\n}                           // A: 3 3 3 3 ??\nA.at(i) = 3;\n}                           // program terminates\n// when i is 4",
-        "Reconsider A\nWhere\n vector<string> A;\nIs set in the following manner\n A[0]: \"A\"\n A[1]: \"list\"\n A[2]: \"of\"\n A[3]: \"words\"\n A[4]: \"to\"\n A[5]: \"be\"\n A[6]: \"read.\"",
-        "Vector Interface\niterator begin()\n Returns an iterator that points to the first element of the vector\niterator end()\n Returns an iterator that points to immediately beyond the last element of the vector\n vector<int> C(4);  // C: 0 0 0 0\nC[0] = 0; C[1] = 1; C[2] = 2; C[3] = 3;\nvector<int>::iterator p = C.begin();\nvector<int>::iterator q = C.end();",
-        "Vector Interface\nreference at(size_type i)\n If i is in bounds, returns a reference to element i of the vector; otherwise, throws an exception\nconst_reference at(size_type i) const\n If i is in bounds, returns a constant reference to element i of the vector; otherwise, throws an exception",
-        "Proper << Implementation\nostream& operator<<(ostream &sout,\nconst IntList &A){\nsout << \"[ \";\nfor (int i = 0; i < A.size(); ++i) {\nsout << A[i] << \" \";\n}\nsout << \"]\";\nreturn sout;"
-      ],
-      "response": "When accessing a `std::vector` out of bounds, `A.at(i)` throws an exception, which causes the program to terminate. In contrast, using `A[i]` out of bounds does not explicitly state termination, but the example indicates an uncertain outcome (`??`).",
-      "reference": "When accessing a `std::vector` out of bounds, using the `[]` operator results in `??`, indicating an unspecified outcome. In contrast, the `.at()` method explicitly causes the program to terminate when an index beyond the vector's valid range is accessed. For instance, if an index `i` is equal to the vector's size, `A.at(i)` will lead to program termination.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.926528940264037,
-      "context_recall": 1.0,
-      "context_precision": 0.9999999999
-    },
-    {
-      "user_input": "How does abstraction help define a specific view of an object?",
-      "retrieved_contexts": [
-        "Abstraction\nExtract the relevant object properties while ignoring inessentials\n Defines a view of the object\nExample - car\n Car dealer views a car from selling features standpoint\n Price, length of warranty, color, \u2026\n Mechanic views a car from systems maintenance standpoint\n Size of the oil filter, type of spark plugs, \u2026",
-        "Abstract Data Type\nWell-defined and complete data abstraction using the information-hiding principle\nConsider\n Rational a(1,2);    // a = 1/2\n Rational b(2,3);    // b = 2/3\n cout << a << \" + \" << b << \" = \" << a + b;\n Rational s;         // s = 0/1\n Rational t;         // t = 0/1\n cin >> s >> t;\n cout << s << \" * \" << t << \" = \" << s * t;\nObservation\n Natural look that is analogous to fundamental-type arithmetic objects",
-        "The Class Construct\nDefining objects with attributes and behavior",
-        "Our Goal\nWell-defined representations that allow objects to be created and used in an intuitive manner\n User should not have to bother with unnecessary details\nExample\n programming a microwave to make popcorn should not require a physics course",
-        "Wouldn\u2019t It Be Nice\nBe able to create specialized program objects without starting from scratch\n Blinking rectangles\n Moving bitmaps\n Arbitrary precision numbers\nInheritance is the object-oriented programming mechanism for specialization"
-      ],
-      "response": "Abstraction helps define a specific view of an object by extracting only its relevant properties while ignoring inessential details. This allows for different perspectives, such as a car dealer viewing a car from a selling features standpoint (price, color) or a mechanic viewing it from a systems maintenance standpoint (oil filter size, spark plug type). Each view focuses on the properties pertinent to its specific purpose.",
-      "reference": "Abstraction helps define a specific view of an object by extracting only its relevant properties while ignoring inessential ones. This process allows different stakeholders to focus on the aspects of an object that are pertinent to their specific needs. For example, a car dealer abstracts a car by its selling features like price or color, whereas a mechanic views the same car based on systems maintenance properties such as oil filter size. Each view is a specific abstraction tailored to a particular purpose.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.9787600457702245,
-      "context_recall": 1.0,
-      "context_precision": 0.9999999999
     },
     {
       "user_input": "What does the integer return value of the function registered with `SetTimerCallback` indicate?",
@@ -541,14 +477,30 @@
         "Timer Functions\nvoid SimpleWindow::SetTimerCallback(\u000b   TimerTickCallbackFunction f)\n Registers a callback for a timer tick\n Function f() will be called when a timer tick occurs.\n The function f() must be declared to take no parameters, and it should return an int\n The return value of f() indicates whether the event was handled successfully\n A value of 1 is to indicate success\n A value of 0 is to indicate an error occurred\nint SimpleWindow::StartTimer(int Interval)\n Starts timer running\n Parameter Interval is the number of milliseconds between timer events\n The return value indicates whether the timer was successfully started\n A return value of 1 indicates success\n A return value of 0 indicates the timer could not be set up\nvoid SimpleWindow::StopTimer()\n Turns timer off",
         "Timer Functions\nint SimpleWindow::StartTimer(int Interval)\n Starts timer running\n Parameter Interval is the number of milliseconds between timer events\n The return value indicates whether the timer was successfully started\n A return value of 1 indicates success\n A return value of 0 indicates the timer could not be set up\nvoid SimpleWindow::StopTimer()\n Turns timer off",
         "Vector Interface\nreference back()\n Returns a reference to the last element of the vector\nconst_reference back() const\n Returns a constant reference to the last element of the vector\nvector<int> C(4,1);  // C: 1 1 1 1\nint& val = C.back();\nval = 5;             // C: 1 1 1 5",
-        "Using\nvoid Swap(int a, int b) {\nint Temp = a;\na = b;\nb = Temp;\nreturn;\n}\nvoid Swap(int &a, int &b) {\nint Temp = a;\na = b;\nb = Temp;\nreturn;\n}\nint Factorial(int n) {\n if (n == 0) {\n return 1;\n }\n else {\n return n * Factorial(n-1);\nC++ function mirrors the mathematical factorial  definition\n If the value of n is 0, the value 1 is returned.\n Otherwise, the product of n and Factorial(n-1) is returned."
+        "Returning a value\nReturning a value\n \u2022 Up to one value may be returned; it must be the same type as the return type. int foo() {\n return \"hello\" ;\n // error\n }\n char * foo() {\n // ok\nReturning a value\n \u2022 Up to one value may be returned; it must be the same type as the return type. \u2022 If no values are returned, give the function a void return type void printNumber( int num) { cout << \"number is \" << num << endl;\n }\n int main() { printNumber(4);\n // number is 4\n return 0;\nReturning a value\n \u2022 Up to one value may be returned; it must be the same type as the return type. \u2022 If no values are returned, give the function a void return type \u2013 Note that you cannot declare a variable of type void int main() { void x;\n // ERROR\n return 0;\n }\nReturning a value\n \u2022 Return statements don\u2019t necessarily need to be at the end. \u2022 Function returns as soon as a return statement is executed. void printNumberIfEven( int num) { if (num % 2 == 1) { cout << \"odd number\" << endl;\n return ;\n }\n cout << \" even number;\n number is \" << num << endl;\n int main() { int x = 4;\n printNumberIfEven(x);\n //\n even number;\n number is 3 int y = 5;\n printNumberIfEven(y);\n // odd number"
       ],
-      "response": "The integer return value of the function registered with `SetTimerCallback` indicates whether the timer event was handled successfully. A return value of 1 signifies success, while a value of 0 indicates that an error occurred.",
+      "response": "The integer return value of the function registered with `SetTimerCallback` indicates whether the timer tick event was handled successfully. A return value of 1 signifies success, while a value of 0 indicates that an error occurred.",
       "reference": "The integer return value of the function registered with `SetTimerCallback` indicates whether the timer event was handled successfully. A return value of 1 signifies success, while a value of 0 indicates that an error occurred.",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.9840027860578889,
+      "answer_relevancy": 0.9999999999991305,
       "context_recall": 1.0,
       "context_precision": 0.99999999995
+    },
+    {
+      "user_input": "What is the complete output produced by this C++ code?",
+      "retrieved_contexts": [
+        "Execution Trace\nfor (int i = 0; i < 3; ++i) {\u000bcout << \"i is \" << i << endl;\n}\ncout << \"all done\" << endl;",
+        "Execution Trace\nfor (int i = 0; i < 3; ++i) {\u000bcout << \"i is \" << i << endl;\n}\ncout << \"all done\" << endl;",
+        "Execution Trace\nfor (int i = 0; i < 3; ++i) {\u000bcout << \"i is \" << i << endl;\n}\ncout << \"all done\" << endl;",
+        "2.1 The code\n2.1 The code\n 1\n // A Hello World program\n 2\n #include <iostream >\n 3\n 4\n int main () {\n 5\n std:: cout << \"Hello , world !\\n\";\n 6\n 7\n return 0;\n 8\n }",
+        "Execution Trace\nfor (int i = 0; i < 3; ++i) {\u000bcout << \"i is \" << i << endl;\n}\ncout << \"all done\" << endl;\ni is 0"
+      ],
+      "response": "The C++ code iterates three times, printing the value of `i` in each iteration. It first prints \"i is 0\", then \"i is 1\", and finally \"i is 2\", each on a new line. After the loop finishes, it prints \"all done\" on a new line.",
+      "reference": "The complete output produced by the C++ code is:\n```\ni is 0\ni is 1\ni is 2\n```\nThis output results from the `for` loop iterating three times. In each iteration, the current value of `i` (0, 1, then 2) is printed, preceded by \"i is \" and followed by a newline character.",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8872017532595106,
+      "context_recall": 1.0,
+      "context_precision": 0.94999999997625
     },
     {
       "user_input": "How is the `ParameterList` used to initialize the object created by `new SomeType(ParameterList)`?",
@@ -562,41 +514,89 @@
       "response": "The `ParameterList` provides the parameters to the `SomeType` constructor. This constructor is then used to initialize the newly acquired memory for the object.",
       "reference": "When `new SomeType(ParameterList)` is used, the newly acquired memory for the `SomeType` object is initialized by a `SomeType` constructor. The `ParameterList` directly provides the parameters to this constructor.",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.7014027182362831,
+      "answer_relevancy": 0.830674539135213,
       "context_recall": 1.0,
-      "context_precision": 0.6999999999766667
+      "context_precision": 0.699999999965
+    },
+    {
+      "user_input": "How does abstraction help define a specific view of an object?",
+      "retrieved_contexts": [
+        "Abstraction\nExtract the relevant object properties while ignoring inessentials\n Defines a view of the object\nExample - car\n Car dealer views a car from selling features standpoint\n Price, length of warranty, color, \u2026\n Mechanic views a car from systems maintenance standpoint\n Size of the oil filter, type of spark plugs, \u2026",
+        "Abstract Data Type\nWell-defined and complete data abstraction using the information-hiding principle\nConsider\n Rational a(1,2);    // a = 1/2\n Rational b(2,3);    // b = 2/3\n cout << a << \" + \" << b << \" = \" << a + b;\n Rational s;         // s = 0/1\n Rational t;         // t = 0/1\n cin >> s >> t;\n cout << s << \" * \" << t << \" = \" << s * t;\nObservation\n Natural look that is analogous to fundamental-type arithmetic objects",
+        "The Class Construct\nDefining objects with attributes and behavior",
+        "Our Goal\nWell-defined representations that allow objects to be created and used in an intuitive manner\n User should not have to bother with unnecessary details\nExample\n programming a microwave to make popcorn should not require a physics course",
+        "Wouldn\u2019t It Be Nice\nBe able to create specialized program objects without starting from scratch\n Blinking rectangles\n Moving bitmaps\n Arbitrary precision numbers\nInheritance is the object-oriented programming mechanism for specialization"
+      ],
+      "response": "Abstraction helps define a specific view of an object by extracting only its relevant properties while ignoring inessential details. This allows for different perspectives, such as a car dealer viewing a car from a selling features standpoint (price, color) or a mechanic viewing it from a systems maintenance standpoint (oil filter size, spark plug type). Each view focuses on the properties pertinent to its specific purpose.",
+      "reference": "Abstraction helps define a specific view of an object by extracting only its relevant properties while ignoring inessential ones. This process allows different stakeholders to focus on the aspects of an object that are pertinent to their specific needs. For example, a car dealer abstracts a car by its selling features like price or color, whereas a mechanic views the same car based on systems maintenance properties such as oil filter size. Each view is a specific abstraction tailored to a particular purpose.",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9858399965193559,
+      "context_recall": 1.0,
+      "context_precision": 0.7499999999625
+    },
+    {
+      "user_input": "What is the difference in behavior between using `[]` and `.at()` when accessing a `std::vector` out of bounds?",
+      "retrieved_contexts": [
+        "Example\nvector<int> A(4, 0);        // A: 0 0 0 0\nfor (int i = 0; i <= A.size(); ++i) {\nA[i] = 3;\n}                           // A: 3 3 3 3 ??\nA.at(i) = 3;\n}                           // program terminates\n// when i is 4",
+        "Reconsider A\nWhere\n vector<string> A;\nIs set in the following manner\n A[0]: \"A\"\n A[1]: \"list\"\n A[2]: \"of\"\n A[3]: \"words\"\n A[4]: \"to\"\n A[5]: \"be\"\n A[6]: \"read.\"",
+        "Vector Interface\niterator begin()\n Returns an iterator that points to the first element of the vector\niterator end()\n Returns an iterator that points to immediately beyond the last element of the vector\n vector<int> C(4);  // C: 0 0 0 0\nC[0] = 0; C[1] = 1; C[2] = 2; C[3] = 3;\nvector<int>::iterator p = C.begin();\nvector<int>::iterator q = C.end();",
+        ":: indicates which class\u2019 method is being implemented\n:: indicates which class\u2019 method is being implemented\n #include \"vector.h\" // vector.cpp - method implementation\n void Point::offset ( double offsetX, double offsetY) { x += offsetX; y += offsetY;\n }\n void Point::print () { cout << \"(\" << x << \",\" << y << \")\" ;\n void Vector::offset ( double offsetX, double offsetY) { start.offset(offsetX, offsetY);\n end.offset(offsetX, offsetY);\n void Vector::print () { start.print();\n cout << \" -> \" ;\n end.print();\n cout << endl;",
+        "Vector Interface\nreference at(size_type i)\n If i is in bounds, returns a reference to element i of the vector; otherwise, throws an exception\nconst_reference at(size_type i) const\n If i is in bounds, returns a constant reference to element i of the vector; otherwise, throws an exception"
+      ],
+      "response": "When accessing a `std::vector` out of bounds, `.at()` throws an exception, which causes the program to terminate. The provided context indicates that `[]` access out of bounds is problematic (`??`), but does not explicitly describe its specific behavior.",
+      "reference": "When accessing a `std::vector` out of bounds, using the `[]` operator results in `??`, indicating an unspecified outcome. In contrast, the `.at()` method explicitly causes the program to terminate when an index beyond the vector's valid range is accessed. For instance, if an index `i` is equal to the vector's size, `A.at(i)` will lead to program termination.",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.0,
+      "context_recall": 1.0,
+      "context_precision": 0.9999999999
     },
     {
       "user_input": "If library header files don't contain function definitions, how does my program find and use the actual code?",
       "retrieved_contexts": [
-        "Library Header Files\nTypically do not contain function definitions\n Definitions are in source files\n Access to compiled versions of source files provided by a linker",
+        "\u2022 Library user only needs to know the function prototypes (in the header file), not the implementation source code (in the .cpp file) \u2013 The Linker (part of the compiler) takes care of locating the implementation of functions in the .dll file at compile time\n\u2022 Library user only needs to know the function prototypes (in the header file), not the implementation source code (in the .cpp file) \u2013 The Linker (part of the compiler) takes care of locating the implementation of functions in the .dll file at compile time\n myLib.dll // libraryUser.cpp \u2013 some other guy\u2019s code\n #include \"myLib.h\" double fourthRoot( double num) { return squareRoot(squareRoot(num));\n }\n // myLib.h \u2013 header\n // contains prototypes\n double squareRoot( double num);",
         "Library Header Files\nTypically contains\n Function prototypes\n Interface description\n Class definitions\nSometimes contains\n Object definitions\n Example: cout and cin in iostream\nTypically do not contain function definitions\n Definitions are in source files\n Access to compiled versions of source files provided by a linker",
-        "Library Header Files\nTypically contains\n Function prototypes\n Interface description\n Class definitions\nSometimes contains\n Object definitions\n Example: cout and cin in iostream",
+        "\u2022 Function prototypes are generally put into separate header files\n\u2022 Function prototypes are generally put into separate header files\n \u2013 Separates specification of the function from its implementation // myLib.h - header\n // contains prototypes\n int square( int );\n int cube ( int );\n // myLib.cpp - implementation\n #include \"myLib.h\" int cube( int x) {\n return x*square(x);\n }\n int square( int x) {\n return x*x;",
         "Nonfundamental Types\nTo access a library use a preprocessor directive to add its definitions to your program file\n #include <string>\nThe using statement makes syntax less clumsy\n Without it\n std::string s = \"Sharp\";\n std::string t = \"Spiffy\";\n With it\n using namespace std; // std contains string\n string s = \"Sharp\";\n string t = \"Spiffy\";",
-        "Functions\nPrevious examples\n Programmer-defined functions\n main()\n ApiMain()\n Library-defined functions\n cin.get()\n string member functions size()\n RectangleShape member function Draw()\n SimpleWindow member function Open()\nAdvice\n Don\u2019t reinvent the wheel! There are lots of libraries out there"
+        "Libraries\nLibraries\n \u2022 Libraries are generally distributed as the header file containing the prototypes, and a binary .dll/.so file containing the (compiled) implementation \u2013 Don\u2019t need to share your .cpp code // myLib.h \u2013 header\n // contains prototypes\n double squareRoot( double num);\n myLib.dll"
       ],
-      "response": "Library header files typically do not contain function definitions; these definitions are instead located in source files. Your program finds and uses the actual code because a linker provides access to the compiled versions of these source files. This allows your program to utilize the library's functions even though their definitions aren't directly in the header.",
+      "response": "While library header files provide function prototypes, the actual function definitions are located in separate source files. These source files are compiled into binary files, such as .dlls. The Linker, a component of the compiler, is responsible for locating these compiled implementations in the .dll file at compile time and connecting them to your program.",
       "reference": "Library header files typically declare functions but do not contain their definitions. Instead, the actual function definitions are located in separate source files. Your program finds and uses this code because the linker provides access to the compiled versions of these library source files, integrating them into your executable.",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.8926149284752543,
+      "answer_relevancy": 0.7835367116712609,
       "context_recall": 1.0,
-      "context_precision": 0.99999999995
+      "context_precision": 0.8666666666377778
     },
     {
-      "user_input": "Why is the `Shape` class constructor body empty, even though it takes parameters and initializes members?",
+      "user_input": "What kind of member function is used to change an attribute's value?",
       "retrieved_contexts": [
-        "A Simple RectangleShape Class\nConsider a simpler version of the RectangleShape than what is defined in rect.h\nGiving the class definition not the implementation\nThe definition in rect.h uses inheritance and member functions with default parameters\n If you are wondering what is missing\n Default constructor parameters\n Member function\n Erase()\n Inherited member functions\n HasBorder(), SetBorder(),  and ClearBorder()",
-        "Member Functions\nConstructors\n Member functions that initialize an object during its definition\n RectangleShape R(W, x, y, c, w, h);\n Factoid\n Constructors do not have a type\n Considered superfluous",
-        "Basic Shapes",
-        "A Shape Abstract Base Class\nclass Shape : public WindowObject {\npublic:\nShape(SimpleWindow &w, const Position &p,\nconst color &c = Red);\ncolor GetColor() const;\nvoid SetColor(const color &c);\nvirtual void Draw() = 0; // pure virtual\n// function!\nprivate:\ncolor Color;\n};",
-        "Shapes\u000bHierarchy"
+        "Member Functions\nMutators\n Changes the value of an attribute\n Example\n RectangleShapes have a mutator SetColor()\n R.SetColor(Black);",
+        "Member Functions\nProvide a controlled interface to data members and object access and manipulation\n Create objects of the class\n Inspect, mutate, and manipulate object of the class\n Can be used to keep data members in a correct state\n SetSize()\n SetColor()\n Draw()\nConstructors\n Member functions that initialize an object during its definition\n RectangleShape R(W, x, y, c, w, h);\n Factoid\n Constructors do not have a type\n Considered superfluous\nInspectors\n Member functions that act as a messenger that returns the value of an attribute\n Example\n RectangleShapes have an inspector GetColor()\n color CurrColor = R.GetColor();\nMutators\n Changes the value of an attribute\n Example\n RectangleShapes have a mutator SetColor()\n R.SetColor(Black);\nFacilitators\n Causes an object to perform some action or service\n Example\n RectangleShapes have a facilitator Draw()\n R.Draw();",
+        "Member Functions\nProvide a controlled interface to data members and object access and manipulation\n Create objects of the class\n Inspect, mutate, and manipulate object of the class\n Can be used to keep data members in a correct state\n SetSize()\n SetColor()\n Draw()",
+        "Member Functions\nInspectors\n Member functions that act as a messenger that returns the value of an attribute\n Example\n RectangleShapes have an inspector GetColor()\n color CurrColor = R.GetColor();",
+        "Remember\nEvery class object\n Has its own data members\n Has its own member functions\n When a member function accesses a data member\n By default the function accesses the data member of the object to which it belongs!\n No special notation needed\nAuxiliary functions\n Are not class members\n To access a public member of an object, an auxiliary function must use the dot operator on the desired object\n object.member"
       ],
-      "response": "The provided context only shows the declaration of the `Shape` class constructor: `Shape(SimpleWindow &w, const Position &p, const color &c = Red);`. It does not include the constructor's definition or its body. Therefore, based solely on this context, it is not possible to determine if the constructor body is empty.",
-      "reference": "The `Shape` class constructor body is empty because all necessary initialization for its base class (`WindowObject`) and its own members (like `Color`) is performed in the constructor's initializer list. Specifically, `WindowObject(w, p)` initializes the base class and `Color(c)` initializes the `Color` member. Since all required setup is handled there, no additional code is needed within the constructor's `{}` block.",
-      "faithfulness": 0.8,
-      "answer_relevancy": 0.0,
-      "context_recall": 0.0,
-      "context_precision": 0.249999999975
+      "response": "Mutators are the kind of member function used to change the value of an attribute. For example, a `SetColor()` function on a `RectangleShape` object would be a mutator.",
+      "reference": "The kind of member function used to change an attribute's value is called a mutator. Mutators explicitly change the value of an attribute. For example, a `RectangleShape` object has a mutator named `SetColor()`, which you might call as `R.SetColor(Black);`.",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5144939121038321,
+      "context_recall": 1.0,
+      "context_precision": 0.9999999999666667
+    },
+    {
+      "user_input": "What are the steps to find the smallest value in an array?",
+      "retrieved_contexts": [
+        "Passing An Array\nint ListMinimum(const int A[], int asize) {\n assert(asize >= 1);\n int SmallestValueSoFar = A[0];\n for (int i = 1; i < asize; ++i) {\n if (A[i] < SmallestValueSoFar ) {\n SmallestValueSoFar = A[i];\n }\n return SmallestValueSoFar ;",
+        "A More Detailed Design\nSolution\n Function that takes array of values and array size as its two in parameters; returns smallest value seen as its value\n Initialize smallest value so far to first element\n For each of the other elements in the array in turn\n If it is smaller than the smallest value so far, update the value of the smallest value so far to be the current element\n Return smallest value seen as value of function",
+        "Necessary Information\nInformation to be maintained\n Array with values to be inspected for smallest value\n Number of values in array\n Index of current element being considered\n Smallest value so far",
+        "Preliminary Design\nRealizations\n When looking for value with distinguishing characteristics, need a way of remembering best candidate found so far\n Make it a function -- likely to be used often\nDesign\n Search array looking for smallest value\n Use a loop to consider each element in turn\n If  current element is smallest so far, then update smallest value so far candidate\n When done examining all of the elements, the smallest value seen so far is the smallest value",
+        "Smallest Value\nProblem\n Find the smallest value in a list of integers\nInput\n A list  of integers and a value indicating the number of integers\nOutput\n Smallest value in the list\nNote\n List remains unchanged after finding the smallest value!"
+      ],
+      "response": "To find the smallest value in an array, first initialize a variable with the array's first element. Then, iterate through the remaining elements of the array. For each element, if it is smaller than the current smallest value, update the smallest value to that element. Finally, return the smallest value found after examining all elements.",
+      "reference": "To find the smallest value in an array, first establish a variable to remember the best candidate found so far. Then, use a loop to iterate through each element of the array. Within the loop, compare the current element to your remembered candidate; if the current element is smaller, update the candidate. After the loop has considered all elements, the remembered value will be the smallest in the array, and this logic is often encapsulated within a function for reuse.",
+      "faithfulness": NaN,
+      "answer_relevancy": 0.9632454840301371,
+      "context_recall": 1.0,
+      "context_precision": 0.9166666666361111
     },
     {
       "user_input": "How are the addition and multiplication operators implemented for the `Rational` class?",
@@ -615,36 +615,36 @@
       "context_precision": 0.9999999999
     },
     {
-      "user_input": "What are the steps to find the smallest value in an array?",
+      "user_input": "Why is the `Shape` class constructor body empty, even though it takes parameters and initializes members?",
       "retrieved_contexts": [
-        "Passing An Array\nint ListMinimum(const int A[], int asize) {\n assert(asize >= 1);\n int SmallestValueSoFar = A[0];\n for (int i = 1; i < asize; ++i) {\n if (A[i] < SmallestValueSoFar ) {\n SmallestValueSoFar = A[i];\n }\n return SmallestValueSoFar ;",
-        "A More Detailed Design\nSolution\n Function that takes array of values and array size as its two in parameters; returns smallest value seen as its value\n Initialize smallest value so far to first element\n For each of the other elements in the array in turn\n If it is smaller than the smallest value so far, update the value of the smallest value so far to be the current element\n Return smallest value seen as value of function",
-        "Necessary Information\nInformation to be maintained\n Array with values to be inspected for smallest value\n Number of values in array\n Index of current element being considered\n Smallest value so far",
-        "Preliminary Design\nRealizations\n When looking for value with distinguishing characteristics, need a way of remembering best candidate found so far\n Make it a function -- likely to be used often\nDesign\n Search array looking for smallest value\n Use a loop to consider each element in turn\n If  current element is smallest so far, then update smallest value so far candidate\n When done examining all of the elements, the smallest value seen so far is the smallest value",
-        "Smallest Value\nProblem\n Find the smallest value in a list of integers\nInput\n A list  of integers and a value indicating the number of integers\nOutput\n Smallest value in the list\nNote\n List remains unchanged after finding the smallest value!"
+        "A Simple RectangleShape Class\nConsider a simpler version of the RectangleShape than what is defined in rect.h\nGiving the class definition not the implementation\nThe definition in rect.h uses inheritance and member functions with default parameters\n If you are wondering what is missing\n Default constructor parameters\n Member function\n Erase()\n Inherited member functions\n HasBorder(), SetBorder(),  and ClearBorder()",
+        "Member Functions\nConstructors\n Member functions that initialize an object during its definition\n RectangleShape R(W, x, y, c, w, h);\n Factoid\n Constructors do not have a type\n Considered superfluous",
+        "Basic Shapes",
+        "A Shape Abstract Base Class\nclass Shape : public WindowObject {\npublic:\nShape(SimpleWindow &w, const Position &p,\nconst color &c = Red);\ncolor GetColor() const;\nvoid SetColor(const color &c);\nvirtual void Draw() = 0; // pure virtual\n// function!\nprivate:\ncolor Color;\n};",
+        "Shapes\u000bHierarchy"
       ],
-      "response": "To find the smallest value in an array, first initialize a variable with the array's first element. Then, iterate through the remaining elements of the array. For each element, if it is smaller than the current smallest value, update the smallest value to that element. Finally, return the smallest value found after examining all elements.",
-      "reference": "To find the smallest value in an array, first establish a variable to remember the best candidate found so far. Then, use a loop to iterate through each element of the array. Within the loop, compare the current element to your remembered candidate; if the current element is smaller, update the candidate. After the loop has considered all elements, the remembered value will be the smallest in the array, and this logic is often encapsulated within a function for reuse.",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.9632454742222866,
-      "context_recall": 1.0,
-      "context_precision": 0.9166666666361111
+      "response": "The provided context only gives the *declaration* of the `Shape` class constructor: `Shape(SimpleWindow &w, const Position &p, const color &c = Red);`. It does not include the *implementation* or body of this constructor. Therefore, based solely on the given information, it is not possible to determine if the constructor body is empty.",
+      "reference": "The `Shape` class constructor body is empty because all necessary initialization for its base class (`WindowObject`) and its own members (like `Color`) is performed in the constructor's initializer list. Specifically, `WindowObject(w, p)` initializes the base class and `Color(c)` initializes the `Color` member. Since all required setup is handled there, no additional code is needed within the constructor's `{}` block.",
+      "faithfulness": 0.75,
+      "answer_relevancy": 0.0,
+      "context_recall": 0.0,
+      "context_precision": 0.0
     },
     {
-      "user_input": "What kind of member function is used to change an attribute's value?",
+      "user_input": "What allows this `operator[]` to modify elements within the `Array`?",
       "retrieved_contexts": [
-        "Member Functions\nMutators\n Changes the value of an attribute\n Example\n RectangleShapes have a mutator SetColor()\n R.SetColor(Black);",
-        "Member Functions\nProvide a controlled interface to data members and object access and manipulation\n Create objects of the class\n Inspect, mutate, and manipulate object of the class\n Can be used to keep data members in a correct state\n SetSize()\n SetColor()\n Draw()\nConstructors\n Member functions that initialize an object during its definition\n RectangleShape R(W, x, y, c, w, h);\n Factoid\n Constructors do not have a type\n Considered superfluous\nInspectors\n Member functions that act as a messenger that returns the value of an attribute\n Example\n RectangleShapes have an inspector GetColor()\n color CurrColor = R.GetColor();\nMutators\n Changes the value of an attribute\n Example\n RectangleShapes have a mutator SetColor()\n R.SetColor(Black);\nFacilitators\n Causes an object to perform some action or service\n Example\n RectangleShapes have a facilitator Draw()\n R.Draw();",
-        "Member Functions\nProvide a controlled interface to data members and object access and manipulation\n Create objects of the class\n Inspect, mutate, and manipulate object of the class\n Can be used to keep data members in a correct state\n SetSize()\n SetColor()\n Draw()",
-        "Member Functions\nInspectors\n Member functions that act as a messenger that returns the value of an attribute\n Example\n RectangleShapes have an inspector GetColor()\n color CurrColor = R.GetColor();",
-        "Remember\nEvery class object\n Has its own data members\n Has its own member functions\n When a member function accesses a data member\n By default the function accesses the data member of the object to which it belongs!\n No special notation needed\nAuxiliary functions\n Are not class members\n To access a public member of an object, an auxiliary function must use the dot operator on the desired object\n object.member"
+        "Member Assignment Operator\nIntList& IntList::operator=(const IntList &A) {\nif (this != &A) {\ndelete [] Values;\nNumberValues = A.size();\nValues = new int [A.size()];\nassert(Values);\nfor (int i = 0; i < A.size(); ++i) {\nValues[i] = A[i];\n}\nreturn *this;",
+        "Array Element Manipulation\nConsider\n int i = 7, j = 2, k = 4;\n A[0] = 1;\n A[i] = 5;\n A[j] = A[i] + 3;\n A[j+1] = A[i] + A[0];\n A[A[j]] = 12;\n cin >> A[k]; // where next input value is 3\nConsider\n int i = 7, j = 2, k = 4;\n A[0] = 1;\n A[i] = 5;\n A[j] = A[i] + 3;\n A[j+1] = A[i] + A[0];\n A[A[j]] = 12;\n cin >> A[k]; // where next input value is 3\nConsider\n int i = 7, j = 2, k = 4;\n A[0] = 1;\n A[i] = 5;\n A[j] = A[i] + 3;\n A[j+1] = A[i] + A[0];\n A[A[j]] = 12;\n cin >> A[k]; // where next input value is 3\nConsider\n int i = 7, j = 2, k = 4;\n A[0] = 1;\n A[i] = 5;\n A[j] = A[i] + 3;\n A[j+1] = A[i] + A[0];\n A[A[j]] = 12;\n cin >> A[k]; // where next input value is 3\nConsider\n int i = 7, j = 2, k = 4;\n A[0] = 1;\n A[i] = 5;\n A[j] = A[i] + 3;\n A[j+1] = A[i] + A[0];\n A[A[j]] = 12;\n cin >> A[k]; // where next input value is 3\nConsider\n int i = 7, j = 2, k = 4;\n A[0] = 1;\n A[i] = 5;\n A[j] = A[i] + 3;\n A[j+1] = A[i] + A[0];\n A[A[j]] = 12;\n cin >> A[k]; // where next input value is 3\nConsider\n int i = 7, j = 2, k = 4;\n A[0] = 1;\n A[i] = 5;\n A[j] = A[i] + 3;\n A[j+1] = A[i] + A[0];\n A[A[j]] = 12;\n cin >> A[k]; // where next input value is 3",
+        "Specific Array Insertion Operator\nSuppose we want a different Array insertion operator for Array<char> objects\nostream& operator<<(ostream &sout,\nconst Array<char> &A){\nfor (int i = 0; i < A.size(); ++i) {\nsout << A[i];\n}\nreturn sout;",
+        "Modifying objects\nOperators and Expressions",
+        "Generic Array Insertion Operator\ntemplate <class T>\nostream& operator<<(ostream &sout,\nconst Array<T> &A){\nsout << \"[ \";\nfor (int i = 0; i < A.size(); ++i) {\nsout << A[i] << \" \";\n}\nsout << \"]\";\nreturn sout;\nCan be instantiated for whatever type of Array we need"
       ],
-      "response": "Mutators are the kind of member function used to change the value of an attribute. For example, a `SetColor()` function on a `RectangleShape` object would be a mutator.",
-      "reference": "The kind of member function used to change an attribute's value is called a mutator. Mutators explicitly change the value of an attribute. For example, a `RectangleShape` object has a mutator named `SetColor()`, which you might call as `R.SetColor(Black);`.",
+      "response": "The \"Array Element Manipulation\" section demonstrates `operator[]` modifying elements within the `Array`. For example, `A[0] = 1;` and `A[i] = 5;` directly assign values to array positions. Additionally, `cin >> A[k];` shows `operator[]` being used to receive input, which modifies the element at index `k`.",
+      "reference": "This `operator[]` allows modification because its return type is `T&`, a reference to an element of type `T`. By returning a reference, the `operator[]` provides direct access to the actual element `Values[i]` within the `Array`. This makes the result of `Array[i]` an lvalue, enabling callers to modify the referenced element directly.",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.4697683265567932,
-      "context_recall": 1.0,
-      "context_precision": 0.9999999999666667
+      "answer_relevancy": 0.9244702384085217,
+      "context_recall": 0.0,
+      "context_precision": 0.0
     }
   ]
 }

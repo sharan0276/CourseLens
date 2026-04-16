@@ -235,8 +235,8 @@ def run_scenario(scenario: dict, engine: SocraticEngine) -> ScenarioResult:
         passed=not bool(violations)
     )
     result.stage_results.append(sr)
-    session.messages.append(type("Msg", (), {"role": "user",  "content": scenario["initial_query"]})())
-    session.messages.append(type("Msg", (), {"role": "assistant", "content": reply})())
+    session.add_message(role="user", content=scenario["initial_query"])
+    session.add_message(role="assistant", content=reply)
 
     # Stages 2-4 — student replies drive transitions
     for stage in [2, 3, 4]:
@@ -256,8 +256,8 @@ def run_scenario(scenario: dict, engine: SocraticEngine) -> ScenarioResult:
         )
         result.stage_results.append(sr)
 
-        session.messages.append(type("Msg", (), {"role": "user",  "content": student_input})())
-        session.messages.append(type("Msg", (), {"role": "assistant", "content": reply})())
+        session.add_message(role="user", content=student_input)
+        session.add_message(role="assistant", content=reply)
 
     result.overall_passed = all(sr.passed for sr in result.stage_results)
     return result
@@ -292,11 +292,23 @@ def main():
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
         google_api_key=GEMINI_API_KEY,
+        safety_settings={
+            "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_NONE",
+            "HARM_CATEGORY_HATE_SPEECH": "BLOCK_NONE",
+            "HARM_CATEGORY_HARASSMENT": "BLOCK_NONE",
+            "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_NONE",
+        }
     )
     
     flash_llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
         google_api_key=GEMINI_API_KEY,
+        safety_settings={
+            "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_NONE",
+            "HARM_CATEGORY_HATE_SPEECH": "BLOCK_NONE",
+            "HARM_CATEGORY_HARASSMENT": "BLOCK_NONE",
+            "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_NONE",
+        }
     )
 
     # AnchorRetrieval needs a ChromaDB collection — adjust path as needed

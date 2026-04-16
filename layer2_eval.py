@@ -13,9 +13,12 @@ import chromadb
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from tenacity import retry, wait_exponential, stop_after_attempt
 
 # RAGAS 0.2.x imports
 from ragas import evaluate
+from ragas.run_config import RunConfig
 from ragas.metrics import (
     faithfulness,
     answer_relevancy,
@@ -53,6 +56,7 @@ def retrieve_contexts(question: str, collection, embedder, k: int) -> list[str]:
     return results["documents"][0]   # list[str]
 
 
+@retry(wait=wait_exponential(multiplier=1, min=2, max=10), stop=stop_after_attempt(5))
 def generate_answer(question: str, contexts: list[str], llm) -> str:
     """Simple RAG generation — mirrors what RAGPipelineLearning does at depth=1."""
     context_block = "\n\n".join(contexts)
@@ -79,19 +83,25 @@ def build_ragas_dataset(testset: list[dict], collection, embedder, llm) -> Datas
 
     print(f"[INFO] Evaluating {len(active)} entries with ground truth.")
 
-    for idx, entry in enumerate(active):
+    def process_entry(entry):
         q  = entry["question"]
         gt = entry["ground_truth"]
-
-        print(f"  [{idx+1}/{len(active)}] {entry['id']}: {q[:60]}...")
-
         contexts = retrieve_contexts(q, collection, embedder, TOP_K)
         answer   = generate_answer(q, contexts, llm)
+        return entry["id"], q, answer, contexts, gt
 
-        rows["question"].append(q)
-        rows["answer"].append(answer)
-        rows["contexts"].append(contexts)
-        rows["ground_truth"].append(gt)
+    processed = 0
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        future_to_entry = {executor.submit(process_entry, entry): entry for entry in active}
+        for future in as_completed(future_to_entry):
+            entry_id, q, answer, contexts, gt = future.result()
+            processed += 1
+            print(f"  [{processed}/{len(active)}] {entry_id}: {q[:60]}...")
+            
+            rows["question"].append(q)
+            rows["answer"].append(answer)
+            rows["contexts"].append(contexts)
+            rows["ground_truth"].append(gt)
 
     return Dataset.from_dict(rows)
 
@@ -112,7 +122,13 @@ def main():
     langchain_llm = ChatGoogleGenerativeAI(
         model=GEMINI_MODEL,
         google_api_key=GEMINI_API_KEY,
-        temperature=0
+        temperature=0,
+        safety_settings={
+            "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_NONE",
+            "HARM_CATEGORY_HATE_SPEECH": "BLOCK_NONE",
+            "HARM_CATEGORY_HARASSMENT": "BLOCK_NONE",
+            "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_NONE",
+        }
     )
     langchain_emb = HuggingFaceEmbeddings(model_name=EMBED_MODEL)
     ragas_llm = LangchainLLMWrapper(langchain_llm)
@@ -129,7 +145,8 @@ def main():
     dataset = build_ragas_dataset(testset, collection, embedder, langchain_llm)
 
     print("\n── Running RAGAS evaluation ──")
-    results = evaluate(dataset, metrics=metrics)
+    rc = RunConfig(max_workers=2, max_retries=10, max_wait=30)
+    results = evaluate(dataset, metrics=metrics, run_config=rc)
 
     print("\n── Results ──")
     df = results.to_pandas()
