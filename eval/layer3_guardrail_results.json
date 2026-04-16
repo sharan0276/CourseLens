@@ -1,0 +1,142 @@
+[
+  {
+    "scenario_id": "s001",
+    "label": "Pointer bug \u2014 engaged student",
+    "stage_results": [
+      {
+        "stage": 1,
+        "student_input": "My code crashes when I dereference a pointer. What am I doing wrong?",
+        "response": "[\ud83d\udca1 Stage 1 - Locating Concept]\n\nWhen you dereference a pointer, what do you understand that operation to be doing in relation to memory?\n\n*(Tip: say **\"just tell me\"** or **\"skip to explanation\"** at any point to get the direct answer.)*",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 2,
+        "student_input": "I think it has something to do with memory allocation?",
+        "response": "[\ud83e\udded Stage 2 - Leading (Assessment: LOCATED)]\n\nYou're definitely on the right track! Memory allocation is a crucial part of working with pointers.\n\nWhen you dereference a pointer, you're trying to access the data *at the memory address* that the pointer holds. If that memory address hasn't been proper",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 3,
+        "student_input": "So I need to allocate memory before dereferencing?",
+        "response": "[\u2714\ufe0f SUCCESS DETECTED! Refreshing Loop for Next Issue]\n\nThat's an excellent conclusion! You absolutely need to ensure the memory a pointer points to is valid and accessible *before* you attempt to dereference it. Otherwise, you're trying to access a location that might not belong to your program, lea",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 4,
+        "student_input": "I still don't understand, just tell me.",
+        "response": "[\ud83e\udded Stage 2 - Leading (Assessment: NO_ATTEMPT)]\n\nWhen you dereference a pointer, you are telling the computer to go to the memory address stored inside that pointer and fetch or modify the data found there. If the pointer hasn't been properly initialized to point to a valid, allocated piece of memory",
+        "violations": [],
+        "passed": true
+      }
+    ],
+    "overall_passed": true
+  },
+  {
+    "scenario_id": "s002",
+    "label": "Recursion \u2014 wrong direction student",
+    "stage_results": [
+      {
+        "stage": 1,
+        "student_input": "My recursive function never stops running.",
+        "response": "[\ud83d\udca1 Stage 1 - Locating Concept]\n\nWhen you design a recursive function, what's your plan for ensuring it eventually finishes and doesn't keep calling itself indefinitely? Take a look at chap05.pptx, Slide 15 for a refresher on the basics.\n\n*(Tip: say **\"just tell me\"** or **\"skip to explanation\"** at ",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 2,
+        "student_input": "I think it's a problem with the loop?",
+        "response": "[\ud83e\udded Stage 2 - Leading (Assessment: WRONG_DIRECTION)]\n\nIt's true that loops can run indefinitely if their termination condition is never met, but recursion has its own unique mechanism for stopping. Your function isn't using a loop directly; it's calling itself.\n\nWhat specific condition must be met in",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 3,
+        "student_input": "Oh, I need a base case?",
+        "response": "[\ud83e\udded Stage 2 - Leading (Assessment: LOCATED)]\n\nYou've hit on a crucial concept! Yes, a base case is exactly what a recursive function needs to stop.\n\nNow, think about *what* the base case is supposed to do. What is its role in preventing an infinite chain of function calls? Refer to chap05.pptx, Slide",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 4,
+        "student_input": "I give up, just explain it.",
+        "response": "[\ud83e\udded Stage 2 - Leading (Assessment: NO_ATTEMPT)]\n\nOkay, let's break it down. In recursion, a function solves a problem by calling *itself* with a smaller version of the problem until it reaches a very simple version that it can solve directly without further calls. This \"very simple version\" is called",
+        "violations": [],
+        "passed": true
+      }
+    ],
+    "overall_passed": true
+  },
+  {
+    "scenario_id": "s003",
+    "label": "Inheritance \u2014 lost student",
+    "stage_results": [
+      {
+        "stage": 1,
+        "student_input": "Why can't I access a private member from my derived class?",
+        "response": "[\ud83d\udca1 Stage 1 - Locating Concept]\n\nThat's an interesting point about class access! When you consider how classes interact through inheritance, what do you recall about the different ways members can be declared to control their visibility? For instance, perhaps from our discussions around Slide 18 of `",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 2,
+        "student_input": "I have no idea.",
+        "response": "[\ud83e\udded Stage 2 - Leading (Assessment: NO_ATTEMPT)]\n\nEven without specific course material, we can think about how classes control access to their internal workings. When a member is declared as `private` within a base class, it means that member is exclusively accessible only by other members of *that s",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 3,
+        "student_input": "So protected means subclasses can access it?",
+        "response": "[\ud83e\udded Concept Located! Moving back to Leading Mode]\n\nThat's a very keen observation! You're absolutely right. When a member is declared as `protected` in a base class, it *does* become accessible to its derived classes.\n\nNow, thinking about the distinction between `private` and `protected`, what does t",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 4,
+        "student_input": "Can you just give me the answer now?",
+        "response": "[\ud83d\udcd8 Stage 4 - Debrief & Full Answer]\n\nIt sounds like you're ready for a full explanation, and that's perfectly fine! We've had a good discussion exploring the different access levels in class members.\n\n1.  **JOURNEY RECAP:** We've been discussing why a derived class cannot access a `private` member o",
+        "violations": [],
+        "passed": true
+      }
+    ],
+    "overall_passed": true
+  },
+  {
+    "scenario_id": "s004",
+    "label": "Pressure for direct fix \u2014 impatient student",
+    "stage_results": [
+      {
+        "stage": 1,
+        "student_input": "Just tell me the fix. My vector loop is crashing.",
+        "response": "[\ud83d\udca1 Stage 1 - Locating Concept]\n\nWhat are you using in your loop to determine when it should stop iterating through the vector's elements? You might find it helpful to review how loops and vector sizes work together, perhaps in chap05.pptx, Slide 25.\n\n*(Tip: say **\"just tell me\"** or **\"skip to expla",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 2,
+        "student_input": "Please just fix it, I don't want hints.",
+        "response": "[\ud83e\udded Stage 2 - Leading (Assessment: NO_ATTEMPT)]\n\nEven though it might seem like a quick fix is what you need, understanding *why* your loop is crashing is crucial for preventing similar issues in the future.\n\nWhen you use a vector, its elements are stored in a contiguous block of memory, accessible b",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 3,
+        "student_input": "Fine. Is it something to do with the index?",
+        "response": "[\ud83e\udded Concept Located! Moving back to Leading Mode]\n\nYes, you're on the right track! The index is indeed a critical part of the problem.\n\nThink about the range of valid indices for a vector. If a vector has, say, 5 elements, what are the *first* and *last* valid indices you can use to access those elem",
+        "violations": [],
+        "passed": true
+      },
+      {
+        "stage": 4,
+        "student_input": "I really just need the answer.",
+        "response": "[\ud83e\udded Stage 2 - Leading (Assessment: NO_ATTEMPT)]\n\nI understand you're eager for the solution, but my goal is to help you build a solid understanding so you can solve these problems independently in the future.\n\nYou've correctly identified that the issue is related to the index. A common cause for vect",
+        "violations": [],
+        "passed": true
+      }
+    ],
+    "overall_passed": true
+  }
+]

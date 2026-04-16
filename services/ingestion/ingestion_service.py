@@ -8,17 +8,19 @@ from services.embedding.embedder import Embedder
 from db.vector_store import VectorStore
 from services.ingestion.emf_to_png import convert_all_emfs_in_directory
 from services.ingestion.pdf_parser import PDFParser
+from services.ingestion.chunk_summarizer import ChunkSummarizer
 
 class IngestionService:
     """
     Responsible for orchestrating the ingestion process.
     """
-    def __init__(self, db_path: str = "./CourseLens_data/chroma_db"):
+    def __init__(self, llm=None, db_path: str = "./CourseLens_data/chroma_db"):
         self.pptx_parser = PPTXParser(image_folder_path="CourseLens_data/images")
         self.pdf_parser = PDFParser(image_folder_path="CourseLens_data/images")
         self.slide_cleaner = SlideCleaner()
         self.chunk_builder = ChunkBuilder()
         self.embedding_service = Embedder()
+        self.chunk_summarizer = ChunkSummarizer(llm) if llm else None
         self.vector_store = VectorStore(db_path)
         os.makedirs("CourseLens_data/processed_data", exist_ok=True)
         os.makedirs("CourseLens_data/images", exist_ok=True)
@@ -163,6 +165,12 @@ class IngestionService:
         if image_only:
             print(f"Sample: {image_only[0]['id']} — context_strategy: {image_only[0]['metadata'].get('context_strategy', 'NOT SET')}")
 
+        # Step 1.5: Summarize Chunks for runtime assembly
+        if self.chunk_summarizer:
+            print("\nSummarizing parent and child chunks...")
+            parent_chunks = self.chunk_summarizer.summarize_chunks(parent_chunks)
+            child_chunks = self.chunk_summarizer.summarize_chunks(child_chunks)
+
         # Step 2: Embed Chunks
         parent_chunks = self.embedding_service.embed_chunks(parent_chunks)
         child_chunks = self.embedding_service.embed_chunks(child_chunks)
@@ -204,4 +212,29 @@ class IngestionService:
         for json_path in glob.glob(os.path.join(folder_path, "*.json")):
             self.create_embeddings_for_file(json_path)
             
+        # PROD: Rebuild the BM25 index using the fully updated Chroma DB
+        self._build_bm25_index()
         print("\nEmbeding complete for all files")
+
+    def _build_bm25_index(self):
+        """Builds a persistent BM25 index from all documents currently in Chroma."""
+        print("\nBuilding BM25 Sparse Index...")
+        try:
+            from langchain_community.retrievers import BM25Retriever
+            from langchain_core.documents import Document
+            import pickle
+
+            all_data = self.vector_store.collection.get(include=["documents", "metadatas"])
+            docs = []
+            for t, m, i in zip(all_data['documents'], all_data['metadatas'], all_data['ids']):
+                docs.append(Document(page_content=t, metadata=m, id=i))
+            
+            if docs:
+                bm25 = BM25Retriever.from_documents(docs)
+                with open("CourseLens_data/bm25_retriever.pkl", "wb") as f:
+                    pickle.dump(bm25, f)
+                print(f"Success! Built and securely cached BM25 index over {len(docs)} documents.")
+            else:
+                print("No documents found to build BM25 index.")
+        except Exception as e:
+            print(f"Failed to build BM25 index: {e}")

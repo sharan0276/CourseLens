@@ -1,17 +1,19 @@
 from typing import List
 from langchain_core.documents import Document
 from services.rag.chroma_retriever import VectorStoreManager
+from services.rag.bm25_retriever import BM25Manager
 import chromadb
 
 
 class RetrievalService:
     """
-    Handles retrieval with parent-child expansion and image-only slide navigation (to fetch relevant context).
+    Handles hybrid retrieval (Dense + Sparse) with parent-child expansion and image-only slide navigation.
     It will be the intermediary between the RAG pipeline and the vector store.
     """
-    def __init__(self, vector_store_manager: VectorStoreManager, db_path: str = "CourseLens_data/chroma_db", 
+    def __init__(self, vector_store_manager: VectorStoreManager, bm25_manager: BM25Manager = None, db_path: str = "CourseLens_data/chroma_db", 
                  collection_name: str = "course_lens", k: int = 5, parent_swap_threshold: int = 2, search_type : str = "similarity"):
         self.vector_store_manager = vector_store_manager
+        self.bm25_manager = bm25_manager
         self.k = k
         self.parent_swap_threshold = parent_swap_threshold
         self.search_type = search_type
@@ -21,7 +23,7 @@ class RetrievalService:
         self.collection = self.client.get_collection(collection_name)
     
         
-    def retrieve(self, query: str, lecture_number: int = None) -> List[Document]:
+    def retrieve(self, query: str, lecture_number: int = None, k: int = None) -> List[Document]:
         """
         Retrieve documents on the basis of query similarity, and account methods to enrich chunks 
         """
@@ -29,23 +31,88 @@ class RetrievalService:
         if lecture_number is not None:
             filter_dict = {"lecture_number": {"$lte": lecture_number}}
 
-        # Step 1  Similarity Search
-        retrieved_docs = self.vector_store_manager.similarity_search(query, k=self.k, filter=filter_dict)
+        # Use the provided k, or fallback to the instance default k
+        search_k = k if k is not None else self.k
+
+        # Step 1: Hybrid Similarity Search (Dense + Sparse Fusion)
+        # Increase candidate pool k=50 to ensure narrow matches (like "goals") aren't lost early
+        dense_docs = self.vector_store_manager.similarity_search(query, k=50, filter=filter_dict)
+        if self.bm25_manager:
+            sparse_docs = self.bm25_manager.search(query, k=50, filter=filter_dict)
+            # RRF fusion — now returns all discovered candidates before we apply title boosting
+            retrieved_docs = self._reciprocal_rank_fusion(dense_docs, sparse_docs)
+        else:
+            retrieved_docs = dense_docs[:50]
         
-        # Step 2: Handle image-only slides
+        # Step 2: Apply Title-Match Boost (Heuristic for slide-based RAG)
+        retrieved_docs = self._apply_title_boost(query, retrieved_docs)
+
+        # Step 3: Keep only the final search_k results
+        retrieved_docs = retrieved_docs[:search_k]
+
+        # Step 4: Handle image-only slides
         retrieved_docs = self._handle_image_slides(retrieved_docs)
 
-        # Step 3: Deduplicate (keep best version of each slide)
+        # Step 5: Deduplicate (keep best version of each slide)
         retrieved_docs = self._deduplicate(retrieved_docs)
 
-        # Step 4: Parent-Child Swap (Broader Context)
+        # Step 6: Parent-Child Swap (Broader Context)
         retrieved_docs = self._parent_child_swap(retrieved_docs)
 
         self._log_retrieved_chunks(retrieved_docs)
 
         return retrieved_docs
 
-    
+    def _reciprocal_rank_fusion(self, dense_docs: List[Document], sparse_docs: List[Document]) -> List[Document]:
+        """Mathematically merges dense conceptual matches with sparse exact keyword matches."""
+        fused_scores = {}
+        docs_dict = {}
+        
+        for rank, doc in enumerate(dense_docs):
+            doc_id = doc.page_content[:300]
+            fused_scores[doc_id] = fused_scores.get(doc_id, 0.0) + 1.0 / (rank + 60)
+            docs_dict[doc_id] = doc
+            
+        for rank, doc in enumerate(sparse_docs):
+            doc_id = doc.page_content[:300]
+            fused_scores[doc_id] = fused_scores.get(doc_id, 0.0) + 1.0 / (rank + 60)
+            docs_dict[doc_id] = doc
+            
+        reranked = sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
+        # Return ALL candidates for the next boosting/filtering steps
+        return [docs_dict[doc_id] for doc_id, score in reranked]
+
+    def _apply_title_boost(self, query: str, docs: List[Document]) -> List[Document]:
+        """
+        Heuristic boosting for documents where the title matches keywords in the search query.
+        Helps thin slides (like "Software Engineering Goals") win over dense slides.
+        """
+        import re
+        # Tokenize query — lowercase and remove punctuation + generic stop words
+        # Only focus on meaningful keywords (length > 2)
+        STOP_WORDS = {"what", "are", "the", "for", "and", "how", "why", "who", "when", "does", "have", "with", "this", "that"}
+        query_terms = set(re.findall(r'\b\w{3,}\b', query.lower()))
+        query_terms = {t for t in query_terms if t not in STOP_WORDS}
+
+        if not query_terms:
+            return docs
+
+        scored_docs = []
+        for doc in docs:
+            title = doc.metadata.get("title", "").lower()
+            # Calculate a simple boost factor based on title overlap
+            match_count = sum(1 for term in query_terms if term in title)
+            
+            # Use original rank as base (implied by position in 'docs')
+            # Higher index = worse rank. We apply the boost by shifting it 'up' in the list.
+            boost_score = match_count * 5 # A match in title is worth jumping roughly 5 spots
+            scored_docs.append((doc, boost_score))
+
+        # Re-sort: lower index is better. We subtract boost from original index.
+        # Stabilize by original position to maintain RRF preference.
+        final = sorted(enumerate(scored_docs), key=lambda x: x[0] - x[1][1])
+        return [item[1][0] for item in final]
+
 
     def _log_retrieved_chunks(self, docs: List[Document]):
         """
@@ -124,7 +191,8 @@ class RetrievalService:
             if result["documents"]:
                 return Document(
                     page_content=result["documents"][0],
-                    metadata=result["metadatas"][0]
+                    metadata=result["metadatas"][0],
+                    id=chunk_id
                 )
         except Exception as e:
             print(f"Error fetching chunk {chunk_id}: {e}")
@@ -187,3 +255,40 @@ class RetrievalService:
                 seen.add(content_key)
                 unique.append(doc)
         return unique
+
+    def fetch_lecture_for_summary(self, lecture_number: int) -> List[Document]:
+        """
+        Fetches all chunks matching the lecture number without vector embeddings,
+        skipping parent chunks to get full slide level granularity.
+        """
+        result = self.collection.get(
+            where={"lecture_number": lecture_number},
+            include=["documents", "metadatas"]
+        )
+        return self._process_summary_results(result)
+
+    def fetch_lecture_range_for_summary(self, start_lecture: int, end_lecture: int) -> List[Document]:
+        """
+        Fetches all chunks matching the lecture range [start_lecture, end_lecture].
+        """
+        # ChromaDB syntax for range queries — using $and with $gte and $lte filters
+        result = self.collection.get(
+            where={"$and": [
+                {"lecture_number": {"$gte": start_lecture}},
+                {"lecture_number": {"$lte": end_lecture}}
+            ]},
+            include=["documents", "metadatas"]
+        )
+        return self._process_summary_results(result)
+
+    def _process_summary_results(self, result: dict) -> List[Document]:
+        """Internal helper to convert Chroma results to sorted Documents."""
+        docs = []
+        if result and result.get("documents"):
+            for doc_content, meta in zip(result["documents"], result["metadatas"]):
+                if meta.get("chunk_type") != "parent":
+                    docs.append(Document(page_content=doc_content, metadata=meta))
+                    
+        # Sort by lecture number first, then slide number, to maintain pedagogical flow
+        docs.sort(key=lambda x: (x.metadata.get("lecture_number") or 0, x.metadata.get("slide_number") or 0))
+        return docs
