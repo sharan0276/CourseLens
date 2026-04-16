@@ -4,17 +4,21 @@
 
 CourseLens is a high-quality AI tutoring system designed to turn passive reading into active learning. Unlike standard chatbots, CourseLens is built to prioritize teaching accuracy, grounding every interaction in provided lecture materials while using advanced AI patterns to manage context and relevancy.
 
+![Overall Architecture](assets/architecture/overall_architecture.png)
+
 ---
 
-## 💡 The Core Framework: GRASP
+## 💡 How it Works: The GRASP Approach
 
-CourseLens uses the **GRASP** framework to move students from just "reading" to actually "grasping" concepts.
+![Prompt Engineering Ideation](assets/architecture/ideation_of_prompt_triggers.png)
 
-*   **Gradual**: Adapts how much information it gives based on student progress.
-*   **Reflective**: Provides automated "Journey Recaps" to summarize what has been learned.
-*   **Affirming**: Uses positive reinforcement for breakthroughs in understanding.
-*   **Socratic**: Uses a multi-stage system that guides students via hints rather than giving direct answers.
-*   **Patient**: Stays in the teaching mode even when students are looking for a quick fix.
+Instead of just answering questions, CourseLens follows a design philosophy we call **GRASP**. We wanted the system to feel like a real TA who is helpful but won't do the work for you.
+
+*   **Gradual**: It starts by checking what the student already knows before diving into complex explanations.
+*   **Reflective**: Every few turns, it summarizes the progress so the student can see how far they've come.
+*   **Affirming**: It recognizes small breakthroughs ("Nice work!" or "Spot on!") to keep momentum high.
+*   **Socratic**: It uses leading questions to help students find the answer themselves.
+*   **Patient**: It stays in the "hinting" mode as long as needed, even if a student is rushing for a quick fix.
 
 ---
 
@@ -52,11 +56,15 @@ The system identifies the student's stage of learning and provides hints grounde
 
 ### Multi-Source Web Scraping
 When course materials are too brief, the system intelligently pulls in extra detail from trusted sites (GFG, LearnCpp).
-![Web Scrapping](assets/output_screenshots/Web_Scrapping.png)
+![Lecture Material vs Web Result 1](assets/output_screenshots/Lecture_Material_vs_Web_Scrapping-1.png)
+![Lecture Material vs Web Result 2](assets/output_screenshots/Lecture_Material_vs_Web_Scrapping-2.png)
 
 ### Visual RAG & Image Retrieval
 The system automatically pulls in and shows relevant diagrams from the lecture slides.
 ![Image Retrieval](assets/output_screenshots/Image_Retrieval.png)
+
+> [!NOTE]
+> Detailed technical diagrams and the full library of output screenshots are available in the [assets](assets/) directory.
 
 ---
 
@@ -66,14 +74,18 @@ The system automatically pulls in and shows relevant diagrams from the lecture s
    ```bash
    pip install -r requirements.txt
    ```
-2. **Start the API**:
-   ```bash
-   python api.py
-   ```
-3. **Open the UI**:
-   ```bash
-   streamlit run ui.py
-   ```
+
+2. **Start the System**:
+   You will need to run the following in **two separate terminals**:
+
+   *   **Terminal 1 (Backend API)**:
+       ```bash
+       python3 api.py
+       ```
+   *   **Terminal 2 (User Interface)**:
+       ```bash
+       streamlit run ui.py
+       ```
 
 ---
 
