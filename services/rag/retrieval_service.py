@@ -10,7 +10,8 @@ class RetrievalService:
     Handles hybrid retrieval (Dense + Sparse) with parent-child expansion and image-only slide navigation.
     It will be the intermediary between the RAG pipeline and the vector store.
     """
-    def __init__(self, vector_store_manager: VectorStoreManager, bm25_manager: BM25Manager = None, db_path: str = "CourseLens_data/chroma_db", 
+    def __init__(self, vector_store_manager: VectorStoreManager, bm25_manager: BM25Manager = None, 
+                 db_path: str = "CourseLens_data/chroma_db", 
                  collection_name: str = "course_lens", k: int = 5, parent_swap_threshold: int = 2, search_type : str = "similarity"):
         self.vector_store_manager = vector_store_manager
         self.bm25_manager = bm25_manager
@@ -23,7 +24,7 @@ class RetrievalService:
         self.collection = self.client.get_collection(collection_name)
     
         
-    def retrieve(self, query: str, lecture_number: int = None, k: int = None) -> List[Document]:
+    def retrieve(self, query: str, lecture_number: int = None, k: int = None, disable_swapping: bool = False) -> List[Document]:
         """
         Retrieve documents on the basis of query similarity, and account methods to enrich chunks 
         """
@@ -37,27 +38,32 @@ class RetrievalService:
         # Step 1: Hybrid Similarity Search (Dense + Sparse Fusion)
         # Increase candidate pool k=50 to ensure narrow matches (like "goals") aren't lost early
         dense_docs = self.vector_store_manager.similarity_search(query, k=50, filter=filter_dict)
+        
         if self.bm25_manager:
             sparse_docs = self.bm25_manager.search(query, k=50, filter=filter_dict)
-            # RRF fusion — now returns all discovered candidates before we apply title boosting
-            retrieved_docs = self._reciprocal_rank_fusion(dense_docs, sparse_docs)
+            # RRF fusion — returns list of (Document, score)
+            retrieved_docs_with_scores = self._reciprocal_rank_fusion(dense_docs, sparse_docs)
         else:
-            retrieved_docs = dense_docs[:50]
+            # For dense-only, we treat the rank as the score to stay consistent
+            # Using 1.0 / (rank + 60) scaled by 0.8
+            retrieved_docs_with_scores = [(doc, 0.8 / (i + 60)) for i, doc in enumerate(dense_docs)]
         
         # Step 2: Apply Title-Match Boost (Heuristic for slide-based RAG)
-        retrieved_docs = self._apply_title_boost(query, retrieved_docs)
+        # Works on the (Document, score) list and returns sorted Documents
+        retrieved_docs = self._apply_title_boost(query, retrieved_docs_with_scores)
 
-        # Step 3: Keep only the final search_k results
-        retrieved_docs = retrieved_docs[:search_k]
-
-        # Step 4: Handle image-only slides
+        # Step 3: Handle image-only slides
         retrieved_docs = self._handle_image_slides(retrieved_docs)
+
+        # Step 4: Parent-Child Swap (Broader Context)
+        if not disable_swapping:
+            retrieved_docs = self._parent_child_swap(retrieved_docs)
 
         # Step 5: Deduplicate (keep best version of each slide)
         retrieved_docs = self._deduplicate(retrieved_docs)
 
-        # Step 6: Parent-Child Swap (Broader Context)
-        retrieved_docs = self._parent_child_swap(retrieved_docs)
+        # Step 6: Final Slice (Keeping search_k results)
+        retrieved_docs = retrieved_docs[:search_k]
 
         self._log_retrieved_chunks(retrieved_docs)
 
@@ -69,49 +75,47 @@ class RetrievalService:
         docs_dict = {}
         
         for rank, doc in enumerate(dense_docs):
-            doc_id = doc.page_content[:300]
-            fused_scores[doc_id] = fused_scores.get(doc_id, 0.0) + 1.0 / (rank + 60)
+            # Using getattr(doc, "id") to ensure we use the unique ChromaDB ID
+            doc_id = getattr(doc, "id", None) or doc.metadata.get("id") or doc.page_content[:300]
+            # Semantic Weight: 0.9
+            fused_scores[doc_id] = fused_scores.get(doc_id, 0.0) + (0.9 / (rank + 60))
             docs_dict[doc_id] = doc
             
         for rank, doc in enumerate(sparse_docs):
-            doc_id = doc.page_content[:300]
-            fused_scores[doc_id] = fused_scores.get(doc_id, 0.0) + 1.0 / (rank + 60)
+            doc_id = getattr(doc, "id", None) or doc.metadata.get("id") or doc.page_content[:300]
+            # BM25 Weight: 0.1
+            fused_scores[doc_id] = fused_scores.get(doc_id, 0.0) + (0.1 / (rank + 60))
             docs_dict[doc_id] = doc
             
         reranked = sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
-        # Return ALL candidates for the next boosting/filtering steps
-        return [docs_dict[doc_id] for doc_id, score in reranked]
+        # Return list of (Document, score) for further boosting/filtering
+        return [(docs_dict[doc_id], score) for doc_id, score in reranked]
 
-    def _apply_title_boost(self, query: str, docs: List[Document]) -> List[Document]:
+    def _apply_title_boost(self, query: str, docs_with_scores: List[tuple], lecture_number: int = None) -> List[Document]:
         """
-        Heuristic boosting for documents where the title matches keywords in the search query.
-        Helps thin slides (like "Software Engineering Goals") win over dense slides.
+        Multiplicative boosting: boosts the RRF score based on title keyword matches.
+        Allows conceptual matches to stay on top if confidence is high.
         """
         import re
-        # Tokenize query — lowercase and remove punctuation + generic stop words
-        # Only focus on meaningful keywords (length > 2)
         STOP_WORDS = {"what", "are", "the", "for", "and", "how", "why", "who", "when", "does", "have", "with", "this", "that"}
         query_terms = set(re.findall(r'\b\w{3,}\b', query.lower()))
         query_terms = {t for t in query_terms if t not in STOP_WORDS}
 
         if not query_terms:
-            return docs
+            return [d for d, s in docs_with_scores]
 
-        scored_docs = []
-        for doc in docs:
+        final_scored = []
+        for doc, score in docs_with_scores:
             title = doc.metadata.get("title", "").lower()
-            # Calculate a simple boost factor based on title overlap
             match_count = sum(1 for term in query_terms if term in title)
             
-            # Use original rank as base (implied by position in 'docs')
-            # Higher index = worse rank. We apply the boost by shifting it 'up' in the list.
-            boost_score = match_count * 5 # A match in title is worth jumping roughly 5 spots
-            scored_docs.append((doc, boost_score))
+            # Micro-boost: +5% per keyword match (The verified production peak)
+            boosted_score = score * (1.0 + (0.05 * match_count))
+            final_scored.append((doc, boosted_score))
 
-        # Re-sort: lower index is better. We subtract boost from original index.
-        # Stabilize by original position to maintain RRF preference.
-        final = sorted(enumerate(scored_docs), key=lambda x: x[0] - x[1][1])
-        return [item[1][0] for item in final]
+        # Re-sort by the NEW boosted scores
+        final_scored.sort(key=lambda x: x[1], reverse=True)
+        return [d for d, s in final_scored]
 
 
     def _log_retrieved_chunks(self, docs: List[Document]):
@@ -206,40 +210,48 @@ class RetrievalService:
         """
         Groups child chunks by parent_id.
         If >= parent_swap_threshold children from same parent found
-        → replace all children with parent chunk.
-        Reduces duplicate context passed to model.
+        → replace all children with parent chunk at the position of the highest-ranked child.
+        Reduces duplicate context passed to model, while preserving search rank.
         """
-        # separate parents and children
-        parents = [d for d in docs if d.metadata.get("chunk_type") == "parent"]
-        children = [d for d in docs if d.metadata.get("chunk_type") == "child"]
-
-        result = list(parents)  # keep any directly retrieved parents
-        swapped_parent_ids = set(d.metadata.get("parent_id", "") for d in parents)
-
-        # group children by parent_id, but only for allowed source types
         from collections import defaultdict
-        children_by_parent = defaultdict(list)
-        for child in children:
-            source_type = child.metadata.get("source_type", "")
-            if source_type in ["pptx", "pdf_slideshow"]:
-                parent_id = child.metadata.get("parent_id", "")
+        
+        # 1. Count occurrences of each parent_id among the retrieved children
+        children_count = defaultdict(int)
+        for doc in docs:
+            if doc.metadata.get("chunk_type") == "child" and doc.metadata.get("source_type", "") in ["pptx", "pdf_slideshow"]:
+                parent_id = doc.metadata.get("parent_id", "")
                 if parent_id:
-                    children_by_parent[parent_id].append(child)
-            else:
-                # If not eligible for swap, just keep it directly in the results
-                result.append(child)
+                    children_count[parent_id] += 1
 
-        for parent_id, child_group in children_by_parent.items():
-            if len(child_group) >= self.parent_swap_threshold:
-                # swap children with parent — only if parent not already in results
-                if parent_id not in swapped_parent_ids:
-                    parent_doc = self._fetch_by_id(parent_id)
-                    if parent_doc:
-                        result.append(parent_doc)
-                        swapped_parent_ids.add(parent_id)
+        result = []
+        emitted_parents = set()
+
+        # 2. Re-iterate in original sorted order, preserving rank!
+        for doc in docs:
+            chunk_type = doc.metadata.get("chunk_type")
+            doc_id = getattr(doc, "id", None) or doc.metadata.get("id") or doc.page_content[:300]
+            
+            if chunk_type == "parent":
+                if doc_id not in emitted_parents:
+                    result.append(doc)
+                    emitted_parents.add(doc_id)
+            
+            elif chunk_type == "child" and doc.metadata.get("source_type", "") in ["pptx", "pdf_slideshow"]:
+                parent_id = doc.metadata.get("parent_id", "")
+                if parent_id and children_count[parent_id] >= self.parent_swap_threshold:
+                    # Enough children exist to trigger a swap. Emitting the parent HERE preserves the rank 
+                    # of the highest-scoring child that triggered the swap.
+                    if parent_id not in emitted_parents:
+                        parent_doc = self._fetch_by_id(parent_id)
+                        if parent_doc:
+                            result.append(parent_doc)
+                            emitted_parents.add(parent_id)
+                else:
+                    # Not enough children to swap, keep the child slide independently
+                    result.append(doc)
             else:
-                # keep individual children — not enough to warrant swap
-                result.extend(child_group)
+                # Other types (e.g., pdf or web)
+                result.append(doc)
 
         return result
 

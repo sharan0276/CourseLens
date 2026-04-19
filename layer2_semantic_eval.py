@@ -1,11 +1,6 @@
 """
-Layer 2 Eval — RAGAS Generation Metrics
-Runs RAGPipelineLearning on each test question, collects
-(question, answer, contexts, ground_truth) tuples,
-then evaluates with RAGAS using Gemini as the judge LLM.
-
-Install first:
-    pip install ragas langchain-google-genai
+Layer 2 Eval — RAGAS Generation Metrics (PURE SEMANTIC BASELINE)
+Runs the generative pipeline using pure dense vector search without Hybrid or Title Boosting.
 """
 
 import os
@@ -14,9 +9,6 @@ import chromadb
 from dotenv import load_dotenv
 from pathlib import Path
 from services.embedding.embedder import Embedder
-from services.rag.retrieval_service import RetrievalService
-from services.rag.chroma_retriever import VectorStoreManager
-from services.rag.bm25_retriever import BM25Manager
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tenacity import retry, wait_exponential, stop_after_attempt
 
@@ -40,27 +32,27 @@ CHROMA_PATH      = "./CourseLens_data/chroma_db"
 COLLECTION_NAME  = "course_lens"
 EMBED_MODEL      = "BAAI/bge-m3"
 TESTSET_PATH     = "eval/testset_raw.json"
-RESULTS_PATH     = "eval/layer2_results.json"
+RESULTS_PATH     = "eval/layer2_semantic_results.json"
 load_dotenv()
 GEMINI_API_KEY   = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL     = "gemini-2.5-flash"
-TOP_K            = 5    # chunks retrieved per question
+TOP_K            = 5
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-# ── Inline RAG pipeline (lightweight — no need to import your full pipeline) ──
-
-# ── Sync with Production Retrieval ──
-def retrieve_contexts(question: str, retriever: RetrievalService, k: int) -> list[str]:
-    """Returns list of chunk text strings using the optimized RetrievalService (RRF + Title Boost)."""
-    # Note: disable_swapping=True ensures we test individual slide quality
-    docs = retriever.retrieve(question, k=k, disable_swapping=True)
-    return [doc.page_content for doc in docs]   # list[str]
+def retrieve_pure_semantic(collection, embedder, question: str, k: int) -> list[str]:
+    """Pure vector search returning chunk texts."""
+    q_emb = embedder.embed_query(question)
+    results = collection.query(
+        query_embeddings=[q_emb],
+        n_results=k,
+        include=["documents"]
+    )
+    return results["documents"][0]
 
 
 @retry(wait=wait_exponential(multiplier=1, min=2, max=10), stop=stop_after_attempt(5))
 def generate_answer(question: str, contexts: list[str], llm) -> str:
-    """Simple RAG generation — mirrors what RAGPipelineLearning does at depth=1."""
     context_block = "\n\n".join(contexts)
     prompt = f"""\
 You are a C++ tutoring assistant. Answer the student's question using ONLY \
@@ -73,22 +65,19 @@ Question: {question}
 
 Answer:"""
     resp = llm.invoke(prompt)
-    # LangChain returns an AIMessage
     return resp.content.strip()
 
 
-# ── Main eval ─────────────────────────────────────────────────────────────────
-
-def build_ragas_dataset(testset: list[dict], retriever: RetrievalService, llm) -> Dataset:
+def build_ragas_dataset(testset: list[dict], collection, embedder, llm) -> Dataset:
     rows = {"question": [], "answer": [], "contexts": [], "ground_truth": []}
     active = [e for e in testset if e.get("keep", True) and e.get("ground_truth")]
 
-    print(f"[INFO] Evaluating {len(active)} entries with ground truth using RetrievalService.")
+    print(f"[INFO] Evaluating {len(active)} entries using PURE SEMANTIC retrieval.")
 
     def process_entry(entry):
         q  = entry["question"]
         gt = entry["ground_truth"]
-        contexts = retrieve_contexts(q, retriever, TOP_K)
+        contexts = retrieve_pure_semantic(collection, embedder, q, TOP_K)
         answer   = generate_answer(q, contexts, llm)
         return entry["id"], q, answer, contexts, gt
 
@@ -115,14 +104,12 @@ def main():
     with open(TESTSET_PATH) as f:
         testset = json.load(f)
 
-    print("\n── Connecting to Retrieval Stack ──")
-    embedder = Embedder(model_name=EMBED_MODEL)
-    vsm = VectorStoreManager(embeddings_model=embedder)
-    bm25 = BM25Manager()
-    retriever = RetrievalService(vector_store_manager=vsm, bm25_manager=bm25)
+    print("\n── Connecting to ChromaDB (Pure Semantic) ──")
+    client     = chromadb.PersistentClient(path=CHROMA_PATH)
+    collection = client.get_collection(COLLECTION_NAME)
+    embedder   = Embedder(model_name=EMBED_MODEL)
 
     print("\n── Setting up Gemini as RAGAS judge ──")
-    # ... (skipping lines)
     langchain_llm = ChatGoogleGenerativeAI(
         model=GEMINI_MODEL,
         google_api_key=GEMINI_API_KEY,
@@ -138,7 +125,6 @@ def main():
     ragas_llm = LangchainLLMWrapper(langchain_llm)
     ragas_emb = LangchainEmbeddingsWrapper(langchain_emb)
 
-    # Attach judge to each metric
     metrics = [faithfulness, answer_relevancy, context_recall, context_precision]
     for m in metrics:
         m.llm = ragas_llm
@@ -146,7 +132,7 @@ def main():
             m.embeddings = ragas_emb
 
     print("\n── Building eval dataset (retrieve + generate) ──")
-    dataset = build_ragas_dataset(testset, retriever, langchain_llm)
+    dataset = build_ragas_dataset(testset, collection, embedder, langchain_llm)
 
     print("\n── Running RAGAS evaluation ──")
     rc = RunConfig(max_workers=2, max_retries=10, max_wait=30)

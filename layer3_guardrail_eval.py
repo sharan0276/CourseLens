@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 from dataclasses import dataclass, field, asdict
 import os
+from dotenv import load_dotenv
 
 # ── Adjust these imports to match your module paths ──────────────────────────
 from services.chat.socratic_engine import SocraticEngine, ReplyAssessment
@@ -20,6 +21,7 @@ from services.embedding.embedder import Embedder
 
 # ─────────────────────────────────────────────────────────────────────────────
 
+load_dotenv()
 RESULTS_PATH = "eval/layer3_guardrail_results.json"
 GEMINI_API_KEY     = os.environ.get("GEMINI_API_KEY", "")
 PERSIST_DIR  = "CourseLens_data/chroma_db"

@@ -77,7 +77,13 @@ class VectorStoreManager:
         
         # 2. Get BM25 Docs (Sparse Search ignorers native filters)
         bm25 = self._get_bm25()
-        bm25_docs = bm25.get_relevant_documents(query) if bm25 else []
+        if bm25:
+            try:
+                bm25_docs = bm25.invoke(query)
+            except AttributeError:
+                bm25_docs = bm25.get_relevant_documents(query)
+        else:
+            bm25_docs = []
         
         # 3. Manually filter BM25 Docs
         filtered_bm25 = []
@@ -96,13 +102,15 @@ class VectorStoreManager:
         docs_dict = {}
         
         for rank, doc in enumerate(semantic_docs):
-            doc_id = doc.page_content[:300]
-            fused_scores[doc_id] = fused_scores.get(doc_id, 0.0) + 1.0 / (rank + 60)
+            doc_id = getattr(doc, "id", None) or doc.metadata.get("id") or doc.page_content[:300]
+            # Semantic Weight: 0.9
+            fused_scores[doc_id] = fused_scores.get(doc_id, 0.0) + (0.9 / (rank + 60))
             docs_dict[doc_id] = doc
             
         for rank, doc in enumerate(filtered_bm25):
-            doc_id = doc.page_content[:300]
-            fused_scores[doc_id] = fused_scores.get(doc_id, 0.0) + 1.0 / (rank + 60)
+            doc_id = getattr(doc, "id", None) or doc.metadata.get("id") or doc.page_content[:300]
+            # BM25 Weight: 0.1
+            fused_scores[doc_id] = fused_scores.get(doc_id, 0.0) + (0.1 / (rank + 60))
             docs_dict[doc_id] = doc
             
         # 5. Sort and return top K

@@ -1,12 +1,12 @@
 {
   "n": 40,
   "summary": {
-    "hit_rate@1": 0.575,
-    "mrr@1": 0.575,
-    "hit_rate@3": 0.725,
-    "mrr@3": 0.6417,
-    "hit_rate@5": 0.8,
-    "mrr@5": 0.6592
+    "hit_rate@1": 0.525,
+    "mrr@1": 0.525,
+    "hit_rate@3": 0.65,
+    "mrr@3": 0.575,
+    "hit_rate@5": 0.75,
+    "mrr@5": 0.5975
   },
   "per_entry": [
     {
@@ -14,18 +14,18 @@
       "question": "What is the main advantage of using `cin >> r;` and `cout << t;` instead of `r.Extract(cin);` and `t.Insert(cout);`?",
       "expected": "chap09_slide24",
       "retrieved_top5": [
-        "chap09_slide24",
+        "pdf_notes-5 Input-page7-lecture1",
         "chap09_slide39",
-        "chap12_slide10",
+        "chap09_slide24",
         "chap09_slide36",
         "chap09_slide38"
       ],
-      "hit@1": 1,
-      "rr@1": 1.0,
+      "hit@1": 0,
+      "rr@1": 0.0,
       "hit@3": 1,
-      "rr@3": 1.0,
+      "rr@3": 0.3333,
       "hit@5": 1,
-      "rr@5": 1.0
+      "rr@5": 0.3333
     },
     {
       "id": "q002",
@@ -54,7 +54,7 @@
         "chap14_class_simplewindow",
         "chap11_slide14",
         "chap11_slide13",
-        "chap03_slide30"
+        "chap14_slide07"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -70,9 +70,9 @@
       "retrieved_top5": [
         "chap02_slide18",
         "chap02_slide11",
-        "chap04_a_boolean_type",
         "chap04_slide07",
-        "pdf_notes-1.3 General Notes on C++-page2-lecture1"
+        "chap04_a_boolean_type",
+        "chap03_nonfundamental_types"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -107,8 +107,8 @@
         "chap10_slide22",
         "chap13_slide05",
         "chap13_slide23",
-        "chap10_slide23",
-        "chap13_min_template"
+        "chap07_function_overloading",
+        "chap10_slide23"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
@@ -125,8 +125,8 @@
         "chap09_slide12",
         "chap12_slide10",
         "chap02_slide26",
-        "chap09_slide24",
-        "chap03_incrementing"
+        "chap09_remember",
+        "chap09_slide24"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -140,18 +140,18 @@
       "question": "Can a derived class directly access private members inherited from its base class?",
       "expected": "chap11_slide32",
       "retrieved_top5": [
-        "chap11_slide32",
+        "chap11_slide16",
+        "chap11_slide18",
         "chap11_slide17",
-        "chap11_inheritance_and_member_access",
-        "chap11_slide01",
-        "chap11_slide19"
+        "chap11_slide32",
+        "chap08_slide15"
       ],
-      "hit@1": 1,
-      "rr@1": 1.0,
-      "hit@3": 1,
-      "rr@3": 1.0,
+      "hit@1": 0,
+      "rr@1": 0.0,
+      "hit@3": 0,
+      "rr@3": 0.0,
       "hit@5": 1,
-      "rr@5": 1.0
+      "rr@5": 0.25
     },
     {
       "id": "q009",
@@ -159,10 +159,10 @@
       "expected": "chap08_slide17",
       "retrieved_top5": [
         "chap08_slide17",
-        "chap11_slide10",
-        "chap11_before_inheritance",
         "chap08_simple_rectangleshape",
-        "chap03_rectangleshape_objects"
+        "chap03_rectangleshape_objects",
+        "chap11_slide10",
+        "chap07_slide33"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -177,10 +177,10 @@
       "expected": "chap10_slide66",
       "retrieved_top5": [
         "chap10_slide66",
+        "chap10_slide68",
         "chap10_slide33",
         "chap10_common_sorting_techniques",
-        "chap10_slide32",
-        "chap10_slide08"
+        "chap10_slide32"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -197,8 +197,8 @@
         "chap12_slide03",
         "pdf_notes-4 Variables-page7-lecture1",
         "chap02_slide21",
-        "chap07_default_parameters",
-        "chap12_slide40"
+        "chap06_slide37",
+        "chap07_default_parameters"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -215,7 +215,7 @@
         "chap12_slide01",
         "chap12_slide26",
         "chap10_slide02",
-        "chap10_slide01",
+        "chap12_slide19",
         "chap12_slide02"
       ],
       "hit@1": 1,
@@ -231,10 +231,10 @@
       "expected": "chap09_slide03",
       "retrieved_top5": [
         "chap09_slide03",
+        "chap11_slide18",
+        "chap11_slide20",
         "chap11_slide19",
-        "chap01_slide13",
-        "chap01_slide18",
-        "chap02_slide58"
+        "chap01_slide12"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -268,9 +268,9 @@
       "retrieved_top5": [
         "chap02_slide03",
         "chap02_program_organization",
-        "pdf_notes-1.1 Why Use a Language Like C++?-page1-lecture1",
-        "pdf_notes-1.3 General Notes on C++-page2-lecture1",
-        "chap12_slide02"
+        "chap12_slide02",
+        "pdf_notes-2 Hello World-page2-lecture1",
+        "pdf_notes-1.1 Why Use a Language Like C++?-page1-lecture1"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -284,18 +284,18 @@
       "question": "What makes two functions with the same name count as overloaded?",
       "expected": "chap07_slide39",
       "retrieved_top5": [
+        "chap07_slide39",
+        "chap13_slide02",
         "chap07_function_overloading",
         "chap06_slide24",
-        "chap07_slide39",
-        "chap06_function_overloading",
         "chap07_slide42"
       ],
-      "hit@1": 0,
-      "rr@1": 0.0,
+      "hit@1": 1,
+      "rr@1": 1.0,
       "hit@3": 1,
-      "rr@3": 0.3333,
+      "rr@3": 1.0,
       "hit@5": 1,
-      "rr@5": 0.3333
+      "rr@5": 1.0
     },
     {
       "id": "q017",
@@ -303,17 +303,17 @@
       "expected": "chap04_slide27",
       "retrieved_top5": [
         "pdf_notes-3.2 Operators-page5-lecture1",
-        "chap03_slide40",
+        "chap12_slide14",
         "chap02_slide29",
-        "chap04_slide27",
-        "chap12_slide39"
+        "chap12_slide39",
+        "chap03_slide40"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
       "hit@3": 0,
       "rr@3": 0.0,
-      "hit@5": 1,
-      "rr@5": 0.25
+      "hit@5": 0,
+      "rr@5": 0.0
     },
     {
       "id": "q018",
@@ -339,35 +339,35 @@
       "expected": "chap10_slide63",
       "retrieved_top5": [
         "chap10_slide62",
-        "chap10_iterators",
+        "chap10_slide60",
         "chap03_incrementing",
-        "chap03_slide22",
-        "chap10_slide60"
+        "chap10_iterators",
+        "chap10_slide63"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
       "hit@3": 0,
       "rr@3": 0.0,
-      "hit@5": 0,
-      "rr@5": 0.0
+      "hit@5": 1,
+      "rr@5": 0.2
     },
     {
       "id": "q020",
       "question": "How many blue squares will be drawn by this code?",
       "expected": "chap05_slide59",
       "retrieved_top5": [
-        "chap05_slide57",
-        "chap05_slide59",
         "pdf_notes-2.1 The code-page2-lecture1",
-        "chap03_slide38",
-        "chap06_slide43"
+        "chap05_slide57",
+        "chap06_slide43",
+        "chap05_slide59",
+        "chap03_slide38"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
-      "hit@3": 1,
-      "rr@3": 0.5,
+      "hit@3": 0,
+      "rr@3": 0.0,
       "hit@5": 1,
-      "rr@5": 0.5
+      "rr@5": 0.25
     },
     {
       "id": "q021",
@@ -377,8 +377,8 @@
         "chap06_invocation_process",
         "chap07_using",
         "chap10_slide22",
-        "chap04_slide20",
-        "chap03_slide43"
+        "chap12_slide38",
+        "chap04_slide20"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
@@ -393,17 +393,17 @@
       "expected": "chap14_slide15",
       "retrieved_top5": [
         "chap14_fun_with_pictures",
-        "chap14_slide15",
         "chap14_slide16",
         "chap14_hello_ezwindows",
-        "chap14_slide08"
+        "chap08_slide17",
+        "chap14_slide18"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
-      "hit@3": 1,
-      "rr@3": 0.5,
-      "hit@5": 1,
-      "rr@5": 0.5
+      "hit@3": 0,
+      "rr@3": 0.0,
+      "hit@5": 0,
+      "rr@5": 0.0
     },
     {
       "id": "q023",
@@ -411,10 +411,10 @@
       "expected": "chap04_slide02",
       "retrieved_top5": [
         "chap04_slide02",
-        "chap04_boolean_algebra",
+        "chap04_a_boolean_type",
+        "chap04_slide07",
         "chap04_slide06",
-        "chap04_slide05",
-        "chap04_slide04"
+        "chap04_slide05"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -430,16 +430,16 @@
       "retrieved_top5": [
         "chap13_slide30",
         "chap13_virtual_functions",
-        "chap13_slide26",
-        "chap13_slide27",
-        "chap13_slide28"
+        "chap13_slide31",
+        "chap02_passing_classes_to_functions",
+        "chap02_slide50"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
-      "hit@3": 1,
-      "rr@3": 0.3333,
-      "hit@5": 1,
-      "rr@5": 0.3333
+      "hit@3": 0,
+      "rr@3": 0.0,
+      "hit@5": 0,
+      "rr@5": 0.0
     },
     {
       "id": "q025",
@@ -447,10 +447,10 @@
       "expected": "chap01_slide15",
       "retrieved_top5": [
         "chap01_slide15",
-        "chap01_slide13",
+        "chap01_slide09",
         "chap01_slide18",
         "chap01_slide17",
-        "chap01_slide08"
+        "chap01_slide12"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -464,11 +464,11 @@
       "question": "What allows this `operator[]` to modify elements within the `Array`?",
       "expected": "chap13_slide22",
       "retrieved_top5": [
+        "chap13_slide24",
         "chap12_slide39",
         "chap10_array_element_manipulation",
-        "chap13_slide24",
-        "chap03_slide01",
-        "chap13_slide23"
+        "chap13_slide23",
+        "chap03_slide01"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
@@ -483,10 +483,10 @@
       "expected": "chap05_slide53",
       "retrieved_top5": [
         "chap05_slide40",
-        "chap05_slide41",
-        "chap05_slide45",
         "pdf_notes-2.1 The code-page2-lecture1",
-        "chap05_slide44"
+        "chap05_slide42",
+        "chap05_slide54",
+        "chap05_slide46"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
@@ -501,10 +501,10 @@
       "expected": "chap01_slide10",
       "retrieved_top5": [
         "chap01_slide10",
-        "chap01_slide08",
         "chap01_slide06",
+        "chap01_slide08",
         "chap01_slide02",
-        "chap01_computer_organization"
+        "chap14_slide02"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -518,18 +518,18 @@
       "question": "What is the desired user experience when interacting with well-defined object representations?",
       "expected": "chap09_slide02",
       "retrieved_top5": [
-        "chap09_slide02",
         "chap02_slide04",
+        "chap09_slide02",
+        "chap03_slide29",
         "chap01_slide24",
-        "chap08_slide04",
-        "chap13_slide25"
+        "chap08_slide04"
       ],
-      "hit@1": 1,
-      "rr@1": 1.0,
+      "hit@1": 0,
+      "rr@1": 0.0,
       "hit@3": 1,
-      "rr@3": 1.0,
+      "rr@3": 0.5,
       "hit@5": 1,
-      "rr@5": 1.0
+      "rr@5": 0.5
     },
     {
       "id": "q030",
@@ -537,10 +537,10 @@
       "expected": "chap10_slide22",
       "retrieved_top5": [
         "chap10_slide22",
-        "chap10_slide23",
         "chap10_slide20",
-        "chap10_slide21",
-        "chap10_slide32"
+        "chap10_slide32",
+        "chap10_slide23",
+        "chap10_common_sorting_techniques"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -554,11 +554,11 @@
       "question": "What is the advantage of making `Rational` objects work with operators like `+` and `*`, and I/O streams like `cin` and `cout`, as shown?",
       "expected": "chap09_slide07",
       "retrieved_top5": [
-        "chap09_slide23",
         "chap09_slide37",
+        "chap09_slide23",
+        "chap09_slide20",
         "chap09_slide24",
-        "chap09_slide39",
-        "chap09_slide20"
+        "pdf_notes-3.2 Operators-page5-lecture1"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
@@ -572,11 +572,11 @@
       "question": "What is the difference in behavior between using `[]` and `.at()` when accessing a `std::vector` out of bounds?",
       "expected": "chap10_example",
       "retrieved_top5": [
-        "chap10_slide50",
-        "chap10_slide77",
         "chap10_slide60",
-        "chap02_slide50",
-        "chap10_slide49"
+        "chap10_slide50",
+        "chap10_slide49",
+        "chap10_slide77",
+        "chap02_slide50"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
@@ -609,17 +609,17 @@
       "expected": "chap14_timer_functions",
       "retrieved_top5": [
         "chap14_slide22",
-        "chap14_timer_functions",
+        "chap06_returning_a_value",
         "chap14_slide23",
-        "chap10_slide58",
-        "chap06_returning_a_value"
+        "chap06_slide20",
+        "chap06_slide18"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
-      "hit@3": 1,
-      "rr@3": 0.5,
-      "hit@5": 1,
-      "rr@5": 0.5
+      "hit@3": 0,
+      "rr@3": 0.0,
+      "hit@5": 0,
+      "rr@5": 0.0
     },
     {
       "id": "q035",
@@ -629,8 +629,8 @@
         "chap12_slide17",
         "chap12_slide15",
         "chap12_slide19",
-        "chap03_slide30",
-        "chap12_slide31"
+        "chap03_slide29",
+        "chap03_slide30"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -647,8 +647,8 @@
         "chap06_slide64",
         "chap06_library_header_files",
         "chap06_slide33",
-        "chap03_slide28",
-        "chap06_slide63"
+        "chap09_producing_myprogram_exe",
+        "chap06_libraries"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
@@ -663,17 +663,17 @@
       "expected": "chap11_slide20",
       "retrieved_top5": [
         "chap08_slide09",
-        "chap08_slide05",
-        "chap11_slide21",
         "chap13_slide32",
-        "chap11_slide12"
+        "chap11_slide20",
+        "chap11_slide22",
+        "chap11_slide21"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
-      "hit@3": 0,
-      "rr@3": 0.0,
-      "hit@5": 0,
-      "rr@5": 0.0
+      "hit@3": 1,
+      "rr@3": 0.3333,
+      "hit@5": 1,
+      "rr@5": 0.3333
     },
     {
       "id": "q038",
@@ -683,8 +683,8 @@
         "chap09_slide37",
         "chap09_slide33",
         "chap09_slide20",
-        "chap09_slide24",
-        "chap09_slide44"
+        "chap09_slide44",
+        "chap09_slide34"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -698,18 +698,18 @@
       "question": "What are the steps to find the smallest value in an array?",
       "expected": "chap10_slide20",
       "retrieved_top5": [
-        "chap10_slide23",
+        "chap10_slide19",
         "chap10_slide22",
-        "chap10_slide21",
         "chap10_slide20",
-        "chap10_slide19"
+        "chap10_slide23",
+        "chap10_slide21"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
-      "hit@3": 0,
-      "rr@3": 0.0,
+      "hit@3": 1,
+      "rr@3": 0.3333,
       "hit@5": 1,
-      "rr@5": 0.25
+      "rr@5": 0.3333
     },
     {
       "id": "q040",
@@ -717,10 +717,10 @@
       "expected": "chap08_slide07",
       "retrieved_top5": [
         "chap08_slide07",
+        "chap09_remember",
         "chap08_member_functions",
         "chap08_slide04",
-        "chap08_slide06",
-        "chap09_remember"
+        "chap08_slide06"
       ],
       "hit@1": 1,
       "rr@1": 1.0,

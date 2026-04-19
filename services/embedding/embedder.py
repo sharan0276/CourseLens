@@ -11,8 +11,15 @@ class Embedder:
         model_name: str = "BAAI/bge-m3",
         batch_size: int = 32,
         show_progress_bar: bool = True,
-        device: str = "cuda" if torch.cuda.is_available() else "cpu"
+        device: str = None
     ):
+        if device is None:
+            if torch.cuda.is_available():
+                device = "cuda"
+            elif torch.backends.mps.is_available():
+                device = "mps"
+            else:
+                device = "cpu"
         self.model_name = model_name
         self.batch_size = batch_size
         self.show_progress_bar = show_progress_bar
@@ -43,3 +50,13 @@ class Embedder:
             chunk["embedding"] = embedding
         
         return chunks
+
+    def embed_query(self, query: str) -> list[float]:
+        """
+        Embeds a single query string into a vector.
+        """
+        return self.model.encode(
+            query,
+            convert_to_numpy=True,
+            normalize_embeddings=True
+        ).tolist()

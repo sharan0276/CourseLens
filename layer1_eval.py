@@ -5,10 +5,11 @@ computes hit rate and MRR at k=1, 3, 5. Saves results to eval/layer1_results.jso
 """
 
 import json
-import chromadb
-from sentence_transformers import SentenceTransformer
 from pathlib import Path
-from collections import defaultdict
+from services.embedding.embedder import Embedder
+from services.rag.retrieval_service import RetrievalService
+from services.rag.chroma_retriever import VectorStoreManager
+from services.rag.bm25_retriever import BM25Manager
 
 # ── Config ────────────────────────────────────────────────────────────────────
 CHROMA_PATH     = "./CourseLens_data/chroma_db"  
@@ -31,15 +32,11 @@ def load_testset(path: str) -> list[dict]:
     return active
 
 
-def retrieve(collection, embedder, question: str, k: int) -> list[str]:
-    """Returns list of chunk IDs in ranked order."""
-    q_emb = embedder.encode(question).tolist()
-    results = collection.query(
-        query_embeddings=[q_emb],
-        n_results=k,
-        include=[]   # IDs only — faster
-    )
-    return results["ids"][0]   # list of chunk IDs, ranked
+def retrieve(retriever: RetrievalService, question: str, k: int) -> list[str]:
+    """Returns list of chunk IDs in ranked order using production Hybrid logic."""
+    # disable_swapping=True ensures we test individual slide quality
+    docs = retriever.retrieve(question, k=k, disable_swapping=True)
+    return [doc.metadata.get("id") or getattr(doc, "id", "unknown") for doc in docs]
 
 
 def reciprocal_rank(ranked_ids: list[str], expected_id: str) -> float:
@@ -49,7 +46,7 @@ def reciprocal_rank(ranked_ids: list[str], expected_id: str) -> float:
     return 0.0
 
 
-def evaluate(testset: list[dict], collection, embedder) -> dict:
+def evaluate(testset: list[dict], retriever: RetrievalService) -> dict:
     per_k = {k: {"hits": 0, "rr_sum": 0.0} for k in K_VALUES}
     per_entry = []
     max_k = max(K_VALUES)
@@ -58,7 +55,7 @@ def evaluate(testset: list[dict], collection, embedder) -> dict:
         q   = entry["question"]
         exp = entry["expected_chunk_id"]
 
-        ranked = retrieve(collection, embedder, q, max_k)
+        ranked = retrieve(retriever, q, max_k)
 
         entry_result = {
             "id":               entry["id"],
@@ -114,13 +111,14 @@ def main():
     print("── Loading test set ──")
     testset = load_testset(TESTSET_PATH)
 
-    print("\n── Connecting to ChromaDB ──")
-    client     = chromadb.PersistentClient(path=CHROMA_PATH)
-    collection = client.get_collection(COLLECTION_NAME)
-    embedder   = SentenceTransformer(EMBED_MODEL)
+    print("\n── Connecting to Production Retrieval Stack ──")
+    embedder = Embedder(model_name=EMBED_MODEL)
+    vsm = VectorStoreManager(embeddings_model=embedder)
+    bm25 = BM25Manager()
+    retriever = RetrievalService(vector_store_manager=vsm, bm25_manager=bm25)
 
-    print("\n── Running retrieval eval ──")
-    results = evaluate(testset, collection, embedder)
+    print("\n── Running retrieval eval (Hybrid 90/10 + 1.05x Boost) ──")
+    results = evaluate(testset, retriever)
 
     print_summary(results)
 
