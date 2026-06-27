@@ -29,8 +29,7 @@ import argparse
 # Make sure project root is on the path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-from langchain_google_genai import ChatGoogleGenerativeAI
-
+from services.llm_factory import get_vertex_llm, get_vertex_flash_llm
 from services.embedding.embedder import Embedder
 from services.rag.embeddings_adapter import CourseLensEmbeddings
 from services.rag.vector_store import VectorStoreManager
@@ -56,14 +55,7 @@ Type 'exit' or 'quit' to end the session.
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _check_api_key() -> str:
-    key = os.environ.get("GEMINI_API_KEY", "")
-    if not key:
-        print(
-            "Error: GEMINI_API_KEY environment variable is not set.\n"
-            "Export it first:  export GEMINI_API_KEY='your-key-here'"
-        )
-        sys.exit(1)
-    return key
+    return "vertex-ai-mode"
 
 
 def _build_dependencies(api_key: str, mode: str, search_type: str):
@@ -73,17 +65,9 @@ def _build_dependencies(api_key: str, mode: str, search_type: str):
     base_embedder = Embedder()
     embeddings    = CourseLensEmbeddings(embedder=base_embedder)
 
-    print("Initialising LLM (Gemini) …")
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
-        google_api_key=api_key,
-    )
-    
-    flash_llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",        # lightweight model for classification & assessment
-        google_api_key=api_key,
-        temperature=0,                    # deterministic — always picks most likely label
-    )
+    print("Initialising LLM (Vertex AI) …")
+    llm = get_vertex_llm(temperature=0.7)
+    flash_llm = get_vertex_flash_llm(temperature=0.0)
 
     history_store = ChatHistoryStore(storage_dir=SESSIONS_DIR)
 
@@ -92,7 +76,6 @@ def _build_dependencies(api_key: str, mode: str, search_type: str):
         history_store=history_store,
         llm=llm,
         flash_llm=flash_llm,
-        mode=mode,
         search_type=search_type,
     )
 

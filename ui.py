@@ -65,7 +65,14 @@ def load_history(session_id):
         response = requests.get(f"{API_BASE_URL}/history/{session_id}")
         if response.status_code == 200:
              data = response.json()
-             return data.get("messages", [])
+             messages = data.get("messages", [])
+             
+             # Apply the URL rewrite to all old messages loaded from history
+             for msg in messages:
+                 if msg.get("role") == "assistant" and "content" in msg:
+                     msg["content"] = msg["content"].replace("CourseLens_data/images/", f"{API_BASE_URL}/images/")
+                     
+             return messages
     except requests.exceptions.ConnectionError:
         pass
     return []
@@ -224,7 +231,10 @@ if user_input:
             
             if resp_data:
                 ai_text = resp_data.get("response", "")
+                
+                # Rewrite local paths to the FastAPI server URL so Streamlit can fetch them over the network
                 ai_text = ai_text.replace("CourseLens_data/images/", f"{API_BASE_URL}/images/")
+                
                 session_id = resp_data.get("session_id")
                 
                 st.markdown(ai_text)
@@ -232,4 +242,7 @@ if user_input:
                 
                 if st.session_state.current_session_id is None and session_id:
                     st.session_state.current_session_id = session_id
-                    st.rerun()
+                
+                # Force a full page reload for ALL messages (both new and old sessions)
+                # This guarantees that Streamlit natively renders local images perfectly from the history loop.
+                st.rerun()

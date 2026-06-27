@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 # Make sure project root is on the path (if running from subdirectories)
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-from langchain_google_genai import ChatGoogleGenerativeAI
+from services.llm_factory import get_vertex_llm, get_vertex_flash_llm
 from services.embedding.embedder import Embedder
 from services.rag.embeddings_adapter import CourseLensEmbeddings
 from services.chat.chat_history import ChatHistoryStore
@@ -26,25 +26,13 @@ state = AppState()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    if not api_key:
-        raise RuntimeError("GEMINI_API_KEY environment variable is not set.")
-        
     print("Loading embedding model (BAAI/bge-m3)...")
     base_embedder = Embedder()
     embeddings = CourseLensEmbeddings(embedder=base_embedder)
     
-    print("Initialising LLM (Gemini)...")
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
-        google_api_key=api_key,
-    )
-    
-    flash_llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
-        google_api_key=api_key,
-        temperature=0,
-    )
+    print("Initialising LLM (Vertex AI)...")
+    llm = get_vertex_llm(temperature=0.7)
+    flash_llm = get_vertex_flash_llm(temperature=0.0)
     
     state.title_llm = flash_llm
     state.history_store = ChatHistoryStore(storage_dir=SESSIONS_DIR)
