@@ -1,53 +1,58 @@
 import os
-import json
+import boto3
 from typing import Optional
+from dotenv import load_dotenv
 
 from domain.chat_session import ChatSession
 from domain.chat_message import ChatMessage
 
+# Load env variables for AWS credentials
+load_dotenv()
 
 class ChatHistoryStore:
     """
-    Manages ChatSession objects: creates, loads, saves, and lists them.
-    Sessions are persisted as individual JSON files on disk so they can be resumed.
+    Manages ChatSession objects using AWS DynamoDB for a stateless architecture.
+    Sessions are persisted to the cloud rather than local disk.
     """
 
-    def __init__(self, storage_dir: str = "CourseLens_data/chat_sessions"):
-        self.storage_dir = storage_dir
-        os.makedirs(self.storage_dir, exist_ok=True)
-
-    # ── Helpers ───────────────────────────────────────────────────────────────
-
-    def _session_path(self, session_id: str) -> str:
-        return os.path.join(self.storage_dir, f"{session_id}.json")
+    def __init__(self, table_name: str = "courselens-sessions"):
+        self.table_name = table_name
+        # boto3.resource allows us to interact with DynamoDB using native Python dictionaries
+        self.dynamodb = boto3.resource('dynamodb')
+        self.table = self.dynamodb.Table(self.table_name)
 
     # ── CRUD ──────────────────────────────────────────────────────────────────
 
     def create_session(self, mode: str = "general") -> ChatSession:
-        """Creates a new session, persists it, and returns it."""
+        """Creates a new session, persists it to DynamoDB, and returns it."""
         session = ChatSession(mode=mode)
         self.save_session(session)
         return session
 
     def load_session(self, session_id: str) -> Optional[ChatSession]:
-        """Loads a session from disk by its ID. Returns None if not found."""
-        path = self._session_path(session_id)
-        if not os.path.exists(path):
+        """Loads a session from DynamoDB by its ID. Returns None if not found."""
+        try:
+            response = self.table.get_item(Key={'session_id': session_id})
+            if 'Item' not in response:
+                return None
+            data = response['Item']
+            return ChatSession.model_validate(data)
+        except Exception as e:
+            print(f"Error loading session {session_id} from DynamoDB: {e}")
             return None
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return ChatSession.model_validate(data)
 
     def save_session(self, session: ChatSession) -> None:
-        """Persists a session to disk as JSON."""
-        path = self._session_path(session.session_id)
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(session.model_dump_json(indent=2))
+        """Persists a session to DynamoDB."""
+        try:
+            # We use model_dump() to get a native Python dictionary instead of a JSON string
+            data = session.model_dump()
+            self.table.put_item(Item=data)
+        except Exception as e:
+            print(f"Error saving session {session.session_id} to DynamoDB: {e}")
 
     def append_message(self, session_id: str, role: str, content: str) -> Optional[ChatMessage]:
         """
         Loads the session, appends a message, saves, and returns the new message.
-        Returns None if session not found.
         """
         session = self.load_session(session_id)
         if session is None:
@@ -57,9 +62,13 @@ class ChatHistoryStore:
         return msg
 
     def list_sessions(self) -> list[str]:
-        """Returns a sorted list of all known session IDs."""
-        ids = []
-        for fname in os.listdir(self.storage_dir):
-            if fname.endswith(".json"):
-                ids.append(fname.replace(".json", ""))
-        return sorted(ids)
+        """Returns a list of all known session IDs from DynamoDB."""
+        try:
+            # In a massive production app, we would use a Global Secondary Index here.
+            # For this scale, a simple Scan projecting just the session_id is perfect.
+            response = self.table.scan(ProjectionExpression="session_id")
+            ids = [item['session_id'] for item in response.get('Items', [])]
+            return sorted(ids)
+        except Exception as e:
+            print(f"Error listing sessions from DynamoDB: {e}")
+            return []

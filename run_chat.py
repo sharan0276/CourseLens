@@ -69,7 +69,7 @@ def _build_dependencies(api_key: str, mode: str, search_type: str):
     llm = get_vertex_llm(temperature=0.7)
     flash_llm = get_vertex_flash_llm(temperature=0.0)
 
-    history_store = ChatHistoryStore(storage_dir=SESSIONS_DIR)
+    history_store = ChatHistoryStore()
 
     pipeline = ChatPipeline(
         embeddings=embeddings,
@@ -152,7 +152,7 @@ def main():
 
     # ── --list ────────────────────────────────────────────────────────────────
     if args.list:
-        store    = ChatHistoryStore(storage_dir=SESSIONS_DIR)
+        store    = ChatHistoryStore()
         sessions = store.list_sessions()
         if sessions:
             print("Saved sessions:")

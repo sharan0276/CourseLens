@@ -15,7 +15,7 @@ from services.rag.embeddings_adapter import CourseLensEmbeddings
 from services.chat.chat_history import ChatHistoryStore
 from services.chat.chat_pipeline import ChatPipeline
 
-SESSIONS_DIR = "CourseLens_data/chat_sessions"
+# SESSIONS_DIR = "CourseLens_data/chat_sessions" # Removed because we use DynamoDB
 
 class AppState:
     history_store: ChatHistoryStore
@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
     flash_llm = get_vertex_flash_llm(temperature=0.0)
     
     state.title_llm = flash_llm
-    state.history_store = ChatHistoryStore(storage_dir=SESSIONS_DIR)
+    state.history_store = ChatHistoryStore()
     
     print("Initializing Unified Chat Pipeline...")
     state.pipeline = ChatPipeline(
