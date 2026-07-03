@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from services.chat.socratic_engine import SocraticEngine, ReplyAssessment
 from domain.chat_session import ChatSession
 from services.rag.retrieval_service import RetrievalService
-from services.rag.vector_store import VectorStoreManager
+from services.rag.pinecone_retriever import VectorStoreManager
 from services.rag.embeddings_adapter import CourseLensEmbeddings
 from services.embedding.embedder import Embedder
 

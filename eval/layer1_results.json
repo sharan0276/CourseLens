@@ -33,10 +33,10 @@
       "expected": "chap04_slide25",
       "retrieved_top5": [
         "chap04_slide25",
-        "chap02_slide13",
         "chap12_slide09",
         "chap07_slide52",
-        "chap04_slide07"
+        "chap04_slide07",
+        "chap07_slide53"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -68,18 +68,18 @@
       "question": "Are literal string constants considered a fundamental C++ type?",
       "expected": "chap02_slide18",
       "retrieved_top5": [
-        "chap02_slide18",
-        "chap02_slide11",
         "chap04_slide07",
         "chap04_a_boolean_type",
-        "chap03_nonfundamental_types"
+        "chap03_nonfundamental_types",
+        "pdf_notes-3.3 Data Types-page5-lecture1",
+        "pdf_notes-1.3 General Notes on C++-page2-lecture1"
       ],
-      "hit@1": 1,
-      "rr@1": 1.0,
-      "hit@3": 1,
-      "rr@3": 1.0,
-      "hit@5": 1,
-      "rr@5": 1.0
+      "hit@1": 0,
+      "rr@1": 0.0,
+      "hit@3": 0,
+      "rr@3": 0.0,
+      "hit@5": 0,
+      "rr@5": 0.0
     },
     {
       "id": "q005",
@@ -90,7 +90,7 @@
         "chap05_slide64",
         "chap07_slide13",
         "chap07_range_cpp",
-        "chap03_slide41"
+        "chap03_slide22"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -124,9 +124,9 @@
       "retrieved_top5": [
         "chap09_slide12",
         "chap12_slide10",
-        "chap02_slide26",
         "chap09_remember",
-        "chap09_slide24"
+        "chap09_slide24",
+        "chap03_slide22"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -162,7 +162,7 @@
         "chap08_simple_rectangleshape",
         "chap03_rectangleshape_objects",
         "chap11_slide10",
-        "chap07_slide33"
+        "chap11_slide26"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -196,9 +196,9 @@
       "retrieved_top5": [
         "chap12_slide03",
         "pdf_notes-4 Variables-page7-lecture1",
-        "chap02_slide21",
         "chap06_slide37",
-        "chap07_default_parameters"
+        "chap07_default_parameters",
+        "chap12_slide40"
       ],
       "hit@1": 1,
       "rr@1": 1.0,
@@ -266,18 +266,18 @@
       "question": "What are the advantages of structuring a C++ program into small, understandable units?",
       "expected": "chap02_slide03",
       "retrieved_top5": [
-        "chap02_slide03",
         "chap02_program_organization",
         "chap12_slide02",
         "pdf_notes-2 Hello World-page2-lecture1",
-        "pdf_notes-1.1 Why Use a Language Like C++?-page1-lecture1"
+        "pdf_notes-1.1 Why Use a Language Like C++?-page1-lecture1",
+        "pdf_notes-1.3 General Notes on C++-page2-lecture1"
       ],
-      "hit@1": 1,
-      "rr@1": 1.0,
-      "hit@3": 1,
-      "rr@3": 1.0,
-      "hit@5": 1,
-      "rr@5": 1.0
+      "hit@1": 0,
+      "rr@1": 0.0,
+      "hit@3": 0,
+      "rr@3": 0.0,
+      "hit@5": 0,
+      "rr@5": 0.0
     },
     {
       "id": "q016",
@@ -304,7 +304,7 @@
       "retrieved_top5": [
         "pdf_notes-3.2 Operators-page5-lecture1",
         "chap12_slide14",
-        "chap02_slide29",
+        "chap12_slide41",
         "chap12_slide39",
         "chap03_slide40"
       ],
@@ -340,7 +340,7 @@
       "retrieved_top5": [
         "chap10_slide62",
         "chap10_slide60",
-        "chap03_incrementing",
+        "chap03_slide22",
         "chap10_iterators",
         "chap10_slide63"
       ],
@@ -374,18 +374,18 @@
       "question": "How does a function like this take an input, perform a calculation, and then return a result?",
       "expected": "chap06_slide06",
       "retrieved_top5": [
+        "chap06_slide06",
         "chap06_invocation_process",
         "chap07_using",
-        "chap10_slide22",
         "chap12_slide38",
-        "chap04_slide20"
+        "chap06_slide05"
       ],
-      "hit@1": 0,
-      "rr@1": 0.0,
-      "hit@3": 0,
-      "rr@3": 0.0,
-      "hit@5": 0,
-      "rr@5": 0.0
+      "hit@1": 1,
+      "rr@1": 1.0,
+      "hit@3": 1,
+      "rr@3": 1.0,
+      "hit@5": 1,
+      "rr@5": 1.0
     },
     {
       "id": "q022",
@@ -432,7 +432,7 @@
         "chap13_virtual_functions",
         "chap13_slide31",
         "chap02_passing_classes_to_functions",
-        "chap02_slide50"
+        "chap02_slide30"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
@@ -486,7 +486,7 @@
         "pdf_notes-2.1 The code-page2-lecture1",
         "chap05_slide42",
         "chap05_slide54",
-        "chap05_slide46"
+        "chap05_slide47"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
@@ -503,7 +503,7 @@
         "chap01_slide10",
         "chap01_slide06",
         "chap01_slide08",
-        "chap01_slide02",
+        "chap01_computer_organization",
         "chap14_slide02"
       ],
       "hit@1": 1,
@@ -518,18 +518,18 @@
       "question": "What is the desired user experience when interacting with well-defined object representations?",
       "expected": "chap09_slide02",
       "retrieved_top5": [
-        "chap02_slide04",
         "chap09_slide02",
         "chap03_slide29",
         "chap01_slide24",
-        "chap08_slide04"
+        "chap08_slide04",
+        "chap13_slide25"
       ],
-      "hit@1": 0,
-      "rr@1": 0.0,
+      "hit@1": 1,
+      "rr@1": 1.0,
       "hit@3": 1,
-      "rr@3": 0.5,
+      "rr@3": 1.0,
       "hit@5": 1,
-      "rr@5": 0.5
+      "rr@5": 1.0
     },
     {
       "id": "q030",
@@ -611,8 +611,8 @@
         "chap14_slide22",
         "chap06_returning_a_value",
         "chap14_slide23",
-        "chap06_slide20",
-        "chap06_slide18"
+        "chap10_slide58",
+        "chap06_slide62"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
@@ -645,17 +645,17 @@
       "expected": "chap06_slide18",
       "retrieved_top5": [
         "chap06_slide64",
+        "chap06_slide18",
         "chap06_library_header_files",
         "chap06_slide33",
-        "chap09_producing_myprogram_exe",
-        "chap06_libraries"
+        "chap06_slide17"
       ],
       "hit@1": 0,
       "rr@1": 0.0,
-      "hit@3": 0,
-      "rr@3": 0.0,
-      "hit@5": 0,
-      "rr@5": 0.0
+      "hit@3": 1,
+      "rr@3": 0.5,
+      "hit@5": 1,
+      "rr@5": 0.5
     },
     {
       "id": "q037",
@@ -702,7 +702,7 @@
         "chap10_slide22",
         "chap10_slide20",
         "chap10_slide23",
-        "chap10_slide21"
+        "chap10_slide05"
       ],
       "hit@1": 0,
       "rr@1": 0.0,

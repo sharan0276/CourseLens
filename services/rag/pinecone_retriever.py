@@ -1,51 +1,55 @@
+import os
 from typing import List
 from langchain_core.embeddings import Embeddings
 from langchain_core.documents import Document
-from langchain_chroma import Chroma
+from langchain_pinecone import PineconeVectorStore
 
 
 class VectorStoreManager:
-    """ Read-only interface to ChromaDB for LangChain RAG pipeline.
-    Connects to existing collection built by run_ingestion.py"""
+    """ Read-only interface to Pinecone for LangChain RAG pipeline.
+    Connects to existing cloud index built by run_ingestion.py"""
 
-    def __init__(self, embeddings_model: Embeddings, persist_directory: str = "CourseLens_data/chroma_db", collection_name: str = "course_lens"):
-        self.embeddings = embeddings_model
-        self.persist_directory = persist_directory
-        self.collection_name = collection_name
+    def __init__(self, embeddings_model: Embeddings, persist_directory: str = None, collection_name: str = None):
+        from dotenv import load_dotenv
+        load_dotenv()
         
-        # Initialize chroma db
-        self.vector_store = Chroma(
-            embedding_function=self.embeddings,
-            persist_directory=self.persist_directory,
-            collection_name=self.collection_name
+        self.embeddings = embeddings_model
+        
+        index_name = os.getenv("PINECONE_INDEX_NAME", "courselens")
+        
+        # Initialize Pinecone via LangChain
+        self.vector_store = PineconeVectorStore(
+            index_name=index_name,
+            embedding=self.embeddings,
+            pinecone_api_key=os.getenv("PINECONE_API_KEY")
         )
         self._bm25_retriever = None
-        print(f"Connected to ChromaDB collection: {self.collection_name} at {self.persist_directory}")
+        print(f"Connected to Pinecone Cloud Index: {index_name}")
 
     def _get_bm25(self):
-        """Self-healing BM25 Loader"""
+        """Self-healing BM25 Loader - Downloads from S3 if missing locally"""
         if self._bm25_retriever is not None:
             return self._bm25_retriever
             
         import os, pickle
+        from services.s3_service import S3Service
+        
         pkl_path = "CourseLens_data/bm25_retriever.pkl"
+        
+        if not os.path.exists(pkl_path):
+            print("[VectorStoreManager] local BM25 index not found. Fetching from S3...")
+            try:
+                s3_bucket = os.getenv("S3_BUCKET_NAME", "courselens-data-bucket-test-01")
+                s3_service = S3Service(bucket_name=s3_bucket)
+                s3_service.download_file("CourseLens_data/bm25_retriever.pkl", pkl_path)
+            except Exception as e:
+                print(f"[VectorStoreManager] Failed to fetch BM25 from S3: {e}")
+                
         if os.path.exists(pkl_path):
             with open(pkl_path, "rb") as f:
                 self._bm25_retriever = pickle.load(f)
         else:
-            print("[VectorStoreManager] BM25 Index not found. Auto-healing from ChromaDB...")
-            from langchain_community.retrievers import BM25Retriever
-            from langchain_core.documents import Document
-            
-            all_data = self.vector_store.get(include=["documents", "metadatas"])
-            docs = []
-            for t, m, i in zip(all_data['documents'], all_data['metadatas'], all_data['ids']):
-                docs.append(Document(page_content=t, metadata=m, id=i))
-            
-            if docs:
-                self._bm25_retriever = BM25Retriever.from_documents(docs)
-                with open(pkl_path, "wb") as f:
-                    pickle.dump(self._bm25_retriever, f)
+            print("[VectorStoreManager] WARNING: BM25 Index pickle not found locally or on S3. Please run python3 run_ingestion.py first.")
         
         return self._bm25_retriever
 

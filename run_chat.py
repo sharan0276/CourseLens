@@ -32,7 +32,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from services.llm_factory import get_vertex_llm, get_vertex_flash_llm
 from services.embedding.embedder import Embedder
 from services.rag.embeddings_adapter import CourseLensEmbeddings
-from services.rag.vector_store import VectorStoreManager
+from services.rag.pinecone_retriever import VectorStoreManager
 from services.rag.loader import JSONSlideLoader
 from services.chat.chat_history import ChatHistoryStore
 from services.chat.chat_pipeline import ChatPipeline
@@ -42,7 +42,7 @@ from services.chat.citation_utils import add_sources_footer
 
 DATA_DIR     = "CourseLens_data/processed_data"
 PERSIST_DIR  = "CourseLens_data/chroma_db"
-SESSIONS_DIR = "CourseLens_data/chat_sessions"
+#SESSIONS_DIR = "CourseLens_data/chat_sessions"
 
 BANNER = """
 ╔══════════════════════════════════════════╗

@@ -10,7 +10,7 @@ from langchain_core.documents import Document
 from services.chat.chat_history import ChatHistoryStore
 from domain.chat_session import ChatSession
 from services.rag.retrieval_service import RetrievalService
-from services.rag.chroma_retriever import VectorStoreManager
+from services.rag.pinecone_retriever import VectorStoreManager
 from services.rag.web_content_scraper import WebContentScraper
 from services.chat.query_classifier import QueryClassifier, QueryType
 from services.chat.anchor_retrieval import AnchorRetrieval

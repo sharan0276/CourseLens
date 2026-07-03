@@ -58,7 +58,7 @@ class IngestionService:
         files_processed = 0
         total_slides = 0
 
-        for filepath in glob.glob(os.path.join(folder_path, "*.pptx")):
+        for filepath in glob.glob(os.path.join(folder_path, "**", "*.pptx"), recursive=True):
             try:
                 slides = self.pptx_parser.parse(filepath)
                 cleaned_slides = [self.slide_cleaner.clean(slide) for slide in slides]
@@ -94,7 +94,7 @@ class IngestionService:
         files_processed = 0
         total_sections = 0
 
-        for filepath in glob.glob(os.path.join(folder_path, "*.pdf")):
+        for filepath in glob.glob(os.path.join(folder_path, "**", "*.pdf"), recursive=True):
             try:
                 slides = self.pdf_parser.parse_pdf(filepath)
                 cleaned_slides = [ self.slide_cleaner.clean(slide) for slide in slides]

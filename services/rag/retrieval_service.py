@@ -1,6 +1,6 @@
 from typing import List
 from langchain_core.documents import Document
-from services.rag.chroma_retriever import VectorStoreManager
+from services.rag.pinecone_retriever import VectorStoreManager
 from services.rag.bm25_retriever import BM25Manager
 import chromadb
 

@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 from services.embedding.embedder import Embedder
 from services.rag.retrieval_service import RetrievalService
-from services.rag.chroma_retriever import VectorStoreManager
+from services.rag.pinecone_retriever import VectorStoreManager
 from services.rag.bm25_retriever import BM25Manager
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tenacity import retry, wait_exponential, stop_after_attempt
