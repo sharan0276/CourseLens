@@ -159,7 +159,7 @@ Resources:
                   - dynamodb:PutItem
                   - dynamodb:Scan
                   - dynamodb:UpdateItem
-                Resource: !GetAtt DynamoDBTable::Arn
+                Resource: !GetAtt DynamoDBTable.Arn
               - Effect: Allow
                 Action:
                   - s3:GetObject
