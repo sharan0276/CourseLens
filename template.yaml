@@ -102,17 +102,6 @@ Resources:
         - AttributeName: session_id
           KeyType: HASH
 
-  S3Bucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Ref S3BucketNameParam
-      CorsConfiguration:
-        CorsRules:
-          - AllowedHeaders: ['*']
-            AllowedMethods: [GET]
-            AllowedOrigins: ['*']
-            MaxAge: 3000
-
   # ── IAM Security Roles ──────────────────────────────────────────────────────
   ECSTaskExecutionRole:
     Type: AWS::IAM::Role
