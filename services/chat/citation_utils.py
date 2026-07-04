@@ -13,9 +13,9 @@ def add_sources_footer(text: str) -> str:
     import re
 
     # ── Step 0: Strip any existing LLM-generated "Sources Used" sections ──────
-    # Matches "Sources Used:" or "References:" followed by list items until end or double newline
+    # Matches bolded/header "Sources Used:" or "References:" followed by list items
     text = re.sub(
-        r'\n*(?:Sources Used|References):\s*\n(?:\s*[\*\-•]?\s*(?:\[\d+\]\s*)?[^\n]+\n?)+',
+        r'\n*(?:\*\*|###|##)?\s*(?:Sources Used|References)(?:\*\*)?:?\s*\n(?:\s*[\*\-•]?\s*(?:\[\d+\]\s*)?[^\n]+\n?)+',
         '',
         text
     ).rstrip()
@@ -26,11 +26,16 @@ def add_sources_footer(text: str) -> str:
         """
         Split 'chap01.pptx, Slide 2, Slide 3' -> ['chap01.pptx, Slide 2', 'chap01.pptx, Slide 3']
         """
-        parts = re.split(r',\s*', raw.strip())
-        if not parts: return [raw]
+        # Clean any inner newlines or carriage returns that the LLM might have generated
+        raw_clean = raw.replace('\n', ' ').replace('\r', ' ').strip()
+        # Reduce multiple spaces to a single space
+        raw_clean = re.sub(r'\s+', ' ', raw_clean)
+        
+        parts = re.split(r',\s*', raw_clean)
+        if not parts: return [raw_clean]
         filename = parts[0].strip()
         slides = [p.strip() for p in parts[1:] if re.match(r'[sS]lide\s*\d+', p.strip(), re.IGNORECASE)]
-        return [f"{filename}, {slide}" for slide in slides] if slides else [raw]
+        return [f"{filename}, {slide}" for slide in slides] if slides else [raw_clean]
 
     # ── Step 2: Collect all unique citations in order of appearance ─────────
     unique_citations = []  # list of (display_text, citation_type, url)
@@ -102,4 +107,6 @@ def add_sources_footer(text: str) -> str:
         else:
             footer += f"\n- [{i}] {display}"
 
-    return processed_text + footer
+    final_text = processed_text + footer
+    print(f"\n[Citation Debug] Compiled Bibliography:\n{repr(footer)}\n")
+    return final_text

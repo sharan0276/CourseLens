@@ -56,8 +56,29 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Mount the images directory so they can be accessed via URL
-app.mount("/images", StaticFiles(directory="CourseLens_data/images"), name="images")
+from fastapi.responses import FileResponse
+from services.s3_service import S3Service
+
+# Initialize S3 Service for on-demand image downloading
+S3_BUCKET = os.getenv("S3_BUCKET_NAME", "courselens-data-bucket-test-01")
+s3_service = S3Service(bucket_name=S3_BUCKET)
+
+@app.get("/images/{image_name}")
+async def get_image(image_name: str):
+    local_path = os.path.join("CourseLens_data/images", image_name)
+    if not os.path.exists(local_path):
+        print(f"[API] Image {image_name} not found locally. Downloading from S3...")
+        os.makedirs(os.path.dirname(local_path), exist_ok=True)
+        try:
+            s3_key = f"CourseLens_data/images/{image_name}"
+            s3_service.download_file(s3_key, local_path)
+        except Exception as e:
+            print(f"[API] Error downloading image from S3: {e}")
+            raise HTTPException(status_code=404, detail="Image not found in cloud storage.")
+            
+    if os.path.exists(local_path):
+        return FileResponse(local_path)
+    raise HTTPException(status_code=404, detail="Image file not found.")
 
 class ChatRequest(BaseModel):
     session_id: Optional[str] = None
@@ -143,6 +164,13 @@ def update_session_title(session_id: str, request: SessionTitleUpdate):
     session.title = request.title
     state.history_store.save_session(session)
     return {"status": "success", "title": session.title}
+
+@app.delete("/sessions/{session_id}")
+def delete_session(session_id: str):
+    success = state.history_store.delete_session(session_id)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to delete session from database")
+    return {"status": "success"}
 
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):

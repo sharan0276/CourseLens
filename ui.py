@@ -1,7 +1,9 @@
 import streamlit as st
 import requests
 
-API_BASE_URL = "http://localhost:8000"
+import os
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+EXTERNAL_API_URL = os.getenv("EXTERNAL_API_URL", "http://localhost:8000")
 
 st.set_page_config(
     page_title="CourseLens Chat",
@@ -25,6 +27,10 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         margin-top: 15px;
         margin-bottom: 15px;
+    }
+    /* Fix Safari list container collapse */
+    [data-testid="stChatMessage"] ul {
+        width: 100% !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -70,12 +76,21 @@ def load_history(session_id):
              # Apply the URL rewrite to all old messages loaded from history
              for msg in messages:
                  if msg.get("role") == "assistant" and "content" in msg:
-                     msg["content"] = msg["content"].replace("CourseLens_data/images/", f"{API_BASE_URL}/images/")
+                     msg["content"] = msg["content"].replace("CourseLens_data/images/", f"{EXTERNAL_API_URL}/images/")
                      
              return messages
     except requests.exceptions.ConnectionError:
         pass
     return []
+
+def delete_session_from_db(session_id):
+    if not session_id:
+        return False
+    try:
+        response = requests.delete(f"{API_BASE_URL}/sessions/{session_id}")
+        return response.status_code == 200
+    except requests.exceptions.ConnectionError:
+        return False
 
 def send_message(session_id, message, lecture_number, use_web_scraping=True):
     payload = {
@@ -202,6 +217,8 @@ with control_col:
     st.divider()
     
     if st.button("🗑️ Clear Chat History", type="secondary", use_container_width=True):
+        if st.session_state.current_session_id:
+            delete_session_from_db(st.session_state.current_session_id)
         reset_session()
         st.rerun()
 
@@ -233,7 +250,7 @@ if user_input:
                 ai_text = resp_data.get("response", "")
                 
                 # Rewrite local paths to the FastAPI server URL so Streamlit can fetch them over the network
-                ai_text = ai_text.replace("CourseLens_data/images/", f"{API_BASE_URL}/images/")
+                ai_text = ai_text.replace("CourseLens_data/images/", f"{EXTERNAL_API_URL}/images/")
                 
                 session_id = resp_data.get("session_id")
                 

@@ -44,8 +44,8 @@ class ChatHistoryStore:
     def save_session(self, session: ChatSession) -> None:
         """Persists a session to DynamoDB."""
         try:
-            # We use model_dump() to get a native Python dictionary instead of a JSON string
-            data = session.model_dump()
+            # We use model_dump(mode="json") to get a JSON-serializable dictionary for DynamoDB
+            data = session.model_dump(mode="json")
             self.table.put_item(Item=data)
         except Exception as e:
             print(f"Error saving session {session.session_id} to DynamoDB: {e}")
@@ -72,3 +72,13 @@ class ChatHistoryStore:
         except Exception as e:
             print(f"Error listing sessions from DynamoDB: {e}")
             return []
+
+    def delete_session(self, session_id: str) -> bool:
+        """Deletes a session from DynamoDB by its ID."""
+        try:
+            self.table.delete_item(Key={'session_id': session_id})
+            return True
+        except Exception as e:
+            print(f"Error deleting session {session_id} from DynamoDB: {e}")
+            return False
+

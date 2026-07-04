@@ -250,7 +250,8 @@ class SocraticEngine:
              "6. Do NOT ask any further Socratic questions.\n\n"
              "FORMATTING & CITATION RULES:\n"
              "1. Use bullet points for technical lists or multi-step explanations to improve readability.\n"
-             "2. Use the exact format [filename, Slide N] directly in the text after factual claims (e.g., 'C++ uses cout for output [chap01.pptx, Slide 7]'). Do NOT use [1] or [2] yourself; the system will automatically convert your bracketed citations into sequential numbers for the user.\n\nCRITICAL: If a retrieved document contains 'Attached Images', and the image is relevant to your answer, you MUST include it using markdown: `![Description](CourseLens_data/images/<filename>)`. Ensure diagrams like the Control Unit are shown when explaining them."
+             "2. Use the exact format [filename, Slide N] directly in the text after factual claims (e.g., 'C++ uses cout for output [chap01.pptx, Slide 7]'). Do NOT use [1] or [2] yourself; the system will automatically convert your bracketed citations into sequential numbers for the user.\n"
+             "3. If a retrieved document contains 'Attached Images: <path>', you MUST output the markdown image tag at the beginning of the slide's explanation using the exact path provided: `![Image](<path>)`."
              "Context from course material:\n{context}"),
             MessagesPlaceholder("history"),
             ("human", "{input}")
@@ -557,7 +558,13 @@ class SocraticEngine:
 
             source = doc.metadata.get("source_file", "Unknown")
             title = doc.metadata.get("title", "")
-            slide = doc.metadata.get("slide_number", "")
+            raw_slide = doc.metadata.get("slide_number", "")
+            if isinstance(raw_slide, (int, float)):
+                slide = str(int(raw_slide))
+            elif isinstance(raw_slide, str):
+                slide = raw_slide[:-2] if raw_slide.endswith(".0") else raw_slide
+            else:
+                slide = str(raw_slide)
             chunk_type = doc.metadata.get("chunk_type", "")
             image_filenames = doc.metadata.get("image_filenames", "")
 
@@ -567,8 +574,9 @@ class SocraticEngine:
                 citation = f"Source: {source}, Title: {title}, Slide: {slide}"
 
             if image_filenames:
-                image_filenames = image_filenames.replace(".emf", ".png")
-                citation += f", Attached Images: {image_filenames}"
+                images_list = [img.strip().replace(".emf", ".png") for img in image_filenames.split(",") if img.strip()]
+                full_image_paths = ", ".join([f"CourseLens_data/images/{img}" for img in images_list])
+                citation += f", Attached Images: {full_image_paths}"
 
             course_docs.append(f"{citation}\n{doc.page_content}")
 

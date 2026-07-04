@@ -111,7 +111,13 @@ class SummarizationEngine:
         """Helper to format slide summaries into a coherent text block."""
         context_parts = []
         for doc in docs:
-            slide_no = doc.metadata.get("slide_number", "Unknown")
+            raw_slide = doc.metadata.get("slide_number", "Unknown")
+            if isinstance(raw_slide, (int, float)):
+                slide_no = str(int(raw_slide))
+            elif isinstance(raw_slide, str):
+                slide_no = raw_slide[:-2] if raw_slide.endswith(".0") else raw_slide
+            else:
+                slide_no = str(raw_slide)
             title = doc.metadata.get("title", "")
             
             # Use metadata summary if available, fallback to full text

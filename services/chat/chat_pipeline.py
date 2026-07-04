@@ -117,7 +117,7 @@ class ChatPipeline:
             "4. META-QUERY OVERRIDE: If the user explicitly asks *where* a concept is taught, naturally state the filename/slide number in plain text without brackets.\n"
             "5. STRICT IGNORANCE: If the student uses a symbol, operator, or concept (e.g., `==`) that is NOT defined in your provided context chunks, you MUST NOT explain it using your prior knowledge. State that the concept is beyond the current material, and ONLY correct them using concepts that ARE in the context (like explaining `=` for assignment).\n\n"
             "CRITICAL: VISUAL COMPLIANCE\n"
-            "If a retrieved course document contains 'Attached Images', you MUST include them at the very start of your explanation for that slide using standard markdown syntax: `![Slide Content Image](CourseLens_data/images/<filename>)`.\n"
+            "If a retrieved course document contains 'Attached Images: <path>', you MUST output the markdown image tag at the beginning of the slide's explanation using the exact path provided: `![Image](<path>)`.\n"
             "Do NOT skip images for length. If multiple images are present, include them all sequentially.\n"
             "\nContext:\n{context}"
         )
@@ -185,7 +185,14 @@ class ChatPipeline:
                 continue
 
             source_file = doc.metadata.get("source_file", "Unknown")
-            slide_number = doc.metadata.get("slide_number", "")
+            raw_slide = doc.metadata.get("slide_number", "")
+            if isinstance(raw_slide, (int, float)):
+                slide_number = str(int(raw_slide))
+            elif isinstance(raw_slide, str):
+                slide_number = raw_slide[:-2] if raw_slide.endswith(".0") else raw_slide
+            else:
+                slide_number = str(raw_slide)
+            
             title = doc.metadata.get("title", "")
             chunk_type = doc.metadata.get("chunk_type", "")
             image_filenames = doc.metadata.get("image_filenames", "")
@@ -196,8 +203,9 @@ class ChatPipeline:
                 citation = f"Source: {source_file}, Title: {title}, Slide: {slide_number}"
 
             if image_filenames:
-                image_filenames = image_filenames.replace(".emf", ".png")
-                citation += f", Attached Images: {image_filenames}"
+                images_list = [img.strip().replace(".emf", ".png") for img in image_filenames.split(",") if img.strip()]
+                full_image_paths = ", ".join([f"CourseLens_data/images/{img}" for img in images_list])
+                citation += f", Attached Images: {full_image_paths}"
 
             course_docs.append(f"{citation}\n{doc.page_content}")
 
