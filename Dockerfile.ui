@@ -5,8 +5,8 @@ FROM python:3.13-slim
 WORKDIR /app
 
 # 3. Copy requirements and install Python libraries
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements_ui.txt .
+RUN pip install --no-cache-dir -r requirements_ui.txt
 
 # 4. Copy the rest of the project source code
 COPY . .
