@@ -376,7 +376,7 @@ Resources:
           ContainerPort: 8501
 
   CloudWatchLogGroup:
-    Type: AWS::CloudWatch::LogGroup
+    Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub '/ecs/${EnvironmentName}'
       RetentionInDays: 7
