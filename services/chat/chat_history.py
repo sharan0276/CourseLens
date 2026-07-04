@@ -15,8 +15,8 @@ class ChatHistoryStore:
     Sessions are persisted to the cloud rather than local disk.
     """
 
-    def __init__(self, table_name: str = "courselens-sessions"):
-        self.table_name = table_name
+    def __init__(self, table_name: Optional[str] = None):
+        self.table_name = table_name or os.getenv("DYNAMODB_TABLE_NAME", "courselens-sessions")
         # boto3.resource allows us to interact with DynamoDB using native Python dictionaries
         self.dynamodb = boto3.resource('dynamodb')
         self.table = self.dynamodb.Table(self.table_name)

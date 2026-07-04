@@ -1,0 +1,82 @@
+name: Deploy to AWS ECS
+
+on:
+  push:
+    branches:
+      - stateless-arc # Triggers on updates to your active branch
+
+env:
+  AWS_REGION: us-east-1 # Change to your preferred AWS region
+  ECR_REPOSITORY_API: courselens-api
+  ECR_REPOSITORY_UI: courselens-ui
+  ECS_CLUSTER: courselens-dev-cluster
+  ECS_SERVICE_API: courselens-api
+  ECS_SERVICE_UI: courselens-ui
+
+jobs:
+  deploy:
+    name: Build & Deploy to ECS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Configure AWS Credentials using GitHub Repository Secrets
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Log in to AWS Elastic Container Registry (ECR)
+      - name: Log in to AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # Build and Push API Container
+      - name: Build, Tag, and Push API Image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: latest
+        run: |
+          docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY_API }}:$IMAGE_TAG -f Dockerfile .
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY_API }}:$IMAGE_TAG
+
+      # Build and Push UI Container
+      - name: Build, Tag, and Push UI Image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: latest
+        run: |
+          docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY_UI }}:$IMAGE_TAG -f Dockerfile.ui .
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY_UI }}:$IMAGE_TAG
+
+      # Deploy/Update AWS Infrastructure via CloudFormation
+      - name: Deploy CloudFormation Stack
+        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          name: courselens-dev
+          template: template.yaml
+          no-fail-on-empty-changeset: "1"
+          parameter-overrides: "EnvironmentName=courselens-dev"
+          capabilities: CAPABILITY_IAM
+
+      # Trigger ECS Fargate to pull the latest images and redeploy
+      - name: Deploy API Service to ECS Fargate
+        run: |
+          aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.ECS_SERVICE_API }} --force-new-deployment
+
+      - name: Deploy UI Service to ECS Fargate
+        run: |
+          aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.ECS_SERVICE_UI }} --force-new-deployment
+
+      # Output the Live URL
+      - name: Fetch and Output Live Website URL
+        run: |
+          URL=$(aws cloudformation describe-stacks --stack-name courselens-dev --query "Stacks[0].Outputs[?OutputKey=='WebsiteURL'].OutputValue" --output text)
+          echo "============================================="
+          echo "DEPLOYMENT COMPLETED SUCCESSFULLY!"
+          echo "LIVE WEBSITE URL: $URL"
+          echo "============================================="
