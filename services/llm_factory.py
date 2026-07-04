@@ -3,9 +3,19 @@ from langchain_google_vertexai import ChatVertexAI
 
 def _ensure_credentials():
     if not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        creds_path = os.path.join(base_dir, "secrets", "gcp_credentials.json")
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
+        gcp_json = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+        if gcp_json:
+            creds_path = "/tmp/gcp_credentials.json"
+            with open(creds_path, "w", encoding="utf-8") as f:
+                f.write(gcp_json)
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
+        else:
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            creds_path = os.path.join(base_dir, "secrets", "gcp_credentials.json")
+            if os.path.exists(creds_path):
+                os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
+            else:
+                raise FileNotFoundError(f"File {creds_path} was not found and GOOGLE_APPLICATION_CREDENTIALS_JSON env variable is empty.")
 
 def get_vertex_llm(temperature: float = 0.7) -> ChatVertexAI:
     """
