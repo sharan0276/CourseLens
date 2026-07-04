@@ -6,8 +6,10 @@ requests>=2.31.0
 # Cloud & Database Connections
 boto3>=1.28.0
 pinecone-client>=3.0.0
+langchain-pinecone>=0.1.0
 
 # Machine Learning & LLMs
+torch>=2.0.0
 sentence-transformers>=2.2.2
 google-cloud-aiplatform>=1.38.0
 google-genai>=0.1.0
