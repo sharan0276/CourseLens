@@ -120,3 +120,39 @@ class VectorStoreManager:
         # 5. Sort and return top K
         reranked = sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
         return [docs_dict[doc_id] for doc_id, score in reranked[:k]]
+
+    def fetch_by_id(self, chunk_id: str) -> Document | None:
+        """Fetches a single document by its chunk_id directly from Pinecone."""
+        try:
+            fetch_res = self.vector_store.index.fetch(ids=[chunk_id])
+            vectors = fetch_res.get("vectors", {})
+            if chunk_id in vectors:
+                vec = vectors[chunk_id]
+                metadata = vec.get("metadata", {})
+                text = metadata.pop("text", "")
+                return Document(page_content=text, metadata=metadata, id=chunk_id)
+        except Exception as e:
+            print(f"[VectorStoreManager] Error fetching chunk {chunk_id}: {e}")
+        return None
+
+    def fetch_lecture_for_summary(self, lecture_number: int) -> List[Document]:
+        """Fetches all chunks matching the lecture number using metadata filter."""
+        return self.similarity_search(
+            query="",
+            k=10000,
+            filter={"lecture_number": lecture_number}
+        )
+
+    def fetch_lecture_range_for_summary(self, start_lecture: int, end_lecture: int) -> List[Document]:
+        """Fetches all chunks matching the lecture range [start_lecture, end_lecture]."""
+        filter_query = {
+            "lecture_number": {
+                "$gte": start_lecture,
+                "$lte": end_lecture
+            }
+        }
+        return self.similarity_search(
+            query="",
+            k=10000,
+            filter=filter_query
+        )

@@ -2,7 +2,6 @@ from typing import List
 from langchain_core.documents import Document
 from services.rag.pinecone_retriever import VectorStoreManager
 from services.rag.bm25_retriever import BM25Manager
-import chromadb
 
 
 class RetrievalService:
@@ -18,10 +17,8 @@ class RetrievalService:
         self.k = k
         self.parent_swap_threshold = parent_swap_threshold
         self.search_type = search_type
+        # Connected to Pinecone via vector_store_manager, no local db connection needed
         
-        # Connectikng to chroma db to fetch meta data for chunks
-        self.client = chromadb.PersistentClient(path=db_path)
-        self.collection = self.client.get_collection(collection_name)
     
         
     def retrieve(self, query: str, lecture_number: int = None, k: int = None, disable_swapping: bool = False) -> List[Document]:
@@ -187,21 +184,7 @@ class RetrievalService:
         """
         Fetches a single document by its chunk_id.
         """
-        try:
-            result = self.collection.get(
-                ids=[chunk_id],
-                include=["documents", "metadatas"]
-            )
-            if result["documents"]:
-                return Document(
-                    page_content=result["documents"][0],
-                    metadata=result["metadatas"][0],
-                    id=chunk_id
-                )
-        except Exception as e:
-            print(f"Error fetching chunk {chunk_id}: {e}")
-            pass
-        return None
+        return self.vector_store_manager.fetch_by_id(chunk_id)
     
 
 # Swapping Parent and Child 
@@ -273,34 +256,24 @@ class RetrievalService:
         Fetches all chunks matching the lecture number without vector embeddings,
         skipping parent chunks to get full slide level granularity.
         """
-        result = self.collection.get(
-            where={"lecture_number": lecture_number},
-            include=["documents", "metadatas"]
-        )
-        return self._process_summary_results(result)
+        docs = self.vector_store_manager.fetch_lecture_for_summary(lecture_number)
+        return self._process_summary_results(docs)
 
     def fetch_lecture_range_for_summary(self, start_lecture: int, end_lecture: int) -> List[Document]:
         """
         Fetches all chunks matching the lecture range [start_lecture, end_lecture].
         """
-        # ChromaDB syntax for range queries — using $and with $gte and $lte filters
-        result = self.collection.get(
-            where={"$and": [
-                {"lecture_number": {"$gte": start_lecture}},
-                {"lecture_number": {"$lte": end_lecture}}
-            ]},
-            include=["documents", "metadatas"]
-        )
-        return self._process_summary_results(result)
+        docs = self.vector_store_manager.fetch_lecture_range_for_summary(start_lecture, end_lecture)
+        return self._process_summary_results(docs)
 
-    def _process_summary_results(self, result: dict) -> List[Document]:
-        """Internal helper to convert Chroma results to sorted Documents."""
-        docs = []
-        if result and result.get("documents"):
-            for doc_content, meta in zip(result["documents"], result["metadatas"]):
-                if meta.get("chunk_type") != "parent":
-                    docs.append(Document(page_content=doc_content, metadata=meta))
+    def _process_summary_results(self, docs_list: List[Document]) -> List[Document]:
+        """Internal helper to convert raw results to sorted Documents."""
+        filtered_docs = []
+        if docs_list:
+            for doc in docs_list:
+                if doc.metadata.get("chunk_type") != "parent":
+                    filtered_docs.append(doc)
                     
         # Sort by lecture number first, then slide number, to maintain pedagogical flow
-        docs.sort(key=lambda x: (x.metadata.get("lecture_number") or 0, x.metadata.get("slide_number") or 0))
-        return docs
+        filtered_docs.sort(key=lambda x: (x.metadata.get("lecture_number") or 0, x.metadata.get("slide_number") or 0))
+        return filtered_docs

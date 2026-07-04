@@ -18,24 +18,7 @@ class BM25Manager:
             with open(self.pkl_path, "rb") as f:
                 self._bm25_retriever = pickle.load(f)
         else:
-            print("[BM25Manager] BM25 Index not found on disk. Auto-healing from ChromaDB...")
-            from langchain_community.retrievers import BM25Retriever
-            import chromadb
-            
-            # Extract raw corpus to self-heal
-            client = chromadb.PersistentClient(path="CourseLens_data/chroma_db")
-            collection = client.get_collection("course_lens")
-            all_data = collection.get(include=["documents", "metadatas"])
-            
-            docs = []
-            for t, m, i in zip(all_data['documents'], all_data['metadatas'], all_data['ids']):
-                docs.append(Document(page_content=t, metadata=m, id=i))
-            
-            if docs:
-                self._bm25_retriever = BM25Retriever.from_documents(docs)
-                with open(self.pkl_path, "wb") as f:
-                    pickle.dump(self._bm25_retriever, f)
-                    
+            print("[BM25Manager] WARNING: BM25 Index pickle file not found on disk. Please ensure it has been uploaded to S3.")
         return self._bm25_retriever
 
     def search(self, query: str, k: int = 20, filter: dict = None) -> List[Document]:

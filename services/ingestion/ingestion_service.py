@@ -216,18 +216,24 @@ class IngestionService:
         self._build_bm25_index()
         print("\nEmbeding complete for all files")
 
-    def _build_bm25_index(self):
-        """Builds a persistent BM25 index from all documents currently in Chroma."""
-        print("\nBuilding BM25 Sparse Index...")
+    def _build_bm25_index(self, folder_path: str = "CourseLens_data/processed_data/"):
+        """Builds a persistent BM25 index from all processed JSON documents on disk."""
+        print("\nBuilding BM25 Sparse Index from local JSON files...")
         try:
             from langchain_community.retrievers import BM25Retriever
             from langchain_core.documents import Document
             import pickle
+            import glob
 
-            all_data = self.vector_store.collection.get(include=["documents", "metadatas"])
             docs = []
-            for t, m, i in zip(all_data['documents'], all_data['metadatas'], all_data['ids']):
-                docs.append(Document(page_content=t, metadata=m, id=i))
+            for json_path in glob.glob(os.path.join(folder_path, "*.json")):
+                parent_chunks, child_chunks = self.chunk_builder.build_from_json(json_path)
+                for chunk in parent_chunks + child_chunks:
+                    docs.append(Document(
+                        page_content=chunk["text"],
+                        metadata=chunk["metadata"],
+                        id=chunk["id"]
+                    ))
             
             if docs:
                 bm25 = BM25Retriever.from_documents(docs)
