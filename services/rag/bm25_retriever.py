@@ -49,7 +49,3 @@ class BM25Manager:
                 break
                 
         return filtered_docs
-
-
-
-wait i though t chrom db had a self.collection.get() setiup why for BM25 compoilation does it have vector_store.collection.get() and why does pine codne use glob.glob()?
