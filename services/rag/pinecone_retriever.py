@@ -125,12 +125,14 @@ class VectorStoreManager:
         """Fetches a single document by its chunk_id directly from Pinecone."""
         try:
             fetch_res = self.vector_store.index.fetch(ids=[chunk_id])
-            vectors = fetch_res.get("vectors", {})
+            vectors = fetch_res.vectors if hasattr(fetch_res, "vectors") else {}
             if chunk_id in vectors:
                 vec = vectors[chunk_id]
-                metadata = vec.get("metadata", {})
-                text = metadata.pop("text", "")
-                return Document(page_content=text, metadata=metadata, id=chunk_id)
+                metadata = vec.metadata if hasattr(vec, "metadata") else {}
+                # Create a copy of the metadata so we can safely pop the text
+                metadata_copy = dict(metadata) if metadata else {}
+                text = metadata_copy.pop("text", "")
+                return Document(page_content=text, metadata=metadata_copy, id=chunk_id)
         except Exception as e:
             print(f"[VectorStoreManager] Error fetching chunk {chunk_id}: {e}")
         return None
