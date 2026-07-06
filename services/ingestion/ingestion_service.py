@@ -49,6 +49,133 @@ class IngestionService:
                 )
         }
 
+    def ingest_file(self, filepath: str):
+        """
+        Orchestrates full ingestion (parsing, cleaning, embedding, syllabus update, BM25 rebuild) for a single file.
+        """
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"Target file {filepath} not found.")
+
+        filename = os.path.basename(filepath)
+        ext = os.path.splitext(filename)[1].lower()
+        json_path = None
+        cleaned_slides = []
+
+        if ext == ".pptx":
+            print(f"\nProcessing PPTX file: {filepath}")
+            slides = self.pptx_parser.parse(filepath)
+            cleaned_slides = [self.slide_cleaner.clean(slide) for slide in slides]
+            json_path = os.path.join("CourseLens_data/processed_data", filename.replace(".pptx", ".json"))
+            output_data = {
+                "source_file": filename,
+                "total_slides": len(cleaned_slides),
+                "slides": [slide.to_dict() for slide in cleaned_slides]
+            }
+            with open(json_path, "w") as f:
+                json.dump(output_data, f, indent=4)
+            convert_all_emfs_in_directory("CourseLens_data/images")
+
+        elif ext == ".pdf":
+            print(f"\nProcessing PDF file: {filepath}")
+            slides = self.pdf_parser.parse_pdf(filepath)
+            cleaned_slides = [self.slide_cleaner.clean(slide) for slide in slides]
+            json_path = os.path.join("CourseLens_data/processed_data", filename.replace(".pdf", ".json"))
+            output_data = {
+                "source_file": filename,
+                "total_slides": len(cleaned_slides),
+                "slides": [slide.to_dict() for slide in cleaned_slides]
+            }
+            with open(json_path, "w") as f:
+                json.dump(output_data, f, indent=4)
+
+        else:
+            raise ValueError("Unsupported file format. Only PPTX and PDF are supported.")
+
+        # Step 2: Create embeddings for this single file
+        if json_path:
+            self.create_embeddings_for_file(json_path)
+
+        # Step 3: Update syllabus_topics.json on S3 or locally
+        self._update_syllabus_from_slides(filepath, cleaned_slides)
+
+        # Step 4: Rebuild BM25 Sparse Index
+        self._build_bm25_index()
+
+        return {"status": "success", "file": filename}
+
+    def _update_syllabus_from_slides(self, filepath: str, cleaned_slides: list):
+        """
+        Dynamically extracts slide titles as topics and updates syllabus_topics.json on S3 or locally.
+        """
+        import re
+        # 1. Extract lecture number from file name (e.g. lecture_15.pptx -> 15)
+        match = re.search(r"\d+", os.path.basename(filepath))
+        if not match:
+            print(f"[SyllabusUpdate] Warning: Could not extract lecture number from filename {filepath}. Skipping syllabus update.")
+            return
+
+        lec_num = str(int(match.group()))
+
+        # 2. Extract topics (slide titles) from cleaned_slides
+        topics = []
+        for slide in cleaned_slides:
+            slide_dict = slide if isinstance(slide, dict) else slide.to_dict()
+            title = slide_dict.get("title", "").strip()
+            if title and title not in topics:
+                if not re.match(r"^lecture\s+\d+$", title, re.IGNORECASE):
+                    topics.append(title)
+
+        if not topics:
+            print("[SyllabusUpdate] No valid slide titles found to update syllabus.")
+            return
+
+        # 3. Load existing syllabus_topics.json
+        syllabus_key = "config/syllabus_topics.json"
+        bucket_name = os.getenv("S3_BUCKET_NAME")
+        syllabus_data = {}
+
+        if bucket_name:
+            import boto3
+            s3 = boto3.client("s3")
+            try:
+                response = s3.get_object(Bucket=bucket_name, Key=syllabus_key)
+                syllabus_data = json.loads(response["Body"].read().decode("utf-8"))
+            except Exception as e:
+                print(f"[SyllabusUpdate] Existing syllabus not found on S3, starting fresh: {e}")
+        else:
+            if os.path.exists(syllabus_key):
+                try:
+                    with open(syllabus_key, "r", encoding="utf-8") as f:
+                        syllabus_data = json.load(f)
+                except Exception as e:
+                    print(f"[SyllabusUpdate] Error loading local syllabus: {e}")
+
+        # 4. Update the specific lecture's topics
+        syllabus_data[lec_num] = {"topics": topics}
+
+        # 5. Save syllabus_topics.json back
+        if bucket_name:
+            try:
+                import boto3
+                s3 = boto3.client("s3")
+                s3.put_object(
+                    Bucket=bucket_name,
+                    Key=syllabus_key,
+                    Body=json.dumps(syllabus_data, indent=4),
+                    ContentType="application/json"
+                )
+                print(f"[SyllabusUpdate] Successfully uploaded updated syllabus to S3 for lecture {lec_num}.")
+            except Exception as e:
+                print(f"[SyllabusUpdate] Failed to upload updated syllabus to S3: {e}")
+        else:
+            try:
+                os.makedirs(os.path.dirname(syllabus_key), exist_ok=True)
+                with open(syllabus_key, "w", encoding="utf-8") as f:
+                    json.dump(syllabus_data, f, indent=4)
+                print(f"[SyllabusUpdate] Successfully updated local syllabus for lecture {lec_num}.")
+            except Exception as e:
+                print(f"[SyllabusUpdate] Failed to write local syllabus file: {e}")
+
 
     def ingest_folder_pptx(self, folder_path: str):
         """

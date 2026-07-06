@@ -10,15 +10,25 @@ class BM25Manager:
         self._bm25_retriever = None
 
     def _get_bm25(self):
-        """Self-healing BM25 loader from disk -> memory"""
+        """Self-healing BM25 loader from S3 -> disk -> memory"""
         if self._bm25_retriever is not None:
             return self._bm25_retriever
             
+        if not os.path.exists(self.pkl_path):
+            print("[BM25Manager] Local BM25 index not found. Fetching from S3...")
+            try:
+                from services.s3_service import S3Service
+                s3_bucket = os.getenv("S3_BUCKET_NAME", "courselens-data-bucket-test-01")
+                s3_service = S3Service(bucket_name=s3_bucket)
+                s3_service.download_file("CourseLens_data/bm25_retriever.pkl", self.pkl_path)
+            except Exception as e:
+                print(f"[BM25Manager] Failed to fetch BM25 from S3: {e}")
+
         if os.path.exists(self.pkl_path):
             with open(self.pkl_path, "rb") as f:
                 self._bm25_retriever = pickle.load(f)
         else:
-            print("[BM25Manager] WARNING: BM25 Index pickle file not found on disk. Please ensure it has been uploaded to S3.")
+            print("[BM25Manager] WARNING: BM25 Index pickle file not found on disk or S3.")
         return self._bm25_retriever
 
     def search(self, query: str, k: int = 20, filter: dict = None) -> List[Document]:

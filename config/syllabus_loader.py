@@ -18,7 +18,19 @@ class SyllabusLoader:
         return cls._instance
 
     def _load_config(self, config_path: str) -> None:
-        """Loads the JSON file containing the syllabus topics."""
+        """Loads the JSON file containing the syllabus topics from S3 or local disk."""
+        bucket_name = os.getenv("S3_BUCKET_NAME")
+        if bucket_name:
+            try:
+                import boto3
+                s3 = boto3.client("s3")
+                response = s3.get_object(Bucket=bucket_name, Key=config_path)
+                self._topics_data = json.loads(response["Body"].read().decode("utf-8"))
+                print("SyllabusLoader: Successfully loaded syllabus topics from S3.")
+                return
+            except Exception as e:
+                print(f"SyllabusLoader: Failed to load from S3: {e}. Falling back to local file.")
+
         if not os.path.exists(config_path):
             print(f"Warning: Syllabus config not found at {config_path}")
             self._topics_data = {}

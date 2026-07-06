@@ -12,6 +12,11 @@ Parameters:
     Default: courselens-data-bucket-test-01
     Description: Name of the S3 bucket storing slide assets
 
+  DynamoDBTableNameParam:
+    Type: String
+    Default: courselens-prod-sessions
+    Description: Name of the pre-existing DynamoDB table storing session chats
+
 Resources:
   # ── VPC Network ─────────────────────────────────────────────────────────────
   VPC:
@@ -89,19 +94,6 @@ Resources:
       SubnetId: !Ref PublicSubnetTwo
       RouteTableId: !Ref PublicRouteTable
 
-  # ── Databases & Storage ─────────────────────────────────────────────────────
-  DynamoDBTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub '${EnvironmentName}-sessions'
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: session_id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: session_id
-          KeyType: HASH
-
   # ── IAM Security Roles ──────────────────────────────────────────────────────
   ECSTaskExecutionRole:
     Type: AWS::IAM::Role
@@ -149,7 +141,7 @@ Resources:
                   - dynamodb:Scan
                   - dynamodb:UpdateItem
                   - dynamodb:DeleteItem
-                Resource: !GetAtt DynamoDBTable.Arn
+                Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableNameParam}'
               - Effect: Allow
                 Action:
                   - s3:GetObject
@@ -278,7 +270,7 @@ Resources:
             - Name: S3_BUCKET_NAME
               Value: !Ref S3BucketNameParam
             - Name: DYNAMODB_TABLE_NAME
-              Value: !Ref DynamoDBTable
+              Value: !Ref DynamoDBTableNameParam
           Secrets:
             - Name: PINECONE_API_KEY
               ValueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/courselens/pinecone-api-key'
@@ -364,6 +356,100 @@ Resources:
         - TargetGroupArn: !Ref UITargetGroup
           ContainerName: ui
           ContainerPort: 8501
+
+  # ── Ingestion Trigger Lambda ────────────────────────────────────────────────
+  IngestionTriggerLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${EnvironmentName}-ingestion-trigger'
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.9
+      Timeout: 60
+      Environment:
+        Variables:
+          ECS_CLUSTER: !Ref ECSCluster
+          TASK_DEFINITION_ARN: !Ref APITaskDefinition
+          SUBNETS: !Join [',', [!Ref PublicSubnetOne, !Ref PublicSubnetTwo]]
+          SECURITY_GROUPS: !Ref ContainerSecurityGroup
+      Code:
+        ZipFile: |
+          import os
+          import boto3
+
+          ecs = boto3.client('ecs')
+
+          def handler(event, context):
+              record = event['Records'][0]['s3']
+              bucket = record['bucket']['name']
+              key = record['object']['key']
+              
+              if key.endswith('/'):
+                  return
+                  
+              print(f"Triggered ingestion for S3 key: {key} in bucket: {bucket}")
+              
+              response = ecs.run_task(
+                  cluster=os.getenv('ECS_CLUSTER'),
+                  taskDefinition=os.getenv('TASK_DEFINITION_ARN'),
+                  launchType='FARGATE',
+                  networkConfiguration={
+                      'awsvpcConfiguration': {
+                          'subnets': os.getenv('SUBNETS').split(','),
+                          'securityGroups': [os.getenv('SECURITY_GROUPS')],
+                          'assignPublicIp': 'ENABLED'
+                      }
+                  },
+                  overrides={
+                      'containerOverrides': [
+                          {
+                              'name': 'api',
+                              'command': ['python', 'run_ingestion.py', '--file', key]
+                          }
+                      ]
+                  }
+              )
+              print(f"Task launched successfully: {response}")
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Policies:
+        - PolicyName: LambdaIngestionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${EnvironmentName}-ingestion-trigger:*'
+              - Effect: Allow
+                Action:
+                  - ecs:RunTask
+                Resource: !Ref APITaskDefinition
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource:
+                  - !GetAtt ECSTaskExecutionRole.Arn
+                  - !GetAtt ECSTaskRole.Arn
+
+  LambdaS3Permission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt IngestionTriggerLambda.Arn
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub 'arn:aws:s3:::${S3BucketNameParam}'
 
   CloudWatchLogGroup:
     Type: AWS::Logs::LogGroup

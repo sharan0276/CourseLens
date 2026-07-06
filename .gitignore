@@ -8,3 +8,4 @@ __pycache__/
 venv/
 .env
 secrets/
+config/syllabus_topics.json

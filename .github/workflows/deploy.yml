@@ -60,7 +60,7 @@ jobs:
           name: courselens-dev
           template: template.yaml
           no-fail-on-empty-changeset: "1"
-          parameter-overrides: "EnvironmentName=courselens-dev"
+          parameter-overrides: "EnvironmentName=courselens-dev,DynamoDBTableNameParam=courselens-prod-dev-sessions"
           capabilities: CAPABILITY_IAM
 
       # Trigger ECS Fargate to pull the latest images and redeploy
