@@ -50,6 +50,8 @@ class ChatPipeline:
             collection_name=collection_name
         )
         self.bm25_manager = BM25Manager()
+        # Pre-load/download the BM25 index from S3 on startup to eliminate first-query latency
+        self.bm25_manager._get_bm25()
         self.history_store = history_store
         self.llm = llm
         self.flash_llm = flash_llm  # added: stored so QueryRouter components can use it

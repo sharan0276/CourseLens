@@ -20,6 +20,7 @@ class BM25Manager:
                 from services.s3_service import S3Service
                 s3_bucket = os.getenv("S3_BUCKET_NAME", "courselens-data-bucket-test-01")
                 s3_service = S3Service(bucket_name=s3_bucket)
+                os.makedirs(os.path.dirname(self.pkl_path), exist_ok=True)
                 s3_service.download_file("CourseLens_data/bm25_retriever.pkl", self.pkl_path)
             except Exception as e:
                 print(f"[BM25Manager] Failed to fetch BM25 from S3: {e}")
