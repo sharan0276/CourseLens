@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - stateless-arc # Triggers on updates to your active branch
+  workflow_dispatch: # Allows manual triggers from GitHub Actions UI without code push
 
 env:
   AWS_REGION: us-east-1 # Change to your preferred AWS region
