@@ -565,8 +565,9 @@ Resources:
           Image: ghcr.io/mlflow/mlflow:v2.15.0
           PortMappings:
             - ContainerPort: 5000
-          Command:
+          EntryPoint:
             - "mlflow"
+          Command:
             - "server"
             - "--backend-store-uri"
             - !Sub "postgresql://postgres:${DBMasterPassword}@${MLflowDBInstance.Endpoint.Address}:5432/mlflowdb"
