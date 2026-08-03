@@ -161,12 +161,16 @@ Resources:
   ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Access load balancer on port 80
+      GroupDescription: Access load balancer on port 80 and 5000
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 5000
+          ToPort: 5000
           CidrIp: 0.0.0.0/0
 
   ContainerSecurityGroup:
@@ -182,6 +186,10 @@ Resources:
         - IpProtocol: tcp
           FromPort: 8501
           ToPort: 8501
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 5000
+          ToPort: 5000
           SourceSecurityGroupId: !Ref ALBSecurityGroup
 
   # ── Application Load Balancer (ALB) ─────────────────────────────────────────
@@ -223,6 +231,19 @@ Resources:
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 3
 
+  MLflowTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub '${EnvironmentName}-mlflow-tg'
+      Port: 5000
+      Protocol: HTTP
+      TargetType: ip
+      VpcId: !Ref VPC
+      HealthCheckPath: /health
+      HealthCheckIntervalSeconds: 30
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+
   # Load Balancer Listeners
   ALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -233,6 +254,16 @@ Resources:
       DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref UITargetGroup # Default traffic hits Streamlit UI
+
+  ALBListenerMLflow:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 5000
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref MLflowTargetGroup
 
   ALBListenerRuleAPI:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
@@ -510,6 +541,63 @@ Resources:
       Value: !Sub "postgresql://postgres:${DBMasterPassword}@${MLflowDBInstance.Endpoint.Address}:5432/mlflowdb"
       Description: "Automatically generated connection URL for the MLflow database"
 
+  MLflowTrackingURIParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: "/courselens/mlflow-tracking-uri"
+      Type: String
+      Value: !Sub "http://${LoadBalancer.DNSName}:5000"
+      Description: "Automatically generated URL for the MLflow tracking server"
+
+  MLflowTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub '${EnvironmentName}-mlflow-task'
+      Cpu: '512'
+      Memory: '1024'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !Ref ECSTaskExecutionRole
+      TaskRoleArn: !Ref ECSTaskRole
+      ContainerDefinitions:
+        - Name: mlflow-server
+          Image: python:3.13-slim
+          PortMappings:
+            - ContainerPort: 5000
+          Command:
+            - "sh"
+            - "-c"
+            - !Sub "pip install mlflow psycopg2-binary boto3 && mlflow server --backend-store-uri postgresql://postgres:${DBMasterPassword}@${MLflowDBInstance.Endpoint.Address}:5432/mlflowdb --default-artifact-root s3://${S3BucketNameParam}/mlflow-artifacts/ --host 0.0.0.0 --port 5000"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref CloudWatchLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: mlflow
+
+  MLflowService:
+    Type: AWS::ECS::Service
+    DependsOn: ALBListenerMLflow
+    Properties:
+      ServiceName: courselens-mlflow
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref MLflowTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+          Subnets:
+            - !Ref PublicSubnetOne
+            - !Ref PublicSubnetTwo
+      LoadBalancers:
+        - TargetGroupArn: !Ref MLflowTargetGroup
+          ContainerName: mlflow-server
+          ContainerPort: 5000
+
 Outputs:
   WebsiteURL:
     Description: Public URL of the CourseLens Chat UI
@@ -518,3 +606,7 @@ Outputs:
   MLflowDBEndpoint:
     Description: Connection endpoint for the MLflow PostgreSQL Database
     Value: !GetAtt MLflowDBInstance.Endpoint.Address
+
+  MLflowServerURL:
+    Description: Public URL of the MLflow Tracking Server Dashboard
+    Value: !Sub 'http://${LoadBalancer.DNSName}:5000'
