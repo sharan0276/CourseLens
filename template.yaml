@@ -566,17 +566,10 @@ Resources:
           PortMappings:
             - ContainerPort: 5000
           EntryPoint:
-            - "mlflow"
+            - "sh"
+            - "-c"
           Command:
-            - "server"
-            - "--backend-store-uri"
-            - !Sub "postgresql://postgres:${DBMasterPassword}@${MLflowDBInstance.Endpoint.Address}:5432/mlflowdb"
-            - "--default-artifact-root"
-            - !Sub "s3://${S3BucketNameParam}/mlflow-artifacts/"
-            - "--host"
-            - "0.0.0.0"
-            - "--port"
-            - "5000"
+            - !Sub "pip install psycopg2-binary boto3 && mlflow server --backend-store-uri postgresql://postgres:${DBMasterPassword}@${MLflowDBInstance.Endpoint.Address}:5432/mlflowdb --default-artifact-root s3://${S3BucketNameParam}/mlflow-artifacts/ --host 0.0.0.0 --port 5000"
           LogConfiguration:
             LogDriver: awslogs
             Options:
