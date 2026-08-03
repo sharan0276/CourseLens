@@ -64,6 +64,13 @@ class RetrievalService:
 
         self._log_retrieved_chunks(retrieved_docs)
 
+        # Register retrieved documents for MLflow logging
+        try:
+            from services.chat.mlflow_logger import retrieved_docs_var
+            retrieved_docs_var.set(retrieved_docs_var.get() + retrieved_docs)
+        except ImportError:
+            pass
+
         return retrieved_docs
 
     def _reciprocal_rank_fusion(self, dense_docs: List[Document], sparse_docs: List[Document]) -> List[Document]:

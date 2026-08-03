@@ -345,6 +345,13 @@ class ChatPipeline:
         if session is None:
             raise ValueError(f"Session '{session_id}' not found.")
 
+        # MLflow turn level logging tracking setup
+        import time
+        from services.chat.mlflow_logger import MLflowLogger, retrieved_docs_var
+        ta_stage_before = session.ta_stage
+        retrieved_docs_var.set([])  # Clear thread-local variable before turn begins
+        start_time = time.time()
+
         if session.in_socratic_loop():
             standalone_q = user_input
         else:
@@ -367,6 +374,23 @@ class ChatPipeline:
         reply = result_meta['reply']
         q_type = result_meta['query_type']
         topics = result_meta.get('selected_topics', [])
+
+        # Calculate latency and fetch retrieved docs
+        latency_ms = (time.time() - start_time) * 1000
+        retrieved_docs = retrieved_docs_var.get()
+
+        # Log turn details to MLflow server
+        MLflowLogger.log_turn(
+            session_id=session_id,
+            query=user_input,
+            response=reply,
+            query_type=q_type.value,
+            latency_ms=latency_ms,
+            ta_stage_before=ta_stage_before,
+            ta_stage_after=session.ta_stage,
+            retrieved_chunks=retrieved_docs,
+            selected_topics=topics
+        )
 
         # TOKEN OPTIMIZATION: Only save to history if it's technical or a relevant courselens query.
         # Skip history if it's purely conversational or out-of-scope with no technical topics.

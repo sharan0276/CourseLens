@@ -76,6 +76,13 @@ class AnchorRetrieval:
             web_docs = self.web_scraper.search_topics(session.selected_topics)
             docs = docs + web_docs
 
+        # Register retrieved documents for MLflow logging
+        try:
+            from services.chat.mlflow_logger import retrieved_docs_var
+            retrieved_docs_var.set(retrieved_docs_var.get() + docs)
+        except ImportError:
+            pass
+
         return docs
 
     def _deduplicate_across_topics(self, docs: List[Document]) -> List[Document]:

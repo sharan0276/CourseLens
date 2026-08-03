@@ -17,6 +17,12 @@ Parameters:
     Default: courselens-prod-sessions
     Description: Name of the pre-existing DynamoDB table storing session chats
 
+  DBMasterPassword:
+    Type: String
+    NoEcho: true
+    Default: "postgresMLflowPassword123"
+    Description: Password for the PostgreSQL database administrator account.
+
 Resources:
   # ── VPC Network ─────────────────────────────────────────────────────────────
   VPC:
@@ -278,6 +284,8 @@ Resources:
               ValueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/courselens/pinecone-index-host'
             - Name: GOOGLE_APPLICATION_CREDENTIALS_JSON
               ValueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/courselens/vertex-api-key'
+            - Name: MLFLOW_TRACKING_URI
+              ValueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/courselens/mlflow-tracking-uri'
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -328,6 +336,9 @@ Resources:
               Value: !Sub 'http://${LoadBalancer.DNSName}'
             - Name: EXTERNAL_API_URL
               Value: !Sub 'http://${LoadBalancer.DNSName}'
+          Secrets:
+            - Name: MLFLOW_TRACKING_URI
+              ValueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/courselens/mlflow-tracking-uri'
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -457,7 +468,53 @@ Resources:
       LogGroupName: !Sub '/ecs/${EnvironmentName}'
       RetentionInDays: 7
 
+  # ── RDS Postgres Database for MLflow ─────────────────────────────────────────
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: "Subnets for MLflow RDS Database"
+      SubnetIds:
+        - !Ref PublicSubnetOne
+        - !Ref PublicSubnetTwo
+
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow Fargate containers to access RDS Postgres"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref ContainerSecurityGroup
+
+  MLflowDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: '20'
+      DBInstanceClass: db.t4g.micro
+      DBName: mlflowdb
+      Engine: postgres
+      EngineVersion: '15'
+      MasterUsername: postgres
+      MasterUserPassword: !Ref DBMasterPassword
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref DBSecurityGroup
+
+  MLflowDBURLParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: "/courselens/mlflow-db-url"
+      Type: String
+      Value: !Sub "postgresql://postgres:${DBMasterPassword}@${MLflowDBInstance.Endpoint.Address}:5432/mlflowdb"
+      Description: "Automatically generated connection URL for the MLflow database"
+
 Outputs:
   WebsiteURL:
     Description: Public URL of the CourseLens Chat UI
     Value: !Sub 'http://${LoadBalancer.DNSName}'
+
+  MLflowDBEndpoint:
+    Description: Connection endpoint for the MLflow PostgreSQL Database
+    Value: !GetAtt MLflowDBInstance.Endpoint.Address

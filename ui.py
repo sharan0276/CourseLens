@@ -120,6 +120,61 @@ def update_session_title(session_id, new_title):
          st.error("Failed to connect to the backend API.")
     return False
 
+def fetch_recent_logs(limit=5):
+    import mlflow
+    import json
+    from mlflow.tracking import MlflowClient
+    
+    mlflow_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
+    mlflow.set_tracking_uri(mlflow_uri)
+    
+    try:
+        # Check if experiment exists
+        exp = mlflow.get_experiment_by_name("courselens-chat")
+        if not exp:
+            return []
+            
+        df = mlflow.search_runs(
+            experiment_ids=[exp.experiment_id],
+            order_by=["attribute.start_time DESC"],
+            max_results=limit
+        )
+        
+        if df is None or df.empty:
+            return []
+            
+        client = MlflowClient()
+        log_records = []
+        
+        for _, row in df.iterrows():
+            run_id = row.get('run_id')
+            audit_data = {}
+            try:
+                local_path = client.download_artifacts(run_id, "turn_audit_log.json")
+                if local_path and os.path.exists(local_path):
+                    with open(local_path, 'r') as f:
+                        audit_data = json.load(f)
+            except Exception:
+                pass
+                
+            log_records.append({
+                "run_id": run_id,
+                "session_id": row.get('params.session_id', 'Unknown'),
+                "query_type": row.get('params.query_type', 'Unknown'),
+                "latency_ms": row.get('metrics.latency_ms', 0.0),
+                "chunk_count": int(row.get('metrics.chunk_count', 0)) if row.get('metrics.chunk_count') is not None else 0,
+                "ta_stage_before": row.get('params.ta_stage_before', '0'),
+                "ta_stage_after": row.get('params.ta_stage_after', '0'),
+                "selected_topics": row.get('params.selected_topics', ''),
+                "user_query": audit_data.get("user_query", row.get('params.query', 'N/A')),
+                "bot_response": audit_data.get("bot_response", row.get('params.response', 'N/A')),
+                "retrieved_context": audit_data.get("retrieved_context", [])
+            })
+        return log_records
+    except Exception as e:
+        print(f"Failed to fetch MLflow logs: {e}")
+        return []
+
 # --- SIDEBAR (History) ---
 with st.sidebar:
     st.title("📚 CourseLens")
@@ -173,13 +228,51 @@ with chat_col:
         st.title(active_title if active_title else f"Session: {st.session_state.current_session_id[:8]}")
     else:
         st.title("CourseLens Tutor")
-        st.info("I am your Socratic AI assistant. Ask me anything about the course materials!")
 
-    # Render History
-    for msg in st.session_state.chat_history:
-        role = msg.get("role", "user")
-        with st.chat_message("user" if role == "user" else "assistant"):
-            st.markdown(msg.get("content", ""))
+    tab_chat, tab_logs = st.tabs(["Chat Room", "Live Auditing Logs"])
+
+    with tab_chat:
+        if not st.session_state.current_session_id:
+            st.info("I am your Socratic AI assistant. Ask me anything about the course materials!")
+        
+        # Render History
+        for msg in st.session_state.chat_history:
+            role = msg.get("role", "user")
+            with st.chat_message("user" if role == "user" else "assistant"):
+                st.markdown(msg.get("content", ""))
+
+    with tab_logs:
+        st.write("### MLflow Real-time Run Logs")
+        num_logs = st.slider("Logs to retrieve", min_value=5, max_value=50, value=10, step=5, help="Increase to see more history, decrease for faster load times.")
+        if st.button("Refresh Logs", use_container_width=True):
+            st.rerun()
+            
+        logs = fetch_recent_logs(limit=num_logs)
+        if not logs:
+            st.info("No active MLflow runs found. Start chatting to log metrics!")
+        else:
+            for log in logs:
+                title_lbl = f"[{log['query_type']}] {log['user_query'][:40]}... ({int(log['latency_ms'])}ms)"
+                with st.expander(title_lbl):
+                    st.write(f"**Session ID:** `{log['session_id']}`")
+                    st.write(f"**Socratic Stages:** {log['ta_stage_before']} ➡️ {log['ta_stage_after']}")
+                    if log['selected_topics']:
+                        st.write(f"**Syllabus Topics:** `{log['selected_topics']}`")
+                    st.write(f"**Fetched Chunks:** {log['chunk_count']}")
+                    
+                    st.divider()
+                    st.write("**Full Dialogue Turn:**")
+                    st.chat_message("user").markdown(log['user_query'])
+                    st.chat_message("assistant").markdown(log['bot_response'])
+                    
+                    if log['retrieved_context']:
+                        st.divider()
+                        st.write("**Retrieved Slide Context:**")
+                        for idx, chunk in enumerate(log['retrieved_context'], 1):
+                            src = chunk['metadata'].get('source_file', 'Unknown')
+                            slide = chunk['metadata'].get('slide_number', 'N/A')
+                            st.write(f"*{idx}. {src} (Slide {slide})*")
+                            st.caption(chunk['content'])
 
 with control_col:
     st.subheader("🛠️ Control Center")
@@ -213,6 +306,12 @@ with control_col:
         on_change=on_lecture_change,
         help="The tutor will only use materials up to this lecture. Adjust this as you progress through the course."
     )
+
+    st.divider()
+    
+    st.write("**Admin Diagnostics**")
+    mlflow_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
+    st.link_button("Open MLflow Dashboard", mlflow_uri, use_container_width=True, help="Access MLflow runs, latency metrics, and prompt evaluations.")
 
     st.divider()
     
