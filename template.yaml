@@ -562,13 +562,20 @@ Resources:
       TaskRoleArn: !Ref ECSTaskRole
       ContainerDefinitions:
         - Name: mlflow-server
-          Image: python:3.13-slim
+          Image: ghcr.io/mlflow/mlflow:v2.15.0
           PortMappings:
             - ContainerPort: 5000
           Command:
-            - "sh"
-            - "-c"
-            - !Sub "pip install mlflow psycopg2-binary boto3 && mlflow server --backend-store-uri postgresql://postgres:${DBMasterPassword}@${MLflowDBInstance.Endpoint.Address}:5432/mlflowdb --default-artifact-root s3://${S3BucketNameParam}/mlflow-artifacts/ --host 0.0.0.0 --port 5000"
+            - "mlflow"
+            - "server"
+            - "--backend-store-uri"
+            - !Sub "postgresql://postgres:${DBMasterPassword}@${MLflowDBInstance.Endpoint.Address}:5432/mlflowdb"
+            - "--default-artifact-root"
+            - !Sub "s3://${S3BucketNameParam}/mlflow-artifacts/"
+            - "--host"
+            - "0.0.0.0"
+            - "--port"
+            - "5000"
           LogConfiguration:
             LogDriver: awslogs
             Options:
